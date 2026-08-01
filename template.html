@@ -288,6 +288,8 @@ a{color:var(--red)}a:hover{color:var(--ink)}
 
 .ovnote{font-weight:600;color:var(--paper-2);font-size:var(--fs-small);line-height:1.4;
   text-shadow:0 1px 4px rgba(0,0,0,.5)}
+/* the red pen doing what it always does here: annotating what went wrong */
+.ovnote.bad{color:var(--red);text-shadow:0 1px 4px rgba(0,0,0,.65)}
 .ovbtns{display:flex;gap:10px;justify-content:flex-end}
 
 .sent{background:var(--paper-2);border:var(--bw-pen-heavy) solid var(--ink);padding:24px 22px 22px;
@@ -544,6 +546,7 @@ a{color:var(--red)}a:hover{color:var(--ink)}
     </div>
     <div>
       <div class="ovnote">Once it's sent it can't be taken back, and they'll never know it was you.</div>
+      <div class="ovnote bad" id="send-err" hidden></div>
       <div class="ovbtns" style="margin-top:12px">
         <button class="btn ghost sm" id="dl" type="button">Save GIF</button>
         <button class="btn ink sm" id="btn-back" type="button">Back</button>
@@ -566,8 +569,6 @@ a{color:var(--red)}a:hover{color:var(--ink)}
         <button class="btn" id="btn-share" type="button">Share</button>
         <button class="btn ghost" id="btn-save" type="button">Save video</button>
       </div>
-      <div class="note" id="sent-note"><b>prototype note —</b> nothing was actually sent.
-        No server, no email, nothing left this page.</div>
       <div style="margin-top:16px"><button class="btn ink block" id="btn-restart" type="button">Send another</button></div>
     </div>
   </div>
@@ -1265,6 +1266,8 @@ function openPreview(v){
   $('#p-msg').textContent   = v.msg;
   $('#p-sub').textContent   = v.name + ', someone finally said it';
   $('#p-gif').src = state.gifUrl;
+  state.v = v;                       // send() needs these after the overlay opens
+  showSendErr('');
   const loved = D.loveMs > D.fireMs && D.love > 40;
   $('#p-cap').textContent = loved
     ? '…and this is how they feel about you.'
@@ -1283,8 +1286,56 @@ $('#lnk-report').onclick = e => e.preventDefault();
 $('#lnk-block').onclick = e => e.preventDefault();
 function closeOv(){ $('#ov-preview').classList.remove('on'); }
 
+function showSendErr(msg){
+  const el = $('#send-err');
+  el.textContent = msg || '';
+  el.hidden = !msg;
+}
+
+/* Send it for real.
+   The preview stays open until the server says yes. Showing "It's gone." when
+   nothing left the building would be a lie, and this whole product only works
+   if a message that says it was delivered actually was. On a failure they keep
+   the preview, the error, and the Save button — nothing they made is lost. */
+async function send(){
+  const v = state.v;
+  if(!v) return;
+  const btn = $('#btn-send');
+  const label = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  showSendErr('');
+
+  const fd = new FormData();
+  fd.append('name', v.name);
+  fd.append('email', v.mail);
+  fd.append('message', v.msg);
+  fd.append('stats', state.stats || '');
+  if(state.gifBlob)   fd.append('gif', state.gifBlob, 'beatass.gif');
+  if(state.videoBlob) fd.append('mp4', state.videoBlob, 'beatass.mp4');
+
+  try{
+    const res = await fetch('/api/send', {method:'POST', body:fd});
+    let data = {};
+    try{ data = await res.json(); }catch(e){}
+    if(!res.ok){
+      /* the API answers with a sentence meant for a human: 403 they blocked us,
+         429 too many sends, 413 too big, 502 the mail provider fell over */
+      showSendErr(data.error || "That didn't go through. Try again in a minute.");
+      return;
+    }
+    showSent();
+  }catch(e){
+    // never reached the server at all — offline, DNS, blocked request
+    showSendErr("Couldn't reach the server. Check your connection and try again.");
+  }finally{
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+}
+
 /* The last screen is where every share comes from, so the video gets the room. */
-function send(){
+function showSent(){
   $('#ov-preview').classList.remove('on');
 
   const media = $('#sent-media');

@@ -2,7 +2,30 @@ import { fileURLToPath } from 'url';
 import { chromium } from 'playwright';
 import http from 'http'; import fs from 'fs'; import path from 'path';
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
-const srv=http.createServer((q,s)=>{try{s.writeHead(200,{'Content-Type':'text/html'});s.end(fs.readFileSync(path.join(ROOT,q.url==='/'?'beatass.html':q.url.split('?')[0])))}catch{s.writeHead(404);s.end()}});
+/* The API the page really talks to. Mocked at the real endpoint on purpose: the
+   app posts the same multipart body it would post to the Worker, so this test
+   fails the moment the two drift apart. The first call answers 429 so the
+   failure path gets exercised; every call after it succeeds. The raw body is
+   kept so we can prove the fields and the media actually left the browser. */
+const sent={count:0,body:'',type:''};
+const srv=http.createServer((q,s)=>{
+  if(q.url==='/api/send' && q.method==='POST'){
+    const chunks=[];
+    q.on('data',c=>chunks.push(c));
+    q.on('end',()=>{
+      sent.count++;
+      sent.body=Buffer.concat(chunks).toString('latin1');
+      sent.type=q.headers['content-type']||'';
+      const first=sent.count===1;
+      s.writeHead(first?429:200,{'Content-Type':'application/json'});
+      s.end(first
+        ? JSON.stringify({error:"That's enough for one hour. Come back later."})
+        : JSON.stringify({ok:true,id:'0123456789abcdef'}));
+    });
+    return;
+  }
+  try{s.writeHead(200,{'Content-Type':'text/html'});s.end(fs.readFileSync(path.join(ROOT,q.url==='/'?'beatass.html':q.url.split('?')[0])))}catch{s.writeHead(404);s.end()}
+});
 await new Promise(r=>srv.listen(8894,r));
 fs.mkdirSync(ROOT+'/shots',{recursive:true});
 const b=await chromium.launch();
@@ -36,7 +59,8 @@ for(const [name,w,h] of sizes){
 // ---- full flow on desktop ----
 const p = await b.newPage({viewport:{width:1280,height:800}});
 p.on('pageerror',e=>errs.push('PE: '+e.message));
-p.on('console',m=>{if(m.type()==='error')errs.push('CE: '+m.text())});
+// the 429 below is one we cause on purpose, so the browser logging it isn't a fault
+p.on('console',m=>{if(m.type()==='error' && !/\b429\b/.test(m.text()))errs.push('CE: '+m.text())});
 await p.goto('http://localhost:8894/',{waitUntil:'networkidle'});
 await p.waitForTimeout(600);
 
@@ -88,8 +112,32 @@ console.log('video export:', JSON.stringify(vid));
 if (vid.supported && vid.made && vid.ftyp !== 'ftyp') errs.push('video is not a valid MP4');
 if (vid.supported && !vid.made) errs.push('browser supports MP4 but no video was produced');
 
+/* ---- the send. The first attempt is refused by the API: the app must say so
+       in plain words and must NOT claim the message is gone. ---- */
 await p.click('button:has-text("Send it")'); await p.waitForTimeout(500);
+const refusedMsg = await p.textContent('#send-err');
+const liedAboutSending = await p.isVisible('#ov-sent.on');
+console.log('API refused →', JSON.stringify(refusedMsg), '| still on the preview:', !liedAboutSending);
+if(liedAboutSending) errs.push('claimed "It\'s gone" after the API refused the send');
+if(!/enough for one hour/.test(refusedMsg||'')) errs.push("the API's own error text was not shown");
+await p.screenshot({path:ROOT+'/shots/v3-send-error.png'});
+
+// second attempt: the API accepts it
+await p.click('button:has-text("Send it")'); await p.waitForTimeout(600);
 console.log('sent overlay:', await p.isVisible('#ov-sent.on'));
+if(!(await p.isVisible('#ov-sent.on'))) errs.push('the sent screen never opened after a successful send');
+
+// prove the POST carried everything the Worker reads out of it
+const want = ['name="name"','name="email"','name="message"','name="stats"','name="gif"'];
+if(vid.made) want.push('name="mp4"');
+const missing = want.filter(f => !sent.body.includes(f));
+console.log('POST /api/send:', sent.count, 'calls |', Math.round(sent.body.length/1024)+'KB |',
+  missing.length ? 'MISSING '+missing.join(', ') : 'all fields present',
+  '| recipient carried:', sent.body.includes('priya@example.com'));
+if(missing.length) errs.push('fields missing from the POST body: '+missing.join(', '));
+if(!sent.body.includes('priya@example.com')) errs.push('the recipient address never reached the API');
+if(!/^multipart\/form-data/.test(sent.type)) errs.push('the POST was not multipart/form-data');
+if(!sent.body.includes('GIF89a')) errs.push('no real GIF bytes in the POST body');
 await p.screenshot({path:ROOT+'/shots/v3-sent.png'});
 await p.click('button:has-text("Send another")'); await p.waitForTimeout(400);
 console.log('reset ok:', (await p.inputValue('#i-name'))==='' , '| overlay closed:', !(await p.isVisible('#ov-sent.on')));

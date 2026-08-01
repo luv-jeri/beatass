@@ -10,10 +10,15 @@ Written 2 August 2026. Everything a new session needs to pick this up.
 
 ## The one-line status
 
-**The front end is finished and tested. The backend is written and its
-infrastructure is live, but the two are not connected yet, and nothing is
-deployed.** Pressing Send today still shows a local "It's gone" screen and
-sends no email.
+*(updated 2 August 2026, second session)*
+
+**The front end is finished, tested, and now wired to the API. The backend is
+written and its infrastructure is live. Nothing is deployed yet.** Pressing
+Send posts the confession and both files to `/api/send` — against the real
+Worker once it is deployed, and nothing at all until then.
+
+This project is now a Banyan venture and lives at
+`~/Claude/Projects/banyan/ventures/beatass`. Its passport is `VENTURE.md`.
 
 ---
 
@@ -72,22 +77,29 @@ is a dev dependency; `npx wrangler login` is already done.
 
 ---
 
+### Front end → API — done 2026-08-02
+`send()` in `template.html` now posts `multipart/form-data` to `/api/send`
+with `name`, `email`, `message`, `stats` and the file parts `gif` and `mp4`.
+
+On a failure it shows the API's own sentence (403 blocked, 429 rate limit,
+413 too big, 502 mail provider) in a red line on the preview, **and keeps the
+preview open** — it never claims the message was sent when it wasn't. The
+Send button re-enables so they can retry; Save is right there, so nothing
+they made is lost. A total network failure gets its own line. The "prototype
+note — nothing was actually sent" line is gone from the sent screen.
+
+`npm test` covers both halves: the mock API is served at the real
+`/api/send` path, refuses the first attempt (429) and accepts the second, and
+the test asserts the error text appears, the sent screen does *not* open on
+refusal, and the POST really carried every field plus real `GIF89a` bytes
+(~930 KB). Mocking at the real endpoint is deliberate — the test breaks the
+moment the page and the Worker's field names drift apart.
+
+---
+
 ## What is NOT done — in priority order
 
-### 1. Wire the front end to the API  ← **start here**
-`template.html`'s `send()` function currently just opens the sent overlay.
-It needs to `POST /api/send` as `multipart/form-data` with fields
-`name`, `email`, `message`, `stats`, and file parts `gif` and `mp4`
-(both from `state.gifBlob` / `state.videoBlob`).
-
-Handle: the 403 blocklist response, the 429 rate limit, and the 502 send
-failure — each has a human-readable `error` string, show it rather than a
-generic failure. Keep the share screen working when offline/failed.
-
-Then delete the "prototype note — nothing was actually sent" line from the
-sent overlay, which will no longer be true.
-
-### 2. Deploy
+### 1. Deploy  ← **start here**
 ```bash
 python3 build.py && npx wrangler deploy
 ```
@@ -95,13 +107,13 @@ python3 build.py && npx wrangler deploy
 `build.py`; git-ignored) and falls through to the Worker for `/api/*`,
 `/media/*`, `/block`, `/report`.
 
-### 3. Verify the domain in Resend  ← **blocks real email**
+### 2. Verify the domain in Resend  ← **blocks real email**
 Until `beatass.com` is verified inside Resend, mail can only be delivered to
 the address that owns the Resend account (`unread.fyi@gmail.com`). Everyone
 else silently gets nothing. `MAIL_FROM` in `wrangler.jsonc` is currently
 `onboarding@resend.dev` and must change to an address on the real domain.
 
-### 4. DNS at GoDaddy
+### 3. DNS at GoDaddy
 The domain is registered at **GoDaddy**. Recommended (agreed, not yet done):
 move the nameservers to Cloudflare, which is free and brings the WAF, bot
 filtering and DDoS protection — worth having on an anonymous-message site.
@@ -111,12 +123,12 @@ free DNS entries and they are not optional: without them this mail goes
 straight to spam no matter how good the subject line is, and with the full
 confession inline the reputation risk is real.
 
-### 5. SEO
+### 4. SEO
 Meta, OG and Twitter tags are already in `template.html` and reference
 `https://beatass.com/og.png` — **that image does not exist yet.** Still to do:
 `robots.txt`, `sitemap.xml`, the OG image, and structured data.
 
-### 6. The personal link (`beatass.com/priya`)
+### 5. The personal link (`beatass.com/priya`)
 Lowest priority, per the decisions table. See `DESIGN-PROMPT.md` Prompt 2.
 If it gets built, store the doll's *choreography* (~500 bytes of instructions),
 not the video — about 4,000× cheaper. That requires swapping `Math.random()`
@@ -152,7 +164,17 @@ Full table at the bottom of `DESIGN-PROMPT.md`. The ones most likely to be
 - One file, no framework, no bundler. No emoji as icons — icons are inline SVG
   in the `<defs>` block. Nothing is a perfect rectangle. Three inks only.
 
-## Open question for Sanjay
+## Open questions for Sanjay
+
+### The caption disagrees with itself when the doll was loved
+The preview shows one of two captions: "…and this is what they did to you.
+(stats)" normally, or "…and this is how they feel about you." when the visit
+was mostly loving. The email in `src/index.js` only ever writes the first one,
+because all it receives is `stats`. So a loving message arrives captioned as an
+assault. Two ways to settle it: send the finished caption instead of `stats`
+(front end decides, one field change on both sides), or teach the Worker the
+same rule. It is a copy decision, so it was left alone. Found 2026-08-02.
+
 
 The design handoff's README describes a phone layout where the doll comes
 first and the page scrolls; the actual `AppScreen.jsx` puts the recipient
