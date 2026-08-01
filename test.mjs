@@ -71,6 +71,23 @@ console.log('preview card fits:', JSON.stringify(ovFits));
 await p.screenshot({path:ROOT+'/shots/v3-preview.png'});
 const b64=await p.evaluate(async()=>{const r=await fetch(document.querySelector('#p-gif').src);const u=new Uint8Array(await r.arrayBuffer());let s='';for(const x of u)s+=String.fromCharCode(x);return btoa(s)});
 fs.writeFileSync(ROOT+'/sample.gif',Buffer.from(b64,'base64'));
+// ---- the video export: Instagram and Snapchat reject GIFs, so this must be a real MP4 ----
+const vid = await p.evaluate(async () => {
+  const can = typeof MediaRecorder !== 'undefined' &&
+    ['video/mp4;codecs=avc1.42E01E','video/mp4;codecs=h264','video/mp4']
+      .some(m => MediaRecorder.isTypeSupported(m));
+  if (!can) return {supported:false};
+  if (!window.__state || !window.__state.videoBlob) return {supported:true, made:false};
+  const b = window.__state.videoBlob;
+  const u = new Uint8Array(await b.slice(0,12).arrayBuffer());
+  // a real MP4 has 'ftyp' at byte offset 4
+  return {supported:true, made:true, kb:Math.round(b.size/1024), type:b.type,
+          ftyp:String.fromCharCode(...u.slice(4,8))};
+});
+console.log('video export:', JSON.stringify(vid));
+if (vid.supported && vid.made && vid.ftyp !== 'ftyp') errs.push('video is not a valid MP4');
+if (vid.supported && !vid.made) errs.push('browser supports MP4 but no video was produced');
+
 await p.click('button:has-text("Send it")'); await p.waitForTimeout(500);
 console.log('sent overlay:', await p.isVisible('#ov-sent.on'));
 await p.screenshot({path:ROOT+'/shots/v3-sent.png'});

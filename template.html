@@ -4,241 +4,385 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>beatass — say the thing you'd never say</title>
+<meta name="description" content="Write an anonymous confession, take it out on a voodoo doll, and send them the video. Punch him, pin him, burn him — or love him. Free, no sign-up.">
+<meta name="theme-color" content="#fbf7ea">
+<link rel="canonical" href="https://beatass.com/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://beatass.com/">
+<meta property="og:title" content="beatass — say the thing you'd never say">
+<meta property="og:description" content="Write an anonymous confession, take it out on a voodoo doll, and send them the video.">
+<meta property="og:image" content="https://beatass.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 210'%3E%3Cg fill='none' stroke='%2326356e' stroke-width='9' stroke-linecap='round'%3E%3Cpath d='M75 4v34'/%3E%3Ccircle cx='75' cy='55' r='18'/%3E%3Cpath d='M75 74v58M75 88l-29 22M75 88l29 22M75 132l-19 36M75 132l20 36'/%3E%3C/g%3E%3C/svg%3E">
 <style>
 /* ============================================================
-   FONTS — embedded, so it looks identical everywhere and
-   works with no internet at all.
+   FONTS — embedded at build time, so the page looks identical
+   everywhere and works with no internet at all.
    ============================================================ */
 @font-face{font-family:'Hand';src:url(data:font/woff2;base64,__FONT_PATRICK__) format('woff2');font-weight:400;font-display:block}
 @font-face{font-family:'Scrawl';src:url(data:font/woff2;base64,__FONT_CAVEAT__) format('woff2');font-weight:400 700;font-display:block}
 @font-face{font-family:'Marker';src:url(data:font/woff2;base64,__FONT_MARKER__) format('woff2');font-weight:400;font-display:block}
 
+/* ============================================================
+   TOKENS — from the beatass design system.
+   ============================================================ */
 :root{
-  --paper:#fbf7ea; --paper-2:#fffdf5;
+  /* paper */
+  --desk:#e8e0cc; --paper:#fbf7ea; --paper-2:#fffdf5;
   --rule:#cddaea; --margin-line:#e3a8a2;
+  /* three inks, three jobs */
   --ink:#26356e; --ink-soft:#5b6a9c; --ink-faint:#93a0c2;
-  --red:#cf3a2d; --pencil:#8d8778;
-  --hl:#ffe873; --hl-pink:#ffb9cf;
-  --sticky:#ffe9a3; --tape:rgba(226,214,178,.72);
-  --rule-h:30px;
+  --red:#cf3a2d; --hl:#ffe873;
+  /* supporting marks */
+  --pencil:#8d8778; --hl-pink:#ffb9cf; --sticky:#ffe9a3;
+  --tape:rgba(226,214,178,.72); --heart:#e0507f; --char:#2b2118;
+  /* the mock inbox — deliberately NOT hand-drawn */
+  --mail-bg:#fff; --mail-text:#1c2333; --mail-muted:#77809a;
+  --mail-faint:#98a0b3; --mail-hair:#ececec; --mail-quote-bg:#faf9f6;
+  /* overlays */
+  --scrim:rgba(34,30,22,.66);
+
+  /* type */
+  --font-hand:'Hand',ui-rounded,'Comic Sans MS',cursive;
+  --font-script:'Scrawl',cursive;
+  --font-marker:'Marker',cursive;
+  --font-ui:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;
+  --fs-micro:11px; --fs-tiny:12px; --fs-caption:13px; --fs-small:14px;
+  --fs-ui:16px; --fs-input:18px;
+  --fs-logo-fluid:clamp(21px,3.4vh,29px);
+  --fs-tagline-fluid:clamp(16px,2.5vh,25px);
+  --fs-display-fluid:clamp(32px,6.5dvh,44px);
+  --lh-tight:1.05; --lh-ui:1.3; --lh-mail:1.5;
+
+  /* spacing — the one rhythm that matters is --rule-h */
+  --rule-h:30px; --rule-offset:4px;
   --gap:clamp(8px,1.5vh,18px);
+  --gap-col:clamp(12px,2.2vw,32px);
+  --pad-page:clamp(14px,2.5vw,34px);
+  --pad-top:clamp(8px,1.6vh,18px);
+  --page-max:1240px; --card-max:540px; --measure:56ch;
+
+  /* NOTHING IS A PERFECT RECTANGLE — four mismatched corners, always */
+  --radius-pen-lg:210px 16px 230px 14px/14px 240px 16px 225px;
+  --radius-pen-md:220px 16px 230px 14px/14px 235px 16px 225px;
+  --radius-pen-btn:225px 18px 235px 16px/16px 245px 14px 230px;
+  --radius-pen-sm:9px 4px 8px 5px/5px 8px 4px 9px;
+  --bw-pen:2px; --bw-pen-heavy:2.5px;
+
+  /* hard offset shadows — the flat drop of a doodle, never a soft blur */
+  --shadow-btn-red:3px 4px 0 rgba(207,58,45,.3);
+  --shadow-btn-red-hover:5px 7px 0 rgba(207,58,45,.26);
+  --shadow-btn-red-active:1px 1px 0 rgba(207,58,45,.3);
+  --shadow-btn-ink:3px 4px 0 rgba(38,53,110,.28);
+  --shadow-btn-ghost:2px 3px 0 rgba(38,53,110,.18);
+  --shadow-chip:1px 2px 5px rgba(60,50,20,.16);
+  --shadow-taped:1px 6px 20px rgba(40,36,26,.34);
+
+  /* motion */
+  --dur-press:.12s; --dur-tool:.14s; --dur-err:.15s;
+  --dur-fill:.2s; --dur-fade:.3s;
+  --ease-pop:cubic-bezier(.2,.9,.3,1);
+
+  --bg-ruled:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--rule-h) - 1px),var(--rule) calc(var(--rule-h) - 1px),var(--rule) var(--rule-h));
+  --bg-ruled-ink:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--rule-h) - 1.5px),var(--ink-faint) calc(var(--rule-h) - 1.5px),var(--ink-faint) var(--rule-h));
+  --bg-ruled-bad:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--rule-h) - 1.5px),var(--red) calc(var(--rule-h) - 1.5px),var(--red) var(--rule-h));
+  --bg-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+}
+@media(prefers-reduced-motion:reduce){
+  :root{--dur-press:0s;--dur-tool:0s;--dur-err:0s;--dur-fill:0s;--dur-fade:0s}
 }
 
 *{box-sizing:border-box}
-html{height:100%;background-color:var(--paper);
-  background-image:repeating-linear-gradient(to bottom,
-    transparent 0, transparent calc(var(--rule-h) - 1px),
-    var(--rule) calc(var(--rule-h) - 1px), var(--rule) var(--rule-h));
-  background-position:0 4px}
-body{margin:0;height:100%;overflow:hidden;background:transparent;
-  font-family:'Hand',ui-rounded,'Comic Sans MS',cursive;font-size:17px;line-height:1.45;
-  color:var(--ink);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+html{background:var(--desk)}
+body{font-family:var(--font-ui);font-size:var(--fs-ui);line-height:var(--lh-ui);color:var(--ink);
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+input,textarea,button{font-family:inherit}
+a{color:var(--red)}a:hover{color:var(--ink)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
-#margin{position:fixed;top:0;bottom:0;width:2px;background:var(--margin-line);opacity:.7;
-  z-index:0;pointer-events:none;left:max(12px,calc(50% - 620px + 34px))}
-#grain{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.45;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E")}
+/* The paper is a PAGE, not wallpaper — contained, with its own edge and shadow. */
+#sheet{position:relative;height:100dvh;overflow:hidden;max-width:var(--page-max);margin:0 auto;
+  background-color:var(--paper);background-image:var(--bg-ruled);background-position:0 var(--rule-offset);
+  box-shadow:0 0 0 1px rgba(60,50,20,.09),0 2px 26px rgba(60,50,20,.13)}
+#margin{position:absolute;top:0;bottom:0;left:30px;width:2px;background:var(--margin-line);
+  opacity:.6;z-index:0;pointer-events:none}
+#grain{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.45;background-image:var(--bg-grain)}
+#root{position:relative;z-index:1;height:100%;padding-left:22px}
 
 /* ============================================================
-   ONE SCREEN. Nothing scrolls: the app is exactly as tall as
-   the viewport and the panels share whatever is left over.
+   BRAND
    ============================================================ */
-.app{position:relative;z-index:1;height:100dvh;max-width:1240px;margin:0 auto;
-  padding:0 clamp(14px,2.5vw,34px) max(8px,env(safe-area-inset-bottom));
-  display:flex;flex-direction:column;gap:var(--gap)}
-
-.top{display:flex;align-items:center;justify-content:space-between;gap:14px;
-  padding-top:clamp(8px,1.6vh,18px);flex:none}
-.logo{display:flex;align-items:center;gap:10px;transform:rotate(-1.4deg)}
-.logo svg{width:clamp(22px,3.2vh,32px);height:auto;flex:none;color:var(--ink)}
-.logo .n{font-family:'Marker',cursive;font-size:clamp(21px,3.4vh,29px);line-height:1}
-.logo .n em{font-style:normal;color:var(--red)}
-.tagline{font-family:'Scrawl',cursive;font-weight:700;font-size:clamp(16px,2.5vh,25px);
-  line-height:1.05;text-align:right;transform:rotate(.6deg)}
-.tagline .hl{position:relative;z-index:0;white-space:nowrap}
-.tagline .hl::before{content:"";position:absolute;z-index:-1;left:-.12em;right:-.14em;top:.2em;bottom:.08em;
+.logo{display:flex;align-items:center;gap:10px;transform:rotate(-1.4deg);color:var(--ink);flex:none}
+.logo svg{width:calc(var(--fs-logo-fluid) * 1.1);height:auto;display:block;flex:none}
+.logo .word{font-family:var(--font-marker);font-size:var(--fs-logo-fluid);line-height:1}
+.logo .word em{font-style:normal;color:var(--red)}
+.tagline{font-family:var(--font-script);font-weight:700;font-size:var(--fs-tagline-fluid);
+  line-height:var(--lh-tight);text-align:right;transform:rotate(.6deg);color:var(--ink)}
+.hl{position:relative;z-index:0;white-space:nowrap}
+.hl::before{content:"";position:absolute;z-index:-1;left:-.12em;right:-.14em;top:.2em;bottom:.08em;
   background:var(--hl);transform:rotate(-.7deg) skewX(-11deg);opacity:.85;
   clip-path:polygon(1% 6%,99% 0%,100% 92%,0% 100%)}
-@media(max-width:560px){.tagline{font-size:15px;max-width:46%}}
-
-.grid{flex:1 1 auto;min-height:0;display:grid;gap:clamp(12px,2.2vw,32px);
-  grid-template-columns:minmax(0,1fr) minmax(0,1.02fr)}
-.col{min-height:0;display:flex;flex-direction:column;gap:var(--gap)}
-.pane-label{font-family:'Marker',cursive;font-size:13px;color:var(--red);line-height:1;flex:none}
-
-/* ---------- who ---------- */
-.who{display:grid;grid-template-columns:1fr 1.3fr;gap:14px;flex:none}
-.blank{position:relative;padding-bottom:15px}
-.blank label{display:block;font-family:'Scrawl',cursive;font-weight:700;font-size:19px;
-  color:var(--red);line-height:1.1}
-.blank input{width:100%;font-family:'Hand',cursive;font-size:18px;color:var(--ink);
-  background:transparent;border:0;border-bottom:2px dotted var(--ink-faint);
-  padding:1px 2px 4px;outline:none}
-.blank input:focus{border-bottom-style:solid;border-bottom-color:var(--ink)}
-.blank input::placeholder{color:var(--ink-faint);opacity:.75}
-.blank .err{position:absolute;left:0;bottom:-1px;font-family:'Scrawl',cursive;font-weight:700;
-  color:var(--red);font-size:15px;line-height:1;opacity:0;transition:opacity .15s}
-.blank.bad .err{opacity:1}
-.blank.bad input{border-bottom-color:var(--red);border-bottom-style:solid}
-
-/* ---------- confession ---------- */
-.say{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:7px}
-.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;flex:none;padding-bottom:2px}
-.chips::-webkit-scrollbar{display:none}
-.chip{flex:none;font-family:'Scrawl',cursive;font-weight:700;font-size:17px;cursor:pointer;
-  background:var(--sticky);border:0;padding:3px 12px 5px;color:var(--ink);white-space:nowrap;
-  box-shadow:1px 2px 5px rgba(60,50,20,.16);transition:transform .12s}
-.chip:nth-child(2n){transform:rotate(1.2deg)}
-.chip:nth-child(3n){transform:rotate(-1.6deg)}
-.chip.on{background:var(--hl-pink);transform:rotate(-2deg) scale(1.05)}
-.sheet{flex:1 1 auto;min-height:0}
-.sheet textarea{width:100%;height:100%;font-family:'Hand',cursive;font-size:18px;
-  line-height:var(--rule-h);color:var(--ink);background:transparent;border:0;outline:none;
-  resize:none;padding:0 3px;display:block;
-  background-image:repeating-linear-gradient(to bottom,transparent 0,
-    transparent calc(var(--rule-h) - 1.5px),var(--ink-faint) calc(var(--rule-h) - 1.5px),var(--ink-faint) var(--rule-h))}
-.sheet textarea::placeholder{color:var(--ink-faint);opacity:.8}
-.sheet.bad textarea{background-image:repeating-linear-gradient(to bottom,transparent 0,
-    transparent calc(var(--rule-h) - 1.5px),var(--red) calc(var(--rule-h) - 1.5px),var(--red) var(--rule-h))}
-.count{flex:none;text-align:right;font-size:14px;color:var(--pencil);line-height:1}
-
-/* ---------- doll ---------- */
-.stage{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:7px}
-.frame{flex:1 1 auto;min-height:0;position:relative;display:grid;place-items:center;
-  border:2.5px solid var(--ink);background:var(--paper-2);overflow:hidden;
-  border-radius:210px 16px 230px 14px/14px 240px 16px 225px}
-#doll{display:block;height:100%;width:auto;aspect-ratio:1/1;max-width:100%;max-height:100%;
-  touch-action:none;cursor:crosshair}
-.rec{position:absolute;top:8px;left:14px;display:none;align-items:center;gap:6px;
-  font-family:'Marker',cursive;font-size:13px;color:var(--red);transform:rotate(-2deg)}
-.rec.on{display:flex}
-.rec span{font-family:'Hand',cursive;font-size:14px}
-.rec i{width:9px;height:9px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
-@keyframes blink{50%{opacity:.15}}
-.hint{position:absolute;left:0;right:0;bottom:9px;text-align:center;pointer-events:none;
-  font-family:'Scrawl',cursive;font-weight:700;color:var(--red);font-size:19px;transition:opacity .3s}
-.reset{position:absolute;top:5px;right:12px;background:none;border:0;cursor:pointer;
-  font-family:'Hand',cursive;font-size:14px;color:var(--pencil);text-decoration:underline;padding:2px}
-.reset:hover{color:var(--red)}
-
-.tools{flex:none;display:flex;gap:8px}
-.tool{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px;
-  font-family:'Scrawl',cursive;font-weight:700;font-size:16px;line-height:1.1;color:var(--ink);
-  background:transparent;border:2px solid transparent;padding:5px 2px;cursor:pointer;
-  border-radius:220px 16px 230px 14px/14px 235px 16px 225px;transition:.14s}
-.tool svg{width:clamp(19px,2.8vh,25px);height:clamp(19px,2.8vh,25px);color:var(--ink)}
-.tool:hover{border-color:var(--ink-faint)}
-.tool.on{border-color:var(--red);color:var(--red);background:rgba(255,232,115,.55)}
-.tool.on svg{color:var(--red)}
-.gauges{flex:none;display:flex;gap:14px}
-.gauge{flex:1;display:flex;align-items:center;gap:7px}
-.gauge span{font-family:'Marker',cursive;font-size:11px;color:var(--pencil);flex:none}
-.gauge .t{flex:1;height:10px;border:2px solid var(--ink-faint);overflow:hidden;
-  border-radius:9px 4px 8px 5px/5px 8px 4px 9px}
-.gauge .t i{display:block;height:100%;width:0;background:var(--red);transition:width .2s}
-.gauge.love .t i{background:var(--hl-pink)}
-
-/* ---------- bottom bar ---------- */
-.send{flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;
-  padding-top:6px;border-top:2px dotted var(--ink-faint)}
-.warn{font-size:13px;line-height:1.3;color:var(--pencil);max-width:56ch}
-.warn b{color:var(--red);font-family:'Marker',cursive;font-size:12px}
-.btn{font-family:'Marker',cursive;font-size:clamp(15px,2.1vh,19px);color:var(--paper-2);
-  background:var(--red);border:2.5px solid var(--red);cursor:pointer;padding:9px 22px 10px;
-  border-radius:225px 18px 235px 16px/16px 245px 14px 230px;flex:none;
-  box-shadow:3px 4px 0 rgba(207,58,45,.3);transition:transform .12s,box-shadow .12s}
-.btn:hover:not(:disabled){transform:translate(-1px,-2px) rotate(-.5deg);box-shadow:5px 7px 0 rgba(207,58,45,.26)}
-.btn:active:not(:disabled){transform:translate(1px,2px);box-shadow:1px 1px 0 rgba(207,58,45,.3)}
-.btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
-.btn.ink{background:var(--ink);border-color:var(--ink);box-shadow:3px 4px 0 rgba(38,53,110,.28)}
-.btn.ghost{background:var(--paper-2);color:var(--ink);border-color:var(--ink);box-shadow:2px 3px 0 rgba(38,53,110,.18)}
-.btn.sm{font-size:15px;padding:6px 15px 7px}
-.prog{display:none;flex:1;max-width:170px;height:12px;border:2px solid var(--ink);
-  border-radius:9px 4px 8px 5px/5px 8px 4px 9px;overflow:hidden}
-.prog.on{display:block}
-.prog i{display:block;height:100%;width:0;background:var(--hl);transition:width .15s}
+.pane-label{font-weight:700;font-size:var(--fs-small);letter-spacing:.09em;text-transform:uppercase;
+  color:var(--red);line-height:1;flex:none}
 
 /* ============================================================
-   OVERLAYS — still no page scroll
+   FORM — a blank to fill in
    ============================================================ */
-.ov{position:fixed;inset:0;z-index:20;display:none;place-items:center;padding:16px;
-  background:rgba(34,30,22,.66);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
-.ov.on{display:grid;animation:fade .2s ease}
+.who{display:grid;grid-template-columns:1fr 1.35fr;gap:18px;flex:none}
+.field{position:relative;padding-bottom:17px;min-width:0}
+.field label{display:block;font-weight:700;font-size:var(--fs-small);color:var(--ink-soft);
+  line-height:1;margin-bottom:5px;transition:color var(--dur-err)}
+.field input{width:100%;min-height:34px;font-size:var(--fs-input);color:var(--ink);
+  background:transparent;border:0;border-bottom:var(--bw-pen) dotted var(--ink-faint);
+  padding:2px 2px 6px;outline:none;border-radius:0}
+.field input:focus{border-bottom-style:solid;border-bottom-color:var(--ink)}
+.field .err{position:absolute;left:0;bottom:0;font-weight:600;color:var(--red);
+  font-size:var(--fs-caption);line-height:1;opacity:0;transition:opacity var(--dur-err)}
+.field.bad label{color:var(--red)}
+.field.bad input{border-bottom-style:solid;border-bottom-color:var(--red)}
+.field.bad .err{opacity:1}
+
+.chips{display:flex;gap:9px;flex:none;padding:3px 2px 5px}
+.chip{flex:none;cursor:pointer;border:0;white-space:nowrap;min-height:38px;
+  font-weight:600;font-size:var(--fs-ui);line-height:1;background:var(--sticky);color:var(--ink);
+  padding:10px 15px;box-shadow:var(--shadow-chip);
+  transition:transform var(--dur-press),background var(--dur-tool)}
+.chip:nth-child(odd){transform:rotate(1.2deg)}
+.chip:nth-child(even){transform:rotate(-1.6deg)}
+.chip.on{background:var(--hl-pink);transform:rotate(-2deg) scale(1.05)}
+
+.say{display:flex;flex-direction:column;gap:9px;min-height:0}
+.confess{display:flex;flex-direction:column;gap:5px;min-height:0}
+.confess .box{flex:1 1 auto;min-height:0}
+.confess textarea{width:100%;height:100%;display:block;resize:none;font-size:var(--fs-input);
+  line-height:var(--rule-h);color:var(--ink);background:transparent;border:0;outline:none;
+  padding:0 4px;border-radius:0;background-image:var(--bg-ruled-ink)}
+.confess.bad textarea{background-image:var(--bg-ruled-bad)}
+.confess textarea::placeholder,.field input::placeholder{color:var(--ink-faint);opacity:.85}
+.count{flex:none;text-align:right;font-weight:600;font-size:var(--fs-caption);
+  color:var(--pencil);line-height:1}
+.count.near{color:var(--red)}
+
+/* ============================================================
+   THE DOLL — the hero
+   ============================================================ */
+.stage{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;
+  border:var(--bw-pen-heavy) solid var(--ink);background:var(--paper-2);
+  border-radius:var(--radius-pen-lg);min-height:0;margin:0 auto;max-width:100%}
+.stage-head{flex:none;padding:11px 12px 10px;border-bottom:var(--bw-pen) dotted var(--ink-faint);
+  display:flex;gap:14px}
+.stage-body{position:relative;flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center}
+#doll{display:block;aspect-ratio:1/1;width:auto;height:auto;max-width:100%;max-height:100%;
+  flex:0 0 auto;margin:auto;touch-action:none;cursor:pointer}
+.rec{position:absolute;top:10px;left:15px;display:none;align-items:center;gap:7px;transform:rotate(-2deg)}
+.rec.on{display:flex}
+.rec i{width:10px;height:10px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
+.rec span{font-weight:700;font-size:var(--fs-small);color:var(--red)}
+@keyframes blink{50%{opacity:.15}}
+.reset{position:absolute;top:6px;right:8px;background:none;border:0;cursor:pointer;font-weight:600;
+  font-size:var(--fs-caption);color:var(--pencil);text-decoration:underline;text-underline-offset:3px;
+  padding:8px 10px;min-height:40px}
+.reset:hover{color:var(--red)}
+.hint{position:absolute;left:12px;right:12px;bottom:10px;text-align:center;pointer-events:none;
+  font-weight:700;color:var(--red);font-size:var(--fs-ui);opacity:0;transition:opacity var(--dur-fade)}
+.hint.on{opacity:1}
+
+/* Four choices that read as four choices, not four toolbar items. */
+.tools{display:flex;gap:7px;flex:none}
+.tool{flex:1 1 0;min-width:0;min-height:66px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:5px;cursor:pointer;font-weight:700;font-size:var(--fs-ui);line-height:1;
+  background:var(--paper-2);border:var(--bw-pen-heavy) solid var(--ink-faint);color:var(--ink);
+  padding:9px 4px 10px;border-radius:var(--radius-pen-md);box-shadow:2px 3px 0 rgba(38,53,110,.14);
+  transition:background var(--dur-tool),border-color var(--dur-tool),color var(--dur-tool),
+    transform var(--dur-press),box-shadow var(--dur-press)}
+.tool svg{width:27px;height:auto;display:block;flex:none}
+.tool:hover:not(.on){background:rgba(38,53,110,.045)}
+.tool:active{transform:translate(1px,2px);box-shadow:1px 1px 0 rgba(38,53,110,.2)}
+.tool.on{border-color:var(--red);color:var(--red);box-shadow:none;transform:rotate(-.6deg)}
+.tool.on svg{width:30px}
+.tool[data-tool="punch"].on,.tool[data-tool="pin"].on{background:rgba(255,232,115,.62)}
+.tool[data-tool="fire"].on{background:rgba(255,150,40,.26)}
+.tool[data-tool="love"].on{background:rgba(255,185,207,.55);border-color:var(--heart);color:var(--heart)}
+
+.gauge{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.gauge .head{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+.gauge .head span{font-weight:700;font-size:var(--fs-small);line-height:1;color:var(--pencil);
+  transition:color var(--dur-fill)}
+.gauge .head .pct{font-variant-numeric:tabular-nums;color:var(--ink-faint)}
+.gauge.live .head span{color:var(--red)}
+.gauge.love.live .head span{color:var(--heart)}
+.gauge .track{height:16px;overflow:hidden;background:var(--paper-2);
+  border:var(--bw-pen) solid var(--ink);border-radius:var(--radius-pen-sm)}
+.gauge .track i{display:block;height:100%;width:0;background:var(--red);transition:width var(--dur-fill)}
+.gauge.love .track i{background:var(--hl-pink)}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn{font-weight:700;letter-spacing:.005em;display:inline-flex;align-items:center;justify-content:center;
+  gap:8px;border-width:var(--bw-pen-heavy);border-style:solid;border-radius:var(--radius-pen-btn);
+  cursor:pointer;line-height:1;flex:none;
+  transition:transform var(--dur-press),box-shadow var(--dur-press);
+  font-size:16px;padding:12px 22px;min-height:46px;
+  background:var(--red);color:var(--paper-2);border-color:var(--red);box-shadow:var(--shadow-btn-red)}
+.btn.lg{font-size:18px;padding:15px 30px;min-height:54px}
+.btn.sm{font-size:15px;padding:10px 16px;min-height:42px}
+.btn.block{width:100%;flex:1 1 auto}
+.btn:hover:not(:disabled){transform:translate(-1px,-2px) rotate(-.5deg);box-shadow:var(--shadow-btn-red-hover)}
+.btn:active:not(:disabled){transform:translate(1px,2px);box-shadow:var(--shadow-btn-red-active)}
+.btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;transform:none}
+.btn.ink{background:var(--ink);color:var(--paper-2);border-color:var(--ink);box-shadow:var(--shadow-btn-ink)}
+.btn.ink:hover:not(:disabled){box-shadow:5px 7px 0 rgba(38,53,110,.24)}
+.btn.ink:active:not(:disabled){box-shadow:1px 1px 0 rgba(38,53,110,.28)}
+.btn.ghost{background:var(--paper-2);color:var(--ink);border-color:var(--ink);box-shadow:var(--shadow-btn-ghost)}
+.btn.ghost:hover:not(:disabled){box-shadow:4px 5px 0 rgba(38,53,110,.16)}
+.btn.ghost:active:not(:disabled){box-shadow:1px 1px 0 rgba(38,53,110,.18)}
+
+.prog{flex:1;max-width:170px;height:12px;overflow:hidden;border:var(--bw-pen) solid var(--ink);
+  border-radius:var(--radius-pen-sm)}
+.prog i{display:block;height:100%;width:0;background:var(--hl);transition:width .15s}
+.safety{font-size:var(--fs-small);line-height:var(--lh-ui);color:var(--pencil);max-width:var(--measure)}
+.safety b{color:var(--red);font-family:var(--font-marker);font-weight:400;
+  font-size:var(--fs-caption);margin-right:.35em}
+.encoding{font-weight:700;font-size:var(--fs-small);color:var(--ink-soft);flex:none}
+
+/* ============================================================
+   OVERLAYS
+   ============================================================ */
+.ov{position:fixed;inset:0;z-index:20;display:none;place-items:center;padding:clamp(12px,3vw,22px);
+  background:var(--scrim);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);overflow-y:auto}
+.ov.on{display:grid;animation:fade var(--dur-fill) ease}
 @keyframes fade{from{opacity:0}to{opacity:1}}
-.card{width:min(540px,100%);max-height:92dvh;display:flex;flex-direction:column;gap:12px;
-  animation:pop .25s cubic-bezier(.2,.9,.3,1)}
+.ov .card{width:min(var(--card-max),100%);max-height:100%;display:flex;flex-direction:column;gap:14px;
+  animation:pop .25s var(--ease-pop)}
 @keyframes pop{from{opacity:0;transform:translateY(12px) rotate(.6deg)}to{opacity:1;transform:none}}
-.taped{position:relative;background:#fff;box-shadow:1px 6px 20px rgba(40,36,26,.34);
+.taped{position:relative;background:var(--mail-bg);box-shadow:var(--shadow-taped);
   transform:rotate(.5deg);min-height:0;display:flex}
-.taped::before,.taped::after{content:"";position:absolute;width:72px;height:20px;background:var(--tape);z-index:2}
-.taped::before{top:-10px;left:-13px;transform:rotate(-32deg)}
-.taped::after{top:-10px;right:-13px;transform:rotate(32deg)}
-.mail{padding:15px 17px 13px;font-family:ui-sans-serif,system-ui,sans-serif;font-size:13.5px;
-  line-height:1.5;color:#1c2333;min-height:0;display:flex;flex-direction:column;width:100%}
-.mail .hd{display:flex;gap:10px;align-items:center;border-bottom:1px solid #ececec;
+.taped::before,.taped::after{content:"";position:absolute;width:72px;height:20px;
+  background:var(--tape);z-index:2;top:-10px}
+.taped::before{left:-13px;transform:rotate(-32deg)}
+.taped::after{right:-13px;transform:rotate(32deg)}
+
+/* The mock inbox is pretending to be Gmail. That contrast is the joke. */
+.mail{padding:15px 17px 13px;font-size:13.5px;line-height:var(--lh-mail);color:var(--mail-text);
+  width:100%;min-height:0;display:flex;flex-direction:column}
+.mail .hd{display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--mail-hair);
   padding-bottom:9px;flex:none}
-.mail .av{width:32px;height:32px;border-radius:50%;background:#26356e;color:#fff;flex:none;
+.mail .av{width:32px;height:32px;border-radius:50%;background:var(--ink);color:#fff;flex:none;
   display:grid;place-items:center;font-weight:700;font-size:14px}
 .mail .from{font-weight:700}
-.mail .to{color:#77809a;font-size:12px}
+.mail .from span{color:var(--mail-faint);font-weight:400}
+.mail .to{color:var(--mail-muted);font-size:12px}
 .mail .sub{font-weight:700;font-size:15.5px;margin:10px 0 5px;flex:none}
 .mail .body{min-height:0;overflow:hidden;display:flex;flex-direction:column}
-.mail .quote{border-left:3px solid #cf3a2d;background:#faf9f6;padding:8px 11px;margin:8px 0;
-  white-space:pre-wrap;word-break:break-word;flex:none;
+.mail .quote{border-left:3px solid var(--red);background:var(--mail-quote-bg);padding:8px 11px;
+  margin:8px 0;white-space:pre-wrap;word-break:break-word;flex:none;
   display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .mail .gifwrap{text-align:center;min-height:0}
-.mail .gifwrap img{max-width:min(170px,34dvh);width:100%;border:1px solid #ececec}
-.mail .cap{font-size:11.5px;color:#77809a;margin-top:4px}
-.mail .ft{border-top:1px solid #ececec;margin-top:9px;padding-top:8px;font-size:11px;color:#98a0b3;flex:none}
-.ovrow{display:flex;gap:12px;align-items:center;justify-content:space-between;flex:none;flex-wrap:wrap}
-.ovnote{font-family:'Scrawl',cursive;font-weight:700;color:var(--hl);font-size:17px;
-  text-shadow:0 1px 3px rgba(0,0,0,.4);line-height:1.15;flex:1 1 200px}
-.ovbtns{display:flex;gap:9px;flex:none}
+.mail .gifwrap img{max-width:min(170px,34dvh);width:100%;border:1px solid var(--mail-hair)}
+.mail .cap{font-size:11.5px;color:var(--mail-muted);margin-top:4px}
+.mail .ft{border-top:1px solid var(--mail-hair);margin-top:9px;padding-top:8px;font-size:11px;
+  color:var(--mail-faint);flex:none}
+.mail .ft a{color:var(--mail-muted)}
 
-.sent{background:var(--paper-2);border:2.5px solid var(--ink);padding:24px 22px 22px;text-align:center;
-  border-radius:210px 16px 230px 14px/14px 240px 16px 225px}
-.sent svg{width:clamp(90px,18dvh,120px);height:auto;color:var(--ink)}
-.sent h2{font-family:'Scrawl',cursive;font-weight:700;font-size:clamp(34px,7dvh,44px);line-height:1;margin:4px 0 6px}
-.sent p{margin:0}
-.sent .note{font-size:13px;color:var(--pencil);margin-top:12px;line-height:1.4}
-.sent .note b{color:var(--red);font-family:'Marker',cursive;font-size:12px}
+.ovnote{font-weight:600;color:var(--paper-2);font-size:var(--fs-small);line-height:1.4;
+  text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.ovbtns{display:flex;gap:10px;justify-content:flex-end}
+
+.sent{background:var(--paper-2);border:var(--bw-pen-heavy) solid var(--ink);padding:24px 22px 22px;
+  text-align:center;border-radius:var(--radius-pen-lg);color:var(--ink)}
+.sent h2{font-family:var(--font-script);font-weight:700;font-size:var(--fs-display-fluid);
+  line-height:1;margin:6px 0 8px}
+.sent p{margin:0;font-size:var(--fs-ui);color:var(--ink-soft)}
+.sent .note{font-size:var(--fs-caption);color:var(--pencil);margin-top:14px;line-height:1.45}
+.sent .note b{color:var(--red);font-weight:700}
+/* the share screen — the video is the ad, so it gets the room */
+.sent video,.sent .shot{display:block;width:100%;max-width:250px;margin:0 auto 4px;
+  border:var(--bw-pen) solid var(--ink);background:var(--paper);border-radius:6px}
+.sent .row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.sent .row .btn{flex:1 1 130px}
 
 /* ============================================================
-   PHONES — same single screen, panels stack
+   PHONE — the layout IS the design; desktop is the reflow
    ============================================================ */
-@media(max-width:820px){
-  .grid{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);gap:10px}
-  .pane-label{display:none}
-  .say{flex:none}
-  .sheet{height:calc(var(--rule-h)*3)}
-  .send{flex-wrap:wrap;gap:8px;padding-top:5px}
-  .warn{font-size:11.5px;max-width:100%;order:2;width:100%;line-height:1.25}
-  .send .btn{order:1;margin-left:auto}
-  .prog{order:1;max-width:130px}
-  .ovnote{font-size:15px;flex:1 1 100%;order:2}
-  .ovbtns{order:1;margin-left:auto}
+@media(max-width:819px){
+  html{background:var(--paper)}
+  #sheet{box-shadow:none;max-width:none;height:auto;min-height:100dvh;overflow:visible}
+  #margin{display:none}
+  #root{height:auto;min-height:100dvh;padding-left:0}
+  .app{height:100dvh;display:flex;flex-direction:column}
+  /* scroll instead of clipping: a small scroll is cheaper than lost content */
+  .scroller{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    display:flex;flex-direction:column;gap:10px;padding:0 var(--pad-page) 104px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:8px;flex:none}
+  .tagline{font-size:17px;max-width:48%}
+  .who{grid-template-columns:1fr 1.35fr;gap:11px}
+  /* The doll is the hero, so he gets a floor. On a short phone this pushes the
+     stack past the viewport — that's what .scroller is for. A small scroll is
+     cheaper than a 155px doll. */
+  .arena{display:flex;align-items:stretch;gap:9px;flex:1 1 auto;min-height:290px}
+  .stage{flex:1 1 auto;min-width:0;width:100%}
+  .tools{flex-direction:column;width:80px;flex:none}
+  .tool{min-height:0}
+  /* the two desktop columns collapse into one stack, then reorder:
+     who it's for, the doll, then what to say. */
+  .grid{display:flex;flex-direction:column;gap:10px;flex:1 1 auto;min-height:0}
+  .col{display:contents}
+  .pane-label.desk{display:none}
+  .who-label{order:1}
+  .who{order:2}
+  .arena{order:3}
+  .saybox{order:4}
+  .saybox{border-top:var(--bw-pen) dotted var(--ink-faint);padding-top:10px;
+    display:flex;flex-direction:column;gap:9px;flex:none}
+  .chips{overflow-x:auto;scrollbar-width:none;margin:0 calc(var(--pad-page) * -1);
+    padding-left:var(--pad-page);padding-right:var(--pad-page)}
+  .chips::-webkit-scrollbar{display:none}
+  .confess .box{min-height:calc(var(--rule-h) * 3)}
+  .sendbar{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;align-items:center;gap:14px;
+    flex-direction:column;background:var(--paper);border-top:var(--bw-pen) solid var(--ink);
+    padding:11px var(--pad-page) calc(11px + env(safe-area-inset-bottom));
+    box-shadow:0 -6px 18px rgba(60,50,20,.1)}
+  .sendbar .safety{display:none}
+  .sendbar .prog{max-width:100%}
+  .ovbtns{flex-direction:column-reverse}
+  .ovbtns .btn{width:100%}
+  .ovnote{text-align:center}
 }
-@media(max-width:560px){
-  .who{grid-template-columns:1fr 1.2fr;gap:10px}
-  .blank label{font-size:16px}
-  .blank input{font-size:16px}
-  .chip{font-size:15px}
-  .tool{font-size:13px}
-  .tools{gap:5px}
+/* ============================================================
+   DESKTOP — one screen, no scrolling, two columns
+   ============================================================ */
+@media(min-width:820px){
+  .app{height:100%;max-width:var(--page-max);margin:0 auto;padding:0 var(--pad-page) 12px;
+    display:flex;flex-direction:column;gap:var(--gap)}
+  .scroller{display:contents}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding-top:var(--pad-top);flex:none}
+  .grid{flex:1 1 auto;min-height:0;display:grid;gap:var(--gap-col);
+    grid-template-columns:minmax(0,1fr) minmax(0,1.02fr)}
+  .col{min-height:0;display:flex;flex-direction:column;gap:12px}
+  .arena{display:contents}
+  .stage{flex:1 1 auto;min-height:0;height:100%;width:auto}
+  .saybox{display:flex;flex-direction:column;gap:12px;flex:1 1 auto;min-height:0}
+  .say,.confess{flex:1 1 auto;min-height:0}
+  .chips{flex-wrap:wrap}
+  .sendbar{flex:none;display:flex;align-items:center;gap:14px;padding-top:12px;
+    border-top:var(--bw-pen) dotted var(--ink-faint)}
+  .sendbar .safety{flex:1 1 auto}
+  .mobile-only{display:none}
 }
 /* landscape phones are too short for one screen — scroll beats broken */
 @media(max-height:470px){
-  body{overflow:auto}
+  #sheet{height:auto;min-height:100dvh;overflow:visible}
   .app{height:auto;min-height:100dvh}
-  .frame{min-height:240px}
+  .arena{min-height:240px}
 }
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
 </head>
 <body>
-<div id="margin"></div><div id="grain"></div>
 
-<!-- hand-drawn icon set — no emoji anywhere -->
+<!-- hand-drawn icon set from the design system — no emoji anywhere -->
 <svg class="sr" aria-hidden="true"><defs>
   <symbol id="i-fist" viewBox="0 0 32 32">
     <path d="M16 2.2l3.1 5.9 5.4-3.3-1.4 6.4 6.6-.4-4.6 4.8 5.5 3.4-6.3 1.9 3 5.8-6.4-1.6-.6 6.6-4.3-5-4.4 4.8-.4-6.6-6.3 1.8 3.2-5.7L2 19.6l5.4-3.6L3 11.3l6.5.2-1.1-6.5 5.2 3.5z"
@@ -258,95 +402,121 @@ body{margin:0;height:100%;overflow:hidden;background:transparent;
       fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/>
   </symbol>
   <symbol id="i-plane" viewBox="0 0 150 110">
-    <path d="M8 52c44-16 92-30 136-38-20 28-38 54-52 84-6-14-11-24-17-32-16-6-38-11-67-14z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M8 52c44-16 92-30 136-38-20 28-38 54-52 84-6-14-11-24-17-32-16-6-38-11-67-14z"
+      fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
     <path d="M75 66c22-19 47-38 69-52" fill="none" stroke="currentColor" stroke-width="2.2"/>
     <path d="M92 98c-2-14-6-24-10-32" fill="none" stroke="currentColor" stroke-width="2.2"/>
   </symbol>
-  <symbol id="i-hang" viewBox="0 0 150 210">
-    <path d="M75 4v34" stroke="currentColor" stroke-width="2.4" fill="none"/>
-    <path d="M92 56c1-11-7-19-17-19s-18 8-17 19c1 10 8 17 17 17s16-7 17-17z" fill="none" stroke="currentColor" stroke-width="2.8"/>
-    <path d="M67 51c1.5 1 3 1 4.5 0M83 51c-1.5 1-3 1-4.5 0" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-    <path d="M68 63c4-3 10-3 14 0" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-    <path d="M75 74v58M75 88c-14 5-22 12-29 22M75 88c14 5 23 12 29 22M75 132c-8 14-14 24-19 36M75 132c8 14 15 24 20 36" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
+  <!-- the doll mark: the string runs to the BACK OF THE HEAD. A puppet, not a noose. -->
+  <symbol id="i-doll" viewBox="0 0 150 210">
+    <path d="M75 4v30c0 5 8 6 12 9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M92 56c1-11-7-19-17-19s-18 8-17 19c1 10 8 17 17 17s16-7 17-17z"
+      fill="none" stroke="currentColor" stroke-width="2.8" stroke-linejoin="round"/>
+    <path d="M67 51c1.5 1 3 1 4.5 0M83 51c-1.5 1-3 1-4.5 0"
+      fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M68 63c4-3 10-3 14 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M75 74v58M75 88c-14 5-22 12-29 22M75 88c14 5 23 12 29 22M75 132c-8 14-14 24-19 36M75 132c8 14 15 24 20 36"
+      fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
   </symbol>
 </defs></svg>
 
-<div class="app">
+<div id="sheet">
+  <div id="margin"></div><div id="grain"></div>
+  <div id="root">
+  <div class="app">
+    <div class="scroller">
 
-  <div class="top">
-    <div class="logo">
-      <svg viewBox="0 0 150 210" aria-hidden="true"><use href="#i-hang"/></svg>
-      <div class="n">beat<em>ass</em></div>
+      <div class="top">
+        <div class="logo">
+          <svg viewBox="0 0 150 210" aria-hidden="true"><use href="#i-doll"/></svg>
+          <div class="word">beat<em>ass</em></div>
+        </div>
+        <div class="tagline">say the thing<br>you'd <span class="hl">never say</span></div>
+      </div>
+
+      <div class="grid">
+        <!-- ===== left column on desktop: who + what ===== -->
+        <div class="col">
+          <div class="pane-label who-label">who's it for?</div>
+          <div class="who">
+            <div class="field" id="f-name">
+              <label for="i-name">their name</label>
+              <input type="text" id="i-name" placeholder="Priya" autocomplete="off">
+              <div class="err">needs a name</div>
+            </div>
+            <div class="field" id="f-email">
+              <label for="i-email">their email</label>
+              <input type="email" id="i-email" placeholder="priya@example.com" autocomplete="off" inputmode="email">
+              <div class="err">that's not an email</div>
+            </div>
+          </div>
+
+          <div class="saybox">
+            <div class="pane-label">what do you want to say?</div>
+            <div class="say">
+              <div class="chips" id="tones">
+                <button class="chip" data-tone="crush">secret crush</button>
+                <button class="chip" data-tone="grudge">grudge</button>
+                <button class="chip" data-tone="apology">apology</button>
+                <button class="chip" data-tone="roast">roast</button>
+                <button class="chip" data-tone="thanks">thank you</button>
+              </div>
+              <div class="confess" id="f-msg">
+                <div class="box">
+                  <textarea id="i-msg" maxlength="600" placeholder="I've been holding this in for two years…"></textarea>
+                </div>
+                <div class="count" id="count">0 / 600</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== right column on desktop: the doll ===== -->
+        <div class="col">
+          <div class="pane-label desk">now take it out on him</div>
+          <div class="arena">
+            <div class="stage">
+              <div class="stage-head">
+                <div class="gauge" id="g-dmg">
+                  <div class="head"><span>damage</span><span class="pct">0%</span></div>
+                  <div class="track"><i></i></div>
+                </div>
+                <div class="gauge love" id="g-love">
+                  <div class="head"><span>love</span><span class="pct">0%</span></div>
+                  <div class="track"><i></i></div>
+                </div>
+              </div>
+              <div class="stage-body">
+                <canvas id="doll" width="440" height="440" aria-label="A hand-drawn voodoo doll. Tap or drag to hit him."></canvas>
+                <div class="rec" id="rec"><i></i><span id="rec-t">REC 4.8s</span></div>
+                <button class="reset" id="btn-reset" type="button">start over</button>
+                <div class="hint" id="hint"></div>
+              </div>
+            </div>
+            <div class="tools">
+              <button class="tool on" data-tool="punch" type="button"><svg viewBox="0 0 32 32"><use href="#i-fist"/></svg>Punch</button>
+              <button class="tool" data-tool="pin" type="button"><svg viewBox="0 0 32 32"><use href="#i-pin"/></svg>Pins</button>
+              <button class="tool" data-tool="fire" data-toggle="1" type="button"><svg viewBox="0 0 32 32"><use href="#i-flame"/></svg>Burn</button>
+              <button class="tool" data-tool="love" data-toggle="1" type="button"><svg viewBox="0 0 32 32"><use href="#i-heart"/></svg>Love</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.scroller -->
+
+    <div class="sendbar">
+      <div class="safety"><b>heads up —</b> they never asked for this. Send the thing you'd still be
+        glad you sent tomorrow.</div>
+      <div class="encoding" id="enc-label" hidden>making your gif…</div>
+      <div class="prog" id="prog" hidden><i></i></div>
+      <button class="btn lg block" id="go" type="button">Preview &amp; send</button>
     </div>
-    <div class="tagline">say the thing<br>you'd <span class="hl">never say</span></div>
   </div>
-
-  <div class="grid">
-    <!-- ===== left: who + what ===== -->
-    <div class="col">
-      <div class="pane-label">who's it for?</div>
-      <div class="who">
-        <div class="blank" id="f-name">
-          <label for="i-name">their name</label>
-          <input type="text" id="i-name" placeholder="Priya" autocomplete="off">
-          <div class="err">needs a name</div>
-        </div>
-        <div class="blank" id="f-email">
-          <label for="i-email">their email</label>
-          <input type="email" id="i-email" placeholder="priya@example.com" autocomplete="off" inputmode="email">
-          <div class="err">that's not an email</div>
-        </div>
-      </div>
-
-      <div class="pane-label">what do you want to say?</div>
-      <div class="say">
-        <div class="chips" id="tones">
-          <button class="chip" data-tone="crush">secret crush</button>
-          <button class="chip" data-tone="grudge">grudge</button>
-          <button class="chip" data-tone="apology">apology</button>
-          <button class="chip" data-tone="roast">roast</button>
-          <button class="chip" data-tone="thanks">thank you</button>
-        </div>
-        <div class="sheet" id="f-msg">
-          <textarea id="i-msg" maxlength="600" placeholder="I've been holding this in for two years…"></textarea>
-        </div>
-        <div class="count" id="count">0 / 600</div>
-      </div>
-    </div>
-
-    <!-- ===== right: the doll ===== -->
-    <div class="col">
-      <div class="pane-label">now take it out on him</div>
-      <div class="stage">
-        <div class="frame">
-          <canvas id="doll" width="440" height="440"></canvas>
-          <div class="rec" id="rec"><i></i><span id="rec-t">REC 4.8s</span></div>
-          <button class="reset" onclick="resetDoll()">start over</button>
-          <div class="hint" id="hint">pick something, then hit him</div>
-        </div>
-        <div class="tools">
-          <button class="tool on" data-tool="punch"><svg viewBox="0 0 32 32"><use href="#i-fist"/></svg>Punch</button>
-          <button class="tool" data-tool="pin"><svg viewBox="0 0 32 32"><use href="#i-pin"/></svg>Pins</button>
-          <button class="tool" data-tool="fire" data-toggle="1"><svg viewBox="0 0 32 32"><use href="#i-flame"/></svg>Burn</button>
-          <button class="tool" data-tool="love" data-toggle="1"><svg viewBox="0 0 32 32"><use href="#i-heart"/></svg>Love</button>
-        </div>
-        <div class="gauges">
-          <div class="gauge"><span>dmg</span><div class="t"><i id="dmg-b"></i></div></div>
-          <div class="gauge love"><span>love</span><div class="t"><i id="lov-b"></i></div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="send">
-    <div class="warn"><b>heads up —</b> they never asked for this. Blind anonymous mail is what gets a domain
-      blocklisted; a plain "someone left you a message" link they choose to open is the safer build.</div>
-    <div class="prog" id="prog"><i></i></div>
-    <button class="btn" id="go" onclick="preview()">Preview &amp; send</button>
   </div>
 </div>
 
-<!-- ===== preview overlay ===== -->
+<!-- ===== the payoff: the email preview ===== -->
 <div class="ov" id="ov-preview">
   <div class="card">
     <div class="taped">
@@ -354,7 +524,7 @@ body{margin:0;height:100%;overflow:hidden;background:transparent;
         <div class="hd">
           <div class="av">?</div>
           <div>
-            <div class="from">Someone <span style="color:#98a0b3;font-weight:400">&lt;anon@beatass.com&gt;</span></div>
+            <div class="from">Someone <span>&lt;anon@beatass.com&gt;</span></div>
             <div class="to">to <span id="p-to">—</span></div>
           </div>
         </div>
@@ -368,30 +538,37 @@ body{margin:0;height:100%;overflow:hidden;background:transparent;
           </div>
         </div>
         <div class="ft">You're getting this because someone entered your address on beatass.com.
-          <a href="#" onclick="return false">Report this</a> · <a href="#" onclick="return false">Block my address forever</a></div>
+          <a href="#" id="lnk-report">Report this</a> ·
+          <a href="#" id="lnk-block">Block my address forever</a></div>
       </div>
     </div>
-    <div class="ovrow">
-      <div class="ovnote">the report link isn't decoration — it's what keeps you off the blocklists</div>
-      <div class="ovbtns">
-        <button class="btn ghost sm" id="dl">Save GIF</button>
-        <button class="btn ink sm" onclick="closeOv()">Back</button>
-        <button class="btn sm" onclick="send()">Send it</button>
+    <div>
+      <div class="ovnote">Once it's sent it can't be taken back, and they'll never know it was you.</div>
+      <div class="ovbtns" style="margin-top:12px">
+        <button class="btn ghost sm" id="dl" type="button">Save GIF</button>
+        <button class="btn ink sm" id="btn-back" type="button">Back</button>
+        <button class="btn sm lg-on-phone" id="btn-send" type="button">Send it</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ===== sent overlay ===== -->
+<!-- ===== sent + share ===== -->
 <div class="ov" id="ov-sent">
   <div class="card">
     <div class="sent">
-      <svg viewBox="0 0 150 110" aria-hidden="true"><use href="#i-plane"/></svg>
+      <div id="sent-media">
+        <svg viewBox="0 0 150 110" aria-hidden="true" style="width:118px;height:auto;margin:0 auto;display:block"><use href="#i-plane"/></svg>
+      </div>
       <h2>It's gone.</h2>
       <p>They'll never know it was you.</p>
-      <div class="note"><b>prototype note —</b> nothing was actually sent. No server, no email,
-        nothing left this page.</div>
-      <div style="margin-top:16px"><button class="btn ink" onclick="restart()">Send another</button></div>
+      <div class="row" id="share-row" hidden>
+        <button class="btn" id="btn-share" type="button">Share</button>
+        <button class="btn ghost" id="btn-save" type="button">Save video</button>
+      </div>
+      <div class="note" id="sent-note"><b>prototype note —</b> nothing was actually sent.
+        No server, no email, nothing left this page.</div>
+      <div style="margin-top:16px"><button class="btn ink block" id="btn-restart" type="button">Send another</button></div>
     </div>
   </div>
 </div>
@@ -399,14 +576,390 @@ body{margin:0;height:100%;overflow:hidden;background:transparent;
 <!-- gif.js 0.2.0 by Johan Nordberg (MIT) — embedded so the page works offline -->
 <script>__GIFJS__</script>
 <script type="text/js-worker" id="gif-worker-src">__GIFWORKER__</script>
-<script>
-const $  = s => document.querySelector(s);
-const $$ = s => Array.from(document.querySelectorAll(s));
-let state = {gif:null, gifUrl:'', isStill:false, stats:''};
 
+<script>
 /* =====================================================================
-   1. the form
+   THE DOLL — drawing engine, ported verbatim from the design system.
+
+   Kept from the original: pendulum physics, limb lag, the "boil" (every
+   stroke drawn TWICE with a wobble re-rolled ~9x a second), and pins
+   living in the doll's own coordinate space so they swing with him.
+
+   Added by the redesign, because a passive doll doesn't invite a punch:
+   heavier strokes, a face that blinks and glances and worries, weight on
+   impact, damage that accumulates and STAYS, and a drawn invitation.
    ===================================================================== */
+const DOLL_W = 440, DOLL_H = 440;
+const PIVOT = {x: DOLL_W / 2, y: 30};
+const SCALE = 1.46;
+const WORDS = ['POW','THWACK','BAM','OOF','WHAM','SMACK','KAPOW'];
+
+function newDoll(){
+  return {
+    theta:0, omega:0, damage:0, love:0, burn:0,
+    pins:[], parts:[], pops:[], marks:[],
+    onFire:false, loving:false, shake:0, squash:0, t:0,
+    blink:0, nextBlink:1.6, glance:0, glanceX:0, flinch:0, nextFlinch:4,
+    hits:0, pinCount:0, fireMs:0, loveMs:0, touched:false, lastHit:99
+  };
+}
+
+function summary(D){
+  const b = [];
+  if(D.hits) b.push(D.hits + (D.hits === 1 ? ' hit' : ' hits'));
+  if(D.pinCount) b.push(D.pinCount + (D.pinCount === 1 ? ' pin' : ' pins'));
+  if(D.fireMs > .3) b.push('burned');
+  if(D.loveMs > .3) b.push('loved');
+  return b.join(' · ') || 'untouched';
+}
+
+function toLocal(cv, D, clientX, clientY){
+  const r = cv.getBoundingClientRect();
+  const x = (clientX - r.left) * (DOLL_W / r.width);
+  const y = (clientY - r.top) * (DOLL_H / r.height);
+  const dx = (x - PIVOT.x) / SCALE, dy = (y - PIVOT.y) / SCALE;
+  const c = Math.cos(-D.theta), s = Math.sin(-D.theta);
+  return {x: dx*c - dy*s, y: dx*s + dy*c};
+}
+
+/* A mark is permanent. Damage you can see is damage worth doing. */
+function addMark(D, p){
+  const kinds = ['bruise','plaster','scratch'];
+  const kind = D.marks.length % 3 === 1 ? 'plaster' : kinds[(Math.random()*kinds.length)|0];
+  D.marks.push({
+    x: p.x + (Math.random()-.5)*8, y: p.y + (Math.random()-.5)*8,
+    a: (Math.random()-.5)*1.9, s: .8 + Math.random()*.5,
+    kind, id:(Math.random()*9999)|0
+  });
+  if(D.marks.length > 14) D.marks.shift();
+}
+
+function punch(D, p){
+  D.omega += (p.x > 0 ? -1 : 1) * (0.34 + Math.random()*0.14);
+  D.damage = Math.min(100, D.damage + 5);
+  D.love = Math.max(0, D.love - 4);
+  D.shake = 16; D.squash = 1; D.flinch = 1; D.lastHit = 0; D.hits++;
+  D.pops.push({x:p.x, y:p.y, t:0, txt: WORDS[(Math.random()*WORDS.length)|0], big:true});
+  for(let i=0;i<16;i++)
+    D.parts.push({x:p.x, y:p.y, vx:(Math.random()-.5)*7, vy:(Math.random()-.5)*7-1.4,
+      life:1, kind:'spark', size:2+Math.random()*3});
+  if(D.hits % 2 === 1) addMark(D, p);
+  if(navigator.vibrate) navigator.vibrate(22);
+}
+
+function addPin(D, p){
+  if(D.pins.length > 26) return;
+  D.pins.push({x:p.x, y:p.y, a:Math.random()*Math.PI*2, id:(Math.random()*9999)|0});
+  D.damage = Math.min(100, D.damage + 3);
+  D.love = Math.max(0, D.love - 2);
+  D.omega += (Math.random()-.5)*0.16;
+  D.shake = 7; D.flinch = .7; D.lastHit = 0; D.pinCount++;
+  D.pops.push({x:p.x, y:p.y, t:0, txt:'OW'});
+  for(let i=0;i<5;i++)
+    D.parts.push({x:p.x, y:p.y, vx:(Math.random()-.5)*3, vy:(Math.random()-.5)*3-1,
+      life:1, kind:'spark', size:1.6+Math.random()*2});
+  if(navigator.vibrate) navigator.vibrate(14);
+}
+
+function step(D, dt){
+  D.t += dt; D.lastHit += dt;
+
+  D.omega += (-10.5 * Math.sin(D.theta)) * dt;
+  D.omega *= Math.pow(0.985, dt*60);
+  if(D.onFire) D.omega += (Math.random()-.5) * 0.02 * dt * 60;
+  D.theta += D.omega * dt;
+  D.shake *= 0.86;
+  D.squash = Math.max(0, D.squash - dt*4.5);
+  D.flinch = Math.max(0, D.flinch - dt*2.2);
+
+  /* idle life — he blinks, glances about, and flinches on his own */
+  D.blink -= dt; D.nextBlink -= dt;
+  if(D.nextBlink <= 0){ D.blink = .13; D.nextBlink = 1.6 + Math.random()*3.4; }
+  D.glance -= dt;
+  if(D.glance <= -2.4){ D.glance = .9 + Math.random(); D.glanceX = (Math.random()-.5)*6; }
+  D.nextFlinch -= dt;
+  if(D.nextFlinch <= 0 && !D.touched){ D.flinch = .45; D.nextFlinch = 3.5 + Math.random()*4; }
+
+  if(D.onFire){ D.fireMs += dt; D.burn = Math.min(1, D.burn + dt*0.28);
+                D.damage = Math.min(100, D.damage + dt*9); D.love = Math.max(0, D.love - dt*12); }
+  else D.burn = Math.max(0, D.burn - dt*0.05);
+  if(D.loving){ D.loveMs += dt; D.love = Math.min(100, D.love + dt*26);
+                D.damage = Math.max(0, D.damage - dt*7); }
+
+  if(D.onFire && Math.random() < dt*46)
+    D.parts.push({x:(Math.random()-.5)*46, y:70+Math.random()*110, vx:(Math.random()-.5)*1.2,
+      vy:-1.4-Math.random()*1.6, life:1, kind:'fire', size:7+Math.random()*9});
+  if(D.loving && Math.random() < dt*20)
+    D.parts.push({x:(Math.random()-.5)*74, y:60+Math.random()*70, vx:(Math.random()-.5)*.8,
+      vy:-1.1-Math.random()*.9, life:1, kind:'heart', size:11+Math.random()*9});
+
+  for(const p of D.parts){
+    p.x += p.vx*dt*60; p.y += p.vy*dt*60;
+    if(p.kind === 'spark'){ p.vy += .3; p.life -= dt*2; }
+    else if(p.kind === 'fire'){ p.vy -= .02; p.life -= dt*1.5; p.size *= .985; }
+    else { p.life -= dt*.9; p.vx += Math.sin(p.y*.05)*.02; }
+  }
+  D.parts = D.parts.filter(p => p.life > 0);
+  for(const p of D.pops) p.t += dt*1.75;
+  D.pops = D.pops.filter(p => p.t < 1);
+}
+
+function blend(a,b,t){
+  const p = c => { c = c.replace('#',''); if(c.length===3) c = c.split('').map(x=>x+x).join('');
+    return [parseInt(c.slice(0,2),16),parseInt(c.slice(2,4),16),parseInt(c.slice(4,6),16)]; };
+  try{ const A=p(a), B=p(b); return 'rgb('+A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')+')'; }
+  catch(e){ return a; }
+}
+
+function drawDoll(ctx, D, boil, css){
+  const jr = i => { const x = Math.sin(i*127.1 + boil*311.7) * 43758.5453; return x - Math.floor(x); };
+  const sLine = (x1,y1,x2,y2,id,amp) => {
+    amp = amp === undefined ? 2.2 : amp;
+    for(let k=0;k<2;k++){
+      const s = id*13 + k*97;
+      const ax = x1 + (jr(s)-.5)*amp,   ay = y1 + (jr(s+1)-.5)*amp;
+      const bx = x2 + (jr(s+2)-.5)*amp, by = y2 + (jr(s+3)-.5)*amp;
+      const mx = (ax+bx)/2 + (jr(s+4)-.5)*amp*2.2, my = (ay+by)/2 + (jr(s+5)-.5)*amp*2.2;
+      ctx.beginPath(); ctx.moveTo(ax,ay); ctx.quadraticCurveTo(mx,my,bx,by); ctx.stroke();
+    }
+  };
+  const sCircle = (cx,cy,r,id,amp) => {
+    amp = amp === undefined ? 2.4 : amp;
+    for(let k=0;k<2;k++){
+      const s = id*17 + k*53, N = 26, start = jr(s)*0.7;
+      ctx.beginPath();
+      for(let i=0;i<=N;i++){
+        const a = start + (i/N)*Math.PI*2*1.06;   /* overshoot = pen overlap */
+        const rr = r + (jr(s+i*3)-.5)*amp;
+        const x = cx + Math.cos(a)*rr, y = cy + Math.sin(a)*rr;
+        i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+      }
+      ctx.stroke();
+    }
+  };
+  const sPath = (pts,id,amp) => {
+    amp = amp === undefined ? 2 : amp;
+    for(let k=0;k<2;k++){
+      const s = id*23 + k*61;
+      ctx.beginPath();
+      pts.forEach((p,i) => {
+        const x = p[0] + (jr(s+i*2)-.5)*amp, y = p[1] + (jr(s+i*2+1)-.5)*amp;
+        i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+      });
+      ctx.stroke();
+    }
+  };
+
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle = css.paper; ctx.fillRect(0,0,DOLL_W,DOLL_H);
+
+  ctx.strokeStyle = css.rule; ctx.globalAlpha = .5; ctx.lineWidth = 1;
+  for(let x=0;x<DOLL_W;x+=22){ ctx.beginPath(); ctx.moveTo(x+.5,0); ctx.lineTo(x+.5,DOLL_H); ctx.stroke(); }
+  for(let y=0;y<DOLL_H;y+=22){ ctx.beginPath(); ctx.moveTo(0,y+.5); ctx.lineTo(DOLL_W,y+.5); ctx.stroke(); }
+  ctx.globalAlpha = 1;
+
+  if(D.burn > .02){
+    const g = ctx.createRadialGradient(DOLL_W/2,DOLL_H/2,10,DOLL_W/2,DOLL_H/2,DOLL_W*.6);
+    g.addColorStop(0,'rgba(255,150,40,'+(.24*D.burn)+')'); g.addColorStop(1,'rgba(255,150,40,0)');
+    ctx.fillStyle = g; ctx.fillRect(0,0,DOLL_W,DOLL_H);
+  }
+  if(D.love > 5){
+    const g = ctx.createRadialGradient(DOLL_W/2,DOLL_H*.45,10,DOLL_W/2,DOLL_H*.45,DOLL_W*.55);
+    g.addColorStop(0,'rgba(255,120,175,'+(.2*D.love/100)+')'); g.addColorStop(1,'rgba(255,120,175,0)');
+    ctx.fillStyle = g; ctx.fillRect(0,0,DOLL_W,DOLL_H);
+  }
+
+  const sx = (Math.random()-.5)*D.shake, sy = (Math.random()-.5)*D.shake;
+
+  /* the string — attached to the BACK OF THE HEAD. A puppet string, not a noose. */
+  ctx.save(); ctx.translate(sx,sy);
+  ctx.strokeStyle = css.pencil; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+  const hangX = PIVOT.x + Math.sin(D.theta)*30*SCALE;
+  const hangY = PIVOT.y + Math.cos(D.theta)*30*SCALE;
+  sLine(PIVOT.x, 0, hangX, hangY, 900, 1.5);
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(PIVOT.x + sx, PIVOT.y + sy);
+  ctx.rotate(D.theta);
+  const sq = 1 + D.squash*.1;
+  ctx.scale(SCALE*(1/sq), SCALE*sq);
+  ctx.strokeStyle = D.burn > .02 ? blend(css.ink, '#2b2118', D.burn*.9) : css.ink;
+  ctx.lineWidth = 5.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+  const lag = Math.max(-.55, Math.min(.55, -D.omega*.55));
+  const breathe = Math.sin(D.t*1.8)*.035;
+  const idle = Math.sin(D.t*2.4)*.05 + (D.onFire ? Math.sin(D.t*22)*.16 : 0) + breathe;
+  const HEAD = {x:0, y:52, r:30}, NECK = {y:82}, HIP = {y:166};
+
+  /* legs */
+  [.55 + lag + idle, -.55 + lag - idle].forEach((a,i) => {
+    const kx = Math.sin(a)*32, ky = HIP.y + Math.cos(a)*32;
+    const fx = kx + Math.sin(a*1.35)*34, fy = ky + Math.cos(a*1.35)*34;
+    sPath([[0,HIP.y],[kx,ky],[fx,fy]], 10+i, 1.7);
+  });
+  /* spine */
+  sLine(0, NECK.y, 0, HIP.y, 20, 1.8);
+  /* arms — up when burning or loving, braced when flinching */
+  const raise = (D.onFire ? -1.5 : 0) + (D.loving ? -.95 : 0) + (D.flinch ? -D.flinch*.75 : 0);
+  [1.0 + lag + idle + raise, -1.0 + lag - idle - raise].forEach((a,i) => {
+    const ex = Math.sin(a)*30, ey = 98 + Math.cos(a)*30;
+    const hx = ex + Math.sin(a*1.5)*29, hy = ey + Math.cos(a*1.5)*29;
+    sPath([[0,98],[ex,ey],[hx,hy]], 30+i, 1.7);
+  });
+  sCircle(HEAD.x, HEAD.y, HEAD.r, 40, 2.1);
+
+  /* body hatching */
+  ctx.save(); ctx.lineWidth = 2.2; ctx.globalAlpha = .4;
+  for(let y=98;y<160;y+=14) sLine(-5, y, 5, y+2, 50+y, 1.2);
+  ctx.restore();
+
+  /* ---- face ---- */
+  const hurt = D.damage/100, loved = D.love/100;
+  const blinking = D.blink > 0;
+  const gx = D.glance > 0 ? D.glanceX : 0;
+  ctx.save(); ctx.translate(HEAD.x, HEAD.y); ctx.lineWidth = 4;
+
+  if(hurt > .55 && !D.loving){
+    [-11,11].forEach((x,i) => { sLine(x-6,-11,x+6,1,60+i,1.5); sLine(x+6,-11,x-6,1,70+i,1.5); });
+  } else if(loved > .35){
+    [-11,11].forEach(x => {
+      ctx.save(); ctx.translate(x,-4); ctx.scale(.85,.85);
+      ctx.strokeStyle = css.heart; ctx.beginPath(); ctx.moveTo(0,5);
+      ctx.bezierCurveTo(-10,-4,-6,-13,0,-7); ctx.bezierCurveTo(6,-13,10,-4,0,5);
+      ctx.stroke(); ctx.restore();
+    });
+  } else if(blinking){
+    [-11,11].forEach((x,i) => sLine(x-5,-5,x+5,-5,84+i,1));
+  } else {
+    /* wide, alive, and looking at you */
+    [-11,11].forEach((x,i) => {
+      ctx.lineWidth = 3.2;
+      sCircle(x,-5,6.2,80+i,1.1);
+      ctx.save(); ctx.fillStyle = ctx.strokeStyle;
+      ctx.beginPath(); ctx.arc(x+gx, -4 + (D.flinch ? 1.5 : 0), 2.7, 0, 7); ctx.fill();
+      ctx.restore();
+    });
+    ctx.lineWidth = 4;
+  }
+
+  /* brows do most of the acting */
+  if(!loved || loved <= .35){
+    ctx.save(); ctx.lineWidth = 3;
+    const worry = .5 + Math.min(.5, hurt*.7 + D.flinch*.35);
+    sLine(-19, -13 + worry*4, -7, -19 - worry*3, 86, 1.2);
+    sLine(7, -19 - worry*3, 19, -13 + worry*4, 87, 1.2);
+    ctx.restore();
+  }
+
+  if(loved > .35)      sPath([[-11,4],[-5,11],[0,12],[5,11],[11,4]], 90, 1.4);
+  else if(D.onFire)    sCircle(0,11,8.5,91,1.6);
+  else if(hurt > .3)   sPath([[-11,15],[-5,8],[0,7],[5,8],[11,15]], 92, 1.4);
+  else if(D.flinch>.2) sCircle(0,11,6,94,1.4);
+  else                 sPath([[-9,8],[-3,12],[3,12],[9,8]], 93, 1.3);  /* a nervous grin at rest */
+  ctx.restore();
+
+  /* ---- accumulated damage. It stays. ---- */
+  for(const m of D.marks){
+    ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(m.a); ctx.scale(m.s, m.s);
+    if(m.kind === 'plaster'){
+      ctx.strokeStyle = css.red; ctx.lineWidth = 2.6;
+      sPath([[-11,-5],[11,-5],[11,5],[-11,5],[-11,-5]], m.id, 1.2);
+      sLine(-3,-5,-3,5,m.id+1,.9); sLine(3,-5,3,5,m.id+2,.9);
+    } else if(m.kind === 'scratch'){
+      ctx.strokeStyle = css.red; ctx.lineWidth = 2.4;
+      sLine(-9,-6,9,6,m.id,1.4); sLine(-6,5,6,-5,m.id+1,1.4);
+    } else {
+      ctx.strokeStyle = css.red; ctx.lineWidth = 2; ctx.globalAlpha = .7;
+      for(let i=-6;i<=6;i+=4) sLine(i,-7,i+3,7,m.id+i,1.1);
+    }
+    ctx.restore();
+  }
+
+  /* pins */
+  for(const p of D.pins){
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a);
+    ctx.strokeStyle = css.pencil; ctx.lineWidth = 3.2; sLine(0,0,0,-30,p.id,1.4);
+    ctx.strokeStyle = css.red;    ctx.lineWidth = 3;   sCircle(0,-34,6,p.id+1,1.1);
+    ctx.restore();
+  }
+
+  /* particles */
+  for(const p of D.parts){
+    if(p.kind === 'fire'){
+      const g = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.size);
+      g.addColorStop(0,'rgba(255,225,120,'+(.8*p.life)+')');
+      g.addColorStop(.45,'rgba(240,120,30,'+(.55*p.life)+')');
+      g.addColorStop(1,'rgba(220,60,0,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,7); ctx.fill();
+    } else if(p.kind === 'heart'){
+      ctx.save(); ctx.translate(p.x,p.y); ctx.scale(p.size/18,p.size/18);
+      ctx.globalAlpha = Math.max(0,p.life);
+      ctx.strokeStyle = css.heart; ctx.lineWidth = 3.4;
+      ctx.beginPath(); ctx.moveTo(0,5);
+      ctx.bezierCurveTo(-10,-4,-6,-13,0,-7); ctx.bezierCurveTo(6,-13,10,-4,0,5);
+      ctx.stroke(); ctx.restore();
+    } else {
+      ctx.globalAlpha = Math.max(0,p.life); ctx.strokeStyle = css.red; ctx.lineWidth = 2.6;
+      sLine(p.x, p.y, p.x+p.size*1.7, p.y+p.size*1.7, (p.x*7+p.y*3)|0, 1);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  /* impact words */
+  for(const p of D.pops){
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, 1-p.t);
+    ctx.translate(p.x, p.y - p.t*40);
+    ctx.rotate((jr(p.txt.length)-.5)*.34);
+    const s = (p.big ? 1.15 : .9) * (1 + p.t*.8);
+    ctx.scale(s,s);
+    ctx.font = '30px Marker, cursive'; ctx.textAlign = 'center';
+    ctx.lineWidth = 5; ctx.strokeStyle = css.paper;
+    ctx.strokeText(p.txt, 0, 0);
+    ctx.fillStyle = css.red; ctx.fillText(p.txt, 0, 0);
+    ctx.restore();
+  }
+  ctx.restore();
+
+  /* the invitation — drawn, not typed, and gone the moment he's touched */
+  if(!D.touched){
+    const pulse = .55 + Math.sin(D.t*2.6)*.3;
+    ctx.save();
+    ctx.globalAlpha = pulse;
+    ctx.strokeStyle = css.red; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+    const cx = DOLL_W/2 + Math.sin(D.theta)*52*SCALE;
+    const cy = PIVOT.y + Math.cos(D.theta)*52*SCALE;
+    const r = 42*SCALE*.72 + Math.sin(D.t*2.6)*3;
+    ctx.setLineDash([9,8]);
+    sCircle(cx, cy, r, 700, 2.6);
+    ctx.setLineDash([]);
+    ctx.globalAlpha = Math.min(1, pulse + .3);
+    ctx.font = '26px Scrawl, cursive'; ctx.textAlign = 'center';
+    ctx.fillStyle = css.red;
+    ctx.fillText('hit him', cx, cy - r - 14);
+    ctx.restore();
+  }
+
+  /* the strip burned into every recorded frame */
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.strokeStyle = css.pencil; ctx.lineWidth = 1.6;
+  sLine(16, DOLL_H-46, DOLL_W-16, DOLL_H-46, 800, 1.8);
+  ctx.textBaseline = 'middle';
+  ctx.font = '22px Marker, cursive'; ctx.fillStyle = css.ink; ctx.textAlign = 'left';
+  ctx.fillText('beatass.com', 18, DOLL_H-24);
+  ctx.font = '24px Scrawl, cursive'; ctx.fillStyle = css.red; ctx.textAlign = 'right';
+  ctx.fillText(summary(D), DOLL_W-18, DOLL_H-24);
+}
+</script>
+
+<script>
+/* =====================================================================
+   THE APP
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
 const STARTERS = {
   crush:   "I've had a thing for you since the day we met and I've never had the guts to say it. ",
   grudge:  "You probably don't even remember doing it. I do. Every single day. ",
@@ -414,6 +967,22 @@ const STARTERS = {
   roast:   "Someone had to tell you, so it may as well be a stranger with a voodoo doll. ",
   thanks:  "You'll never know how much that one thing you did meant to me. "
 };
+
+const cv = $('#doll'), ctx = cv.getContext('2d');
+let D = newDoll();
+let tool = 'punch';
+let boil = 0;
+setInterval(() => boil++, 110);
+
+const CSS = () => {
+  const cs = getComputedStyle(document.documentElement);
+  const V = v => cs.getPropertyValue(v).trim();
+  return {paper:V('--paper-2'), rule:V('--rule'), ink:V('--ink'),
+          red:V('--red'), pencil:V('--pencil'), heart:V('--heart')};
+};
+let css = CSS();
+
+/* ---------- 1. the form ---------- */
 $$('#tones .chip').forEach(c => c.onclick = () => {
   const on = c.classList.contains('on');
   $$('#tones .chip').forEach(o => o.classList.remove('on'));
@@ -422,7 +991,11 @@ $$('#tones .chip').forEach(c => c.onclick = () => {
   const t = $('#i-msg');
   if(!t.value.trim()){ t.value = STARTERS[c.dataset.tone]; t.focus(); bump(); }
 });
-function bump(){ $('#count').textContent = $('#i-msg').value.length + ' / 600'; }
+function bump(){
+  const n = $('#i-msg').value.length;
+  $('#count').textContent = n + ' / 600';
+  $('#count').classList.toggle('near', n > 540);
+}
 $('#i-msg').addEventListener('input', bump);
 /* stop shouting the moment they start fixing it */
 [['#i-name','#f-name'],['#i-email','#f-email'],['#i-msg','#f-msg']].forEach(([i,f]) =>
@@ -443,79 +1016,7 @@ function validate(){
   return {name, mail, msg};
 }
 
-/* =====================================================================
-   2. THE DOLL
-   ---------------------------------------------------------------------
-   (a) He hangs from a string on real pendulum physics — punch him from
-       the right and he swings left, limbs lagging like they weigh something.
-   (b) Every stroke is drawn twice with a wobble, re-rolled ~9 times a
-       second. That's the "boil" of hand-drawn animation — it's what stops
-       him looking like clip art.
-   ===================================================================== */
-const cv = $('#doll'), ctx = cv.getContext('2d');
-const W = cv.width, H = cv.height;
-const PIVOT = {x: W/2, y: 34};
-const SCALE = 1.4;
-
-let boil = 0;
-setInterval(() => boil++, 110);
-function jr(i){ const x = Math.sin(i*127.1 + boil*311.7) * 43758.5453; return x - Math.floor(x); }
-
-function sLine(x1,y1,x2,y2,id,amp){
-  amp = amp === undefined ? 2.2 : amp;
-  for(let k=0;k<2;k++){
-    const s = id*13 + k*97;
-    const ax = x1 + (jr(s)-.5)*amp,   ay = y1 + (jr(s+1)-.5)*amp;
-    const bx = x2 + (jr(s+2)-.5)*amp, by = y2 + (jr(s+3)-.5)*amp;
-    const mx = (ax+bx)/2 + (jr(s+4)-.5)*amp*2.2, my = (ay+by)/2 + (jr(s+5)-.5)*amp*2.2;
-    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.quadraticCurveTo(mx,my,bx,by); ctx.stroke();
-  }
-}
-function sCircle(cx,cy,r,id,amp){
-  amp = amp === undefined ? 2.4 : amp;
-  for(let k=0;k<2;k++){
-    const s = id*17 + k*53, N = 26, start = jr(s)*0.7;
-    ctx.beginPath();
-    for(let i=0;i<=N;i++){
-      const a  = start + (i/N)*Math.PI*2*1.06;    /* overshoot = pen overlap */
-      const rr = r + (jr(s+i*3)-.5)*amp;
-      const x = cx + Math.cos(a)*rr, y = cy + Math.sin(a)*rr;
-      i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
-    }
-    ctx.stroke();
-  }
-}
-function sPath(pts,id,amp){
-  amp = amp === undefined ? 2 : amp;
-  for(let k=0;k<2;k++){
-    const s = id*23 + k*61;
-    ctx.beginPath();
-    pts.forEach((p,i) => {
-      const x = p[0] + (jr(s+i*2)-.5)*amp, y = p[1] + (jr(s+i*2+1)-.5)*amp;
-      i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
-    });
-    ctx.stroke();
-  }
-}
-
-let D;
-function resetDoll(){
-  D = {theta:0, omega:0, damage:0, love:0, burn:0, pins:[], parts:[], pops:[],
-       onFire:false, loving:false, shake:0, t:0,
-       hits:0, pinCount:0, fireMs:0, loveMs:0, touched:false};
-  $$('.tool[data-toggle]').forEach(b => b.classList.remove('on'));
-  stopRecording(true);
-  state.gif = null; state.gifUrl = ''; state.isStill = false;
-  $('#hint').textContent = 'pick something, then hit him';
-  $('#hint').style.opacity = 1;
-  updateMeters();
-}
-function updateMeters(){
-  $('#dmg-b').style.width = D.damage + '%';
-  $('#lov-b').style.width = D.love + '%';
-}
-
-let tool = 'punch';
+/* ---------- 2. tools + hitting ---------- */
 const toolBtn = n => document.querySelector('.tool[data-tool="'+n+'"]');
 $$('.tool').forEach(b => b.onclick = () => {
   if(b.dataset.toggle){
@@ -531,304 +1032,228 @@ $$('.tool').forEach(b => b.onclick = () => {
   $$('.tool:not([data-toggle])').forEach(o => o.classList.toggle('on', o === b));
 });
 
-function toLocal(e){
-  const r = cv.getBoundingClientRect();
-  const x = (e.clientX - r.left) * (W / r.width);
-  const y = (e.clientY - r.top)  * (H / r.height);
-  const dx = (x - PIVOT.x) / SCALE, dy = (y - PIVOT.y) / SCALE;
-  const c = Math.cos(-D.theta), s = Math.sin(-D.theta);
-  return {x: dx*c - dy*s, y: dx*s + dy*c};
+function strike(e){
+  const p = toLocal(cv, D, e.clientX, e.clientY);
+  if(tool === 'punch') punch(D, p); else addPin(D, p);
 }
+let hold = null;
 cv.addEventListener('pointerdown', e => {
   e.preventDefault();
   firstTouch();
-  const p = toLocal(e);
-  if(tool === 'punch') punch(p); else addPin(p);
+  strike(e);
   try{ cv.setPointerCapture(e.pointerId); }catch(err){}
+  hold = {id:e.pointerId, last:0};
 });
-function punch(p){
-  D.omega += (p.x > 0 ? -1 : 1) * (0.30 + Math.random()*0.12);
-  D.damage = Math.min(100, D.damage + 5);
-  D.love   = Math.max(0, D.love - 4);
-  D.shake = 10; D.hits++;
-  const words = ['POW','THWACK','BAM','OOF','WHAM','SMACK'];
-  D.pops.push({x:p.x, y:p.y, t:0, txt: words[(Math.random()*words.length)|0]});
-  for(let i=0;i<9;i++) D.parts.push({x:p.x, y:p.y, vx:(Math.random()-.5)*5,
-    vy:(Math.random()-.5)*5-1, life:1, kind:'spark', size:2+Math.random()*2});
+/* dragging across him keeps hitting — a thumb sweeps, it doesn't tap precisely */
+cv.addEventListener('pointermove', e => {
+  if(!hold || hold.id !== e.pointerId) return;
+  const now = performance.now();
+  if(now - hold.last < 140) return;
+  hold.last = now;
+  strike(e);
+});
+const letGo = () => { hold = null; };
+cv.addEventListener('pointerup', letGo);
+cv.addEventListener('pointercancel', letGo);
+
+$('#btn-reset').onclick = resetDoll;
+function resetDoll(){
+  D = newDoll();
+  $$('.tool[data-toggle]').forEach(b => b.classList.remove('on'));
+  stopRecording(true);
+  state.gifUrl = ''; state.gifBlob = null; state.isStill = false;
+  state.videoUrl = ''; state.videoBlob = null; state.videoExt = '';
+  showHint('');
+  paintMeters();
 }
-function addPin(p){
-  if(D.pins.length > 26) return;
-  D.pins.push({x:p.x, y:p.y, a:Math.random()*Math.PI*2, id:(Math.random()*9999)|0});
-  D.damage = Math.min(100, D.damage + 3);
-  D.love   = Math.max(0, D.love - 2);
-  D.omega += (Math.random()-.5)*0.12;
-  D.pinCount++;
-  D.pops.push({x:p.x, y:p.y, t:0, txt:'OW'});
+function showHint(txt){
+  $('#hint').textContent = txt;
+  $('#hint').classList.toggle('on', !!txt);
 }
-function firstTouch(){
-  if(D.touched) return;
-  D.touched = true;
-  $('#hint').style.opacity = 0;
-  startRecording();
+function paintMeters(){
+  const set = (sel, v) => {
+    const g = $(sel);
+    g.querySelector('.track i').style.width = v + '%';
+    g.querySelector('.pct').textContent = Math.round(v) + '%';
+    g.classList.toggle('live', v > 4);
+  };
+  set('#g-dmg', D.damage);
+  set('#g-love', D.love);
 }
 
 let last = performance.now();
 function loop(now){
-  const dt = Math.min(0.05, (now - last)/1000); last = now; D.t += dt;
-
-  D.omega += (-10.5 * Math.sin(D.theta)) * dt;
-  D.omega *= Math.pow(0.985, dt*60);
-  if(D.onFire) D.omega += (Math.random()-.5) * 0.018 * dt * 60;
-  D.theta += D.omega * dt;
-  D.shake *= 0.86;
-
-  if(D.onFire){ D.fireMs += dt; D.burn = Math.min(1, D.burn + dt*0.28);
-                D.damage = Math.min(100, D.damage + dt*9); D.love = Math.max(0, D.love - dt*12); }
-  else D.burn = Math.max(0, D.burn - dt*0.05);
-  if(D.loving){ D.loveMs += dt; D.love = Math.min(100, D.love + dt*26);
-                D.damage = Math.max(0, D.damage - dt*7); }
-
-  if(D.onFire && Math.random() < dt*42)
-    D.parts.push({x:(Math.random()-.5)*46, y:70+Math.random()*110, vx:(Math.random()-.5)*1.2,
-      vy:-1.4-Math.random()*1.6, life:1, kind:'fire', size:7+Math.random()*9});
-  if(D.loving && Math.random() < dt*18)
-    D.parts.push({x:(Math.random()-.5)*74, y:70+Math.random()*70, vx:(Math.random()-.5)*.8,
-      vy:-1.1-Math.random()*.9, life:1, kind:'heart', size:11+Math.random()*9});
-
-  for(const p of D.parts){
-    p.x += p.vx*dt*60; p.y += p.vy*dt*60;
-    if(p.kind === 'spark'){ p.vy += .25; p.life -= dt*2.2; }
-    else if(p.kind === 'fire'){ p.vy -= .02; p.life -= dt*1.5; p.size *= .985; }
-    else { p.life -= dt*.9; p.vx += Math.sin(p.y*.05)*.02; }
-  }
-  D.parts = D.parts.filter(p => p.life > 0);
-  for(const p of D.pops) p.t += dt*1.9;
-  D.pops = D.pops.filter(p => p.t < 1);
-
-  updateMeters(); draw();
+  const dt = Math.min(0.05, (now - last)/1000); last = now;
+  step(D, dt);
+  drawDoll(ctx, D, boil, css);
+  paintMeters();
   requestAnimationFrame(loop);
 }
 
-const CSSVAR = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-
-function draw(){
-  const paper = CSSVAR('--paper-2'), rule = CSSVAR('--rule');
-  const inkC = CSSVAR('--ink'), redC = CSSVAR('--red'), pencilC = CSSVAR('--pencil');
-
-  ctx.setTransform(1,0,0,1,0,0);
-  ctx.fillStyle = paper; ctx.fillRect(0,0,W,H);
-
-  ctx.strokeStyle = rule; ctx.globalAlpha = .55; ctx.lineWidth = 1;
-  for(let x=0;x<W;x+=22){ ctx.beginPath(); ctx.moveTo(x+.5,0); ctx.lineTo(x+.5,H); ctx.stroke(); }
-  for(let y=0;y<H;y+=22){ ctx.beginPath(); ctx.moveTo(0,y+.5); ctx.lineTo(W,y+.5); ctx.stroke(); }
-  ctx.globalAlpha = 1;
-
-  if(D.burn > .02){
-    const g = ctx.createRadialGradient(W/2,H/2,10,W/2,H/2,W*.6);
-    g.addColorStop(0,'rgba(255,150,40,'+(.22*D.burn)+')'); g.addColorStop(1,'rgba(255,150,40,0)');
-    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-  }
-  if(D.love > 5){
-    const g = ctx.createRadialGradient(W/2,H*.45,10,W/2,H*.45,W*.55);
-    g.addColorStop(0,'rgba(255,120,175,'+(.18*D.love/100)+')'); g.addColorStop(1,'rgba(255,120,175,0)');
-    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-  }
-
-  const sx = (Math.random()-.5)*D.shake, sy = (Math.random()-.5)*D.shake;
-
-  ctx.save(); ctx.translate(sx,sy);
-  ctx.strokeStyle = pencilC; ctx.lineWidth = 2; ctx.lineCap = 'round';
-  sLine(PIVOT.x, 0, PIVOT.x, PIVOT.y, 900, 1.6);
-  ctx.restore();
-
-  ctx.save();
-  ctx.translate(PIVOT.x + sx, PIVOT.y + sy);
-  ctx.rotate(D.theta); ctx.scale(SCALE, SCALE);
-  ctx.strokeStyle = D.burn > .02 ? blend(inkC, '#2b2118', D.burn*.9) : inkC;
-  ctx.lineWidth = 3.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-
-  const lag  = Math.max(-.55, Math.min(.55, -D.omega*.55));
-  const idle = Math.sin(D.t*2.4)*.05 + (D.onFire ? Math.sin(D.t*22)*.16 : 0);
-  const HEAD = {x:0, y:56, r:30}, NECK = {y:86}, HIP = {y:176};
-
-  [ .55 + lag + idle, -.55 + lag - idle ].forEach((a,i) => {
-    const kx = Math.sin(a)*34, ky = HIP.y + Math.cos(a)*34;
-    const fx = kx + Math.sin(a*1.35)*36, fy = ky + Math.cos(a*1.35)*36;
-    sPath([[0,HIP.y],[kx,ky],[fx,fy]], 10+i);
-  });
-  sLine(0, NECK.y, 0, HIP.y, 20);
-  const raise = (D.onFire ? -1.5 : 0) + (D.loving ? -.9 : 0);
-  [ 1.0 + lag + idle + raise, -1.0 + lag - idle - raise ].forEach((a,i) => {
-    const ex = Math.sin(a)*30, ey = 100 + Math.cos(a)*30;
-    const hx = ex + Math.sin(a*1.5)*30, hy = ey + Math.cos(a*1.5)*30;
-    sPath([[0,100],[ex,ey],[hx,hy]], 30+i);
-  });
-  sCircle(HEAD.x, HEAD.y, HEAD.r, 40);
-
-  ctx.save(); ctx.lineWidth = 1.8; ctx.globalAlpha = .55;
-  for(let y=100;y<170;y+=13) sLine(-5, y, 5, y+2, 50+y, 1.2);
-  ctx.restore();
-
-  drawFace(HEAD);
-
-  for(const p of D.pins){
-    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a);
-    ctx.strokeStyle = pencilC; ctx.lineWidth = 2.8; sLine(0,0,0,-30,p.id,1.4);
-    ctx.strokeStyle = redC;    ctx.lineWidth = 2.6; sCircle(0,-34,5.6,p.id+1,1.1);
-    ctx.restore();
-  }
-
-  for(const p of D.parts){
-    if(p.kind === 'fire'){
-      const g = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.size);
-      g.addColorStop(0,'rgba(255,225,120,'+(.8*p.life)+')');
-      g.addColorStop(.45,'rgba(240,120,30,'+(.55*p.life)+')');
-      g.addColorStop(1,'rgba(220,60,0,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,7); ctx.fill();
-    } else if(p.kind === 'heart'){
-      ctx.save(); ctx.translate(p.x,p.y); ctx.scale(p.size/18,p.size/18);
-      ctx.globalAlpha = Math.max(0,p.life);
-      ctx.strokeStyle = '#e0507f'; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(0,5);
-      ctx.bezierCurveTo(-10,-4,-6,-13,0,-7); ctx.bezierCurveTo(6,-13,10,-4,0,5);
-      ctx.stroke(); ctx.restore();
-    } else {
-      ctx.globalAlpha = Math.max(0,p.life); ctx.strokeStyle = redC; ctx.lineWidth = 2;
-      sLine(p.x, p.y, p.x+p.size*1.6, p.y+p.size*1.6, (p.x*7+p.y*3)|0, 1);
-      ctx.globalAlpha = 1;
-    }
-  }
-
-  for(const p of D.pops){
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, 1-p.t);
-    ctx.translate(p.x, p.y - p.t*34);
-    ctx.rotate((jr(p.txt.length)-.5)*.3);
-    ctx.scale(1+p.t*.7, 1+p.t*.7);
-    ctx.font = '26px Marker, cursive'; ctx.textAlign = 'center';
-    ctx.fillStyle = redC; ctx.fillText(p.txt, 0, 0);
-    ctx.restore();
-  }
-  ctx.restore();
-
-  drawHud(inkC, redC);
-}
-
-function drawFace(H_){
-  const hurt = D.damage/100, loved = D.love/100;
-  ctx.save(); ctx.translate(H_.x, H_.y); ctx.lineWidth = 3;
-  if(hurt > .55 && !D.loving){
-    [-11,11].forEach((x,i) => { sLine(x-5,-10,x+5,1,60+i); sLine(x+5,-10,x-5,1,70+i); });
-  } else if(loved > .35){
-    [-11,11].forEach(x => {
-      ctx.save(); ctx.translate(x,-4); ctx.scale(.8,.8);
-      ctx.strokeStyle = '#e0507f'; ctx.beginPath(); ctx.moveTo(0,5);
-      ctx.bezierCurveTo(-10,-4,-6,-13,0,-7); ctx.bezierCurveTo(6,-13,10,-4,0,5);
-      ctx.stroke(); ctx.restore();
-    });
-  } else {
-    [-11,11].forEach((x,i) => sCircle(x,-5,2.6,80+i,.8));
-  }
-  if(loved > .35)     sPath([[-10,4],[-5,10],[0,11],[5,10],[10,4]], 90);
-  else if(D.onFire)   sCircle(0,10,8,91,1.6);
-  else if(hurt > .3)  sPath([[-10,14],[-5,8],[0,7],[5,8],[10,14]], 92);
-  else                sLine(-8,9,8,9,93);
-  ctx.restore();
-}
-
-/* the strip burned into every recorded frame */
-function drawHud(inkC, redC){
-  ctx.setTransform(1,0,0,1,0,0);
-  ctx.strokeStyle = CSSVAR('--pencil'); ctx.lineWidth = 1.6;
-  sLine(16, H-46, W-16, H-46, 800, 1.8);
-  ctx.textBaseline = 'middle';
-  ctx.font = '22px Marker, cursive'; ctx.fillStyle = inkC; ctx.textAlign = 'left';
-  ctx.fillText('beatass.com', 18, H-24);
-  ctx.font = '24px Scrawl, cursive'; ctx.fillStyle = redC; ctx.textAlign = 'right';
-  ctx.fillText(summary(), W-18, H-24);
-}
-function summary(){
-  const b = [];
-  if(D.hits) b.push(D.hits + ' hits');
-  if(D.pinCount) b.push(D.pinCount + ' pins');
-  if(D.fireMs > .3) b.push('burned');
-  if(D.loveMs > .3) b.push('loved');
-  return b.join(' · ') || 'untouched';
-}
-function blend(a,b,t){
-  const p = c => { c = c.replace('#',''); if(c.length===3) c = c.split('').map(x=>x+x).join('');
-    return [parseInt(c.slice(0,2),16),parseInt(c.slice(2,4),16),parseInt(c.slice(4,6),16)]; };
-  try{ const A=p(a), B=p(b); return 'rgb('+A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')+')'; }
-  catch(e){ return a; }
-}
-
 /* =====================================================================
-   3. GIF recording — gif.js and its worker are embedded above
+   3. RECORDING — two outputs, because they go to two different places.
+
+   GIF  → the email. Gmail plays animated GIFs; it will not play video.
+   MP4  → Instagram and Snapchat. Both REJECT animated GIFs: hand them a
+          .gif and it posts as a frozen still, which kills the whole point.
+
+   The video is composed live into a 1080x1920 Story frame while you play,
+   so it is finished the moment you stop. No waiting screen.
    ===================================================================== */
-const FPS_MS = 150, MAX_FRAMES = 32;   /* ~4.8 seconds */
-const GIF_W = 260, GIF_H = 260;        /* small on purpose — it has to fit in an email */
+const FPS_MS = 150, MAX_FRAMES = 32;      /* ~4.8 seconds */
+const GIF_W = 260, GIF_H = 260;           /* small on purpose — it has to fit in an email */
+const VID_W = 1080, VID_H = 1920;         /* 9:16 — the Story shape */
+
+const state = {gifBlob:null, gifUrl:'', isStill:false, stats:'',
+               videoBlob:null, videoUrl:'', videoExt:''};
+window.__state = state;   /* the browser test reads the exported bytes back out of here */
+
 const rc = document.createElement('canvas');
 rc.width = GIF_W; rc.height = GIF_H;
 const rctx = rc.getContext('2d');
+
+const vc = document.createElement('canvas');
+vc.width = VID_W; vc.height = VID_H;
+const vctx = vc.getContext('2d');
+
 let workerUrl = null, gif = null, capTimer = null, frames = 0;
+let recorder = null, vchunks = [], vmime = '';
 
 try{
   workerUrl = URL.createObjectURL(new Blob(
     [document.getElementById('gif-worker-src').textContent], {type:'application/javascript'}));
 }catch(e){ console.warn('GIF worker unavailable', e); }
 
+/* Which video container can this browser actually make?
+   Safari/iOS gives MP4. Chrome gives MP4 on recent versions, WebM on older
+   ones — and WebM is useless for Instagram, so we only claim a video if the
+   browser can produce something a phone will actually accept. */
+function pickVideoMime(){
+  if(typeof MediaRecorder === 'undefined') return '';
+  const wanted = ['video/mp4;codecs=avc1.42E01E','video/mp4;codecs=h264','video/mp4'];
+  for(const m of wanted) if(MediaRecorder.isTypeSupported(m)) return m;
+  return '';
+}
+
+/* One Story frame: the doll big, the brand under it. Drawn every capture tick. */
+function composeStoryFrame(){
+  vctx.fillStyle = css.paper;
+  vctx.fillRect(0, 0, VID_W, VID_H);
+  vctx.strokeStyle = css.rule; vctx.lineWidth = 3; vctx.globalAlpha = .55;
+  for(let y = 0; y < VID_H; y += 74){
+    vctx.beginPath(); vctx.moveTo(0, y + .5); vctx.lineTo(VID_W, y + .5); vctx.stroke();
+  }
+  vctx.globalAlpha = 1;
+
+  /* the doll fills the width, sitting slightly above centre */
+  vctx.drawImage(cv, 0, 0, DOLL_W, DOLL_H, 0, 300, VID_W, VID_W);
+
+  vctx.textAlign = 'center'; vctx.textBaseline = 'middle';
+  vctx.font = '92px Marker, cursive'; vctx.fillStyle = css.ink;
+  vctx.fillText('beatass.com', VID_W / 2, VID_H - 250);
+  vctx.font = '76px Scrawl, cursive'; vctx.fillStyle = css.red;
+  vctx.fillText(summary(D), VID_W / 2, VID_H - 150);
+}
+
 function startRecording(){
   if(capTimer) return;
   frames = 0;
+
   if(workerUrl && window.GIF)
     gif = new GIF({workers:2, quality:20, width:GIF_W, height:GIF_H, workerScript:workerUrl});
+
+  /* video, live, if the browser can give us something postable */
+  vmime = pickVideoMime();
+  if(vmime){
+    try{
+      composeStoryFrame();
+      const stream = vc.captureStream(0);
+      const track = stream.getVideoTracks()[0];
+      recorder = new MediaRecorder(stream, {mimeType:vmime, videoBitsPerSecond:4_000_000});
+      vchunks = [];
+      recorder.ondataavailable = ev => { if(ev.data && ev.data.size) vchunks.push(ev.data); };
+      recorder.onstop = () => {
+        if(!vchunks.length) return;
+        state.videoBlob = new Blob(vchunks, {type:vmime.split(';')[0]});
+        state.videoUrl = URL.createObjectURL(state.videoBlob);
+        state.videoExt = 'mp4';
+      };
+      recorder.start();
+      recorder._track = track;
+    }catch(e){ console.warn('video recording unavailable', e); recorder = null; }
+  }
+
   $('#rec').classList.add('on');
   capTimer = setInterval(() => {
     if(gif){
-      rctx.drawImage(cv, 0, 0, W, H, 0, 0, GIF_W, GIF_H);
+      rctx.drawImage(cv, 0, 0, DOLL_W, DOLL_H, 0, 0, GIF_W, GIF_H);
       gif.addFrame(rc, {copy:true, delay:FPS_MS});
+    }
+    if(recorder && recorder.state === 'recording'){
+      composeStoryFrame();
+      try{ recorder._track.requestFrame(); }catch(e){}
     }
     frames++;
     $('#rec-t').textContent = 'REC ' + ((MAX_FRAMES-frames)*FPS_MS/1000).toFixed(1) + 's';
     if(frames >= MAX_FRAMES) stopRecording();
   }, FPS_MS);
 }
+
 function stopRecording(discard){
   clearInterval(capTimer); capTimer = null;
   $('#rec').classList.remove('on');
-  if(discard){ if(gif && gif.abort) try{ gif.abort(); }catch(e){} gif = null; frames = 0; }
+  if(recorder && recorder.state === 'recording'){
+    try{ recorder.stop(); }catch(e){}
+  }
+  if(discard){
+    if(gif && gif.abort) try{ gif.abort(); }catch(e){}
+    gif = null; frames = 0; recorder = null; vchunks = [];
+  }
 }
 
-/* one button does everything: check the form, make the GIF, show the preview */
+function firstTouch(){
+  if(D.touched) return;
+  D.touched = true;
+  showHint('');
+  startRecording();
+}
+
+/* ---------- 4. preview, send, share ---------- */
+$('#go').onclick = preview;
 function preview(){
   const v = validate();
   if(!v) return;
   if(!D.touched){
-    $('#hint').textContent = 'hit him first!';
-    $('#hint').style.opacity = 1;
-    setTimeout(() => { if(!D.touched) $('#hint').textContent = 'pick something, then hit him'; }, 2500);
+    showHint('hit him first!');
+    setTimeout(() => { if(!D.touched) showHint(''); }, 2500);
     return;
   }
   if(state.gifUrl){ openPreview(v); return; }
 
   stopRecording();
   const btn = $('#go');
-  btn.disabled = true; btn.textContent = 'making the gif…';
+  btn.disabled = true;
 
-  if(!gif){                                   /* worker blocked — still give them something */
-    state.gifUrl = cv.toDataURL('image/png'); state.isStill = true;
-    state.stats = summary();
-    btn.disabled = false; btn.textContent = 'Preview & send';
+  if(!gif){                                  /* worker blocked — still give them something */
+    state.gifUrl = cv.toDataURL('image/png');
+    state.isStill = true;
+    state.stats = summary(D);
+    btn.disabled = false;
     openPreview(v); return;
   }
-  $('#prog').classList.add('on');
+
+  $('#enc-label').hidden = false;
+  $('#prog').hidden = false;
   gif.on('progress', p => $('#prog i').style.width = Math.round(p*100) + '%');
   gif.on('finished', blob => {
-    $('#prog').classList.remove('on'); $('#prog i').style.width = '0';
-    state.gif = blob; state.isStill = false;
+    $('#enc-label').hidden = true;
+    $('#prog').hidden = true;
+    $('#prog i').style.width = '0';
+    state.gifBlob = blob;
+    state.isStill = false;
     state.gifUrl = URL.createObjectURL(blob);
-    state.stats = summary();
-    btn.disabled = false; btn.textContent = 'Preview & send';
+    state.stats = summary(D);
+    btn.disabled = false;
     openPreview(v);
   });
   gif.render();
@@ -838,31 +1263,82 @@ function openPreview(v){
   $('#p-to').textContent    = v.mail;
   $('#p-greet').textContent = 'Hi ' + v.name + ', somebody used beatass.com to tell you something.';
   $('#p-msg').textContent   = v.msg;
-  $('#p-sub').textContent   = 'Someone has a confession for you, ' + v.name;
+  $('#p-sub').textContent   = v.name + ', someone finally said it';
   $('#p-gif').src = state.gifUrl;
   const loved = D.loveMs > D.fireMs && D.love > 40;
   $('#p-cap').textContent = loved
     ? '…and this is how they feel about you.'
     : '…and this is what they did to you. (' + state.stats + ')';
-  $('#dl').onclick = () => {
-    const a = document.createElement('a');
-    a.href = state.gifUrl; a.download = 'beatass' + (state.isStill ? '.png' : '.gif'); a.click();
-  };
   $('#ov-preview').classList.add('on');
 }
+
+function download(url, filename){
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+}
+$('#dl').onclick = () => download(state.gifUrl, 'beatass' + (state.isStill ? '.png' : '.gif'));
+$('#btn-back').onclick = closeOv;
+$('#btn-send').onclick = send;
+$('#lnk-report').onclick = e => e.preventDefault();
+$('#lnk-block').onclick = e => e.preventDefault();
 function closeOv(){ $('#ov-preview').classList.remove('on'); }
-function send(){ $('#ov-preview').classList.remove('on'); $('#ov-sent').classList.add('on'); }
+
+/* The last screen is where every share comes from, so the video gets the room. */
+function send(){
+  $('#ov-preview').classList.remove('on');
+
+  const media = $('#sent-media');
+  if(state.videoUrl){
+    media.innerHTML = '';
+    const vid = document.createElement('video');
+    vid.src = state.videoUrl;
+    vid.autoplay = true; vid.loop = true; vid.muted = true;
+    vid.playsInline = true; vid.setAttribute('playsinline', '');
+    media.appendChild(vid);
+    $('#share-row').hidden = false;
+  } else if(state.gifUrl){
+    media.innerHTML = '';
+    const img = document.createElement('img');
+    img.className = 'shot'; img.src = state.gifUrl; img.alt = 'What you did to the doll';
+    media.appendChild(img);
+    $('#share-row').hidden = false;
+  }
+  $('#ov-sent').classList.add('on');
+}
+
+/* Web Share needs the file ready BEFORE the tap — phones only allow sharing
+   as a direct response to a gesture, so we can't start encoding here. */
+$('#btn-share').onclick = async () => {
+  const blob = state.videoBlob || state.gifBlob;
+  if(!blob) return;
+  const ext  = state.videoBlob ? 'mp4' : 'gif';
+  const type = state.videoBlob ? 'video/mp4' : 'image/gif';
+  const file = new File([blob], 'beatass.' + ext, {type});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file], text:'beatass.com'}); return; }
+    catch(e){ if(e && e.name === 'AbortError') return; }
+  }
+  download(state.videoUrl || state.gifUrl, 'beatass.' + ext);
+};
+$('#btn-save').onclick = () => {
+  const url = state.videoUrl || state.gifUrl;
+  const ext = state.videoUrl ? 'mp4' : (state.isStill ? 'png' : 'gif');
+  if(url) download(url, 'beatass.' + ext);
+};
+
+$('#btn-restart').onclick = restart;
 function restart(){
   $('#ov-sent').classList.remove('on');
   $('#i-name').value = $('#i-email').value = $('#i-msg').value = '';
-  $('#count').textContent = '0 / 600';
+  bump();
   $$('.chip').forEach(c => c.classList.remove('on'));
-  $('#go').textContent = 'Preview & send';
+  $('#share-row').hidden = true;
   resetDoll();
 }
 document.addEventListener('keydown', e => { if(e.key === 'Escape') closeOv(); });
 
 /* boot — last, so every binding above exists */
+window.addEventListener('resize', () => { css = CSS(); });
 resetDoll();
 requestAnimationFrame(loop);
 </script>
