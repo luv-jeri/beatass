@@ -5,7 +5,7 @@
 | **Name / slug** | beatass (beatass.com — anonymous confession + voodoo-doll GIF) / `beatass` |
 | **Type** | `product-build` (`~/Claude/Projects/banyan/brain/playbooks/product-build.md`) |
 | **Status** | `active` |
-| **Born** | 2026-08-02 · **external graft** — stays at `~/Documents/beatass` (nothing moved; only Sanjay's explicit "move it" makes a venture resident). Directed by Sanjay in conversation, 2026-08-02: "add the project into the banyan as a new venture so that we can work on it". Ledger: `evolution/approved/2026-08-02-graft-beatass-directed.md` |
+| **Born** | 2026-08-02 · **resident graft** — lives at `~/Claude/Projects/banyan/ventures/beatass`, moved the same day from `~/Documents/beatass` on Sanjay's explicit go ("Do all there in correct order", choosing option C). Keeps its own git repo and its own remote. Ledger: `evolution/approved/2026-08-02-graft-beatass-directed.md` |
 | **Produces** | One shipped website — `beatass.com`: you write an anonymous confession, take it out on a voodoo doll, the beating is recorded as a GIF + a 1080×1920 MP4, and the confession is emailed to the person you named |
 | **Needs** | (a) Sanjay verifies `beatass.com` inside Resend — until then email only reaches `unread.fyi@gmail.com` and everyone else silently gets nothing; (b) his call on GoDaddy → Cloudflare nameservers; (c) his yes before the first real deploy goes public; (d) an OG image for the share/meta tags |
 | **Approval chain** | Sanjay — for every deploy, every DNS change, and anything that makes the site publicly reachable (rule 3) |
