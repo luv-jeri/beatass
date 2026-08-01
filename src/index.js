@@ -241,8 +241,20 @@ export default {
       return json({ ok: true, id: mid });
     }
 
-    /* Anything else that isn't a static file. The assets layer only matches
-       real files, so every wrong URL lands here — which is the only place the
+    /* Assets are configured with html_handling "none" so every file is served
+       at exactly the name it has — no /privacy.html -> /privacy redirect, which
+       would make every internal link and every sitemap entry cost a hop. The
+       price of that is the root stops being mapped to index.html, so it lands
+       here and we serve it ourselves. */
+    if (url.pathname === '/') {
+      const home = await env.ASSETS.fetch(new URL('/index.html', url.origin));
+      return new Response(home.body, {
+        status: 200,
+        headers: { 'content-type': 'text/html; charset=utf-8' }
+      });
+    }
+
+    /* Everything else that isn't a static file. This is the only place the
        hand-drawn 404 page can actually be served from. */
     const missing = await env.ASSETS.fetch(new URL('/404.html', url.origin));
     return new Response(missing.body, {

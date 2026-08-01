@@ -1,0 +1,87 @@
+# Build, test, and deploy beatass.
+#
+# A pull request gets built and tested but never deployed. A push to main is
+# treated as the decision to ship: it deploys only if the browser test passed
+# first, so a broken doll can never reach the site.
+#
+# One-time setup before this can deploy (see CI-CD.md):
+#   a repository secret named CLOUDFLARE_API_TOKEN.
+
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:        # lets you deploy by hand from the Actions tab
+
+# If you push twice quickly, cancel the older run rather than racing two
+# deploys to the same Worker.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: npm ci
+
+      # The test drives a real browser: it records the doll, encodes a GIF,
+      # exports an MP4 and posts the whole thing to a mock of the real API.
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build and test
+        run: npm test
+
+      # Proves the crawl and legal files are still coherent. L6 is expected to
+      # fail on the gate's own inability to parse a homepage URL, so this step
+      # reports and does not block — see
+      # evolution/inbox/2026-08-02-legal-crawl-gate-cannot-parse-root-url.md
+      # in the Banyan trunk. Delete the `|| true` once that gate is fixed.
+      - name: Legal and crawl files
+        run: |
+          if [ -f scripts/legal_crawl_gate.py ]; then
+            python3 scripts/legal_crawl_gate.py public || true
+          else
+            echo "gate script not vendored into this repo; skipping"
+          fi
+
+      - name: Deploy
+        if: github.event_name != 'pull_request'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      # A deploy that returns the wrong thing is not a deploy. This fails the
+      # run if the homepage, the legal pages, or the 404 stop behaving.
+      - name: Check the live site
+        if: github.event_name != 'pull_request'
+        run: |
+          BASE=https://beatass.unread-fyi.workers.dev
+          sleep 5
+          fail=0
+          for path in "" privacy.html terms.html about.html contact.html robots.txt sitemap.xml og.png; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/$path")
+            echo "/$path -> $code"
+            [ "$code" = "200" ] || fail=1
+          done
+          code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/this-page-does-not-exist")
+          echo "/this-page-does-not-exist -> $code (want 404)"
+          [ "$code" = "404" ] || fail=1
+          curl -s "$BASE/" | grep -q "say the thing" || { echo "the homepage is not the app"; fail=1; }
+          exit $fail

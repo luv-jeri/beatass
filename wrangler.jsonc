@@ -15,7 +15,12 @@
 
   "assets": {
     "directory": "./public",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    // Serve the files exactly as they are named. Without this, Cloudflare
+    // strips the .html and redirects /privacy.html -> /privacy, so every
+    // internal link and every sitemap entry would cost a redirect hop and
+    // Google would report the listed URLs as "page with redirect".
+    "html_handling": "none"
   },
 
   // the GIFs and MP4s
