@@ -115,6 +115,11 @@ export default {
           'content-type': key.endsWith('.gif') ? 'image/gif' : 'video/mp4',
           // these never change once written, so let everything cache them hard
           'cache-control': 'public, max-age=31536000, immutable',
+          // somebody's confession must never turn up in an image search. This
+          // header, rather than a robots.txt Disallow, because mail clients
+          // fetch these through their own proxies and a Disallow risks the
+          // image not rendering in the email at all.
+          'x-robots-tag': 'noindex, noimageindex',
           'etag': obj.httpEtag
         }
       });
@@ -236,7 +241,13 @@ export default {
       return json({ ok: true, id: mid });
     }
 
-    /* anything else that isn't a static file */
-    return new Response('Not found', { status: 404 });
+    /* Anything else that isn't a static file. The assets layer only matches
+       real files, so every wrong URL lands here — which is the only place the
+       hand-drawn 404 page can actually be served from. */
+    const missing = await env.ASSETS.fetch(new URL('/404.html', url.origin));
+    return new Response(missing.body, {
+      status: 404,
+      headers: { 'content-type': 'text/html; charset=utf-8' }
+    });
   }
 };

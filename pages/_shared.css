@@ -1,0 +1,42 @@
+/* The side pages: same paper, same three inks, but built for reading rather
+   than for one screen. No embedded fonts here on purpose — baking three
+   woff2 files into five more pages would cost about a megabyte to say
+   nothing the system fonts don't already say. */
+:root{
+  --paper:#fbf7ea; --paper-2:#f3ecd8;
+  --ink:#26356e; --pencil:#5b6a9c; --red:#cf3a2d; --hl:#ffe873;
+  --rule:rgba(38,53,110,.08);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font:16px/1.65 ui-serif,Georgia,"Times New Roman",serif;
+  background-image:repeating-linear-gradient(to bottom,transparent 0 29px,var(--rule) 29px 30px);
+}
+.sheet{max-width:44rem;margin:0 auto;padding:28px 20px 56px}
+.head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+  padding-bottom:14px;border-bottom:2px solid var(--ink)}
+.word{font:700 30px/1 ui-rounded,"Trebuchet MS",system-ui,sans-serif;
+  color:var(--ink);text-decoration:none;letter-spacing:-.5px}
+.word em{font-style:normal;color:var(--red)}
+.doc h1{font-size:30px;line-height:1.2;margin:26px 0 6px}
+.doc h2{font-size:20px;margin:30px 0 6px;color:var(--ink)}
+.doc h3{font-size:17px;margin:22px 0 2px;color:var(--ink)}
+.doc .updated{color:var(--pencil);font-size:14px;margin:0 0 8px}
+.doc p,.doc li{color:#1c2333}
+.doc a{color:var(--ink);text-decoration-color:var(--red);text-underline-offset:3px}
+.doc ul{padding-left:1.2em}
+.doc li{margin:6px 0}
+.doc strong{background:linear-gradient(transparent 62%,var(--hl) 62%);padding:0 2px}
+.doc blockquote{margin:18px 0;padding:2px 0 2px 14px;border-left:3px solid var(--red);
+  color:var(--pencil)}
+.foot{margin-top:44px;padding-top:14px;border-top:1px solid var(--rule);
+  font-size:13px;color:var(--pencil)}
+.foot nav{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:8px}
+.foot a{color:var(--pencil)}
+.foot p{margin:0;max-width:38rem}
+@media (max-width:520px){
+  .sheet{padding:20px 16px 40px}
+  .doc h1{font-size:26px}
+}

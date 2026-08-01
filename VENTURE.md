@@ -12,7 +12,7 @@
 | **Budget line** | ₹0 / $0 new spend without a fresh yes. Already paid for and in hand: the `beatass.com` domain (GoDaddy). Cloudflare Workers/R2/D1/KV and Resend are on free tiers today; the moment either needs a paid plan it is a fresh conversation, and a human clicks every payment button (rules 6 + 12) |
 | **Memory** | Its own docs are the source of truth: `HANDOFF.md` (current state + next jobs) · `DESIGN-PROMPT.md` (the brief and the decisions table — decisions already taken, do not reopen) · `VIRAL-RESEARCH.md` (why the product is shaped this way) · `CLAUDE.md` (house rules) · `README.md` (what it is, how to build and test). Session notes land in the trunk's `memory/daily/` |
 | **Skills** | Banyan pack (pointer in `CLAUDE.md`) — no venture-local skills yet. `cloudflare` / `wrangler` / `workers-best-practices` skills apply to the backend work |
-| **Vitals** | 🟡 — front end finished and browser-verified; backend written and its Cloudflare infrastructure live, but the two are **not connected** and nothing is deployed. Pressing Send today sends no email · 2026-08-02 |
+| **Vitals** | 🟡 — front end finished, browser-verified, and **wired to the API**; SEO and legal package built (robots, sitemap, OG image, structured data, privacy/terms/about/contact/404); Cloudflare resources verified live. Still **not deployed** — that needs Sanjay's yes — and real email stays blocked until `beatass.com` is verified in Resend · 2026-08-02 |
 
 ---
 
@@ -42,7 +42,7 @@ One file, no framework, no bundler. `template.html` is the source you edit; `pyt
 | D1 schema | applied to remote — tables `messages`, `blocklist` |
 | Secrets | `RESEND_API_KEY`, `BLOCK_SECRET` — both set in production |
 
-*(IDs as recorded in `HANDOFF.md` 2026-08-02; not re-verified against the live account at graft time.)*
+*(Verified live 2026-08-02 with `wrangler d1 list` / `r2 bucket list` / `kv namespace list`: the R2 bucket, the D1 database and the KV namespace all exist under this account with these exact IDs. The D1 schema and the two production secrets are as recorded in `HANDOFF.md` and were not separately re-checked.)*
 
 ### Secrets — rule 5 status
 

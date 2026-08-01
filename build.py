@@ -16,12 +16,64 @@ Run it with:   python3 build.py
 """
 
 import base64
+import datetime
+import html as html_mod
 import pathlib
 import sys
 
 HERE = pathlib.Path(__file__).parent
 TEMPLATE = HERE / "template.html"
 OUTPUT = HERE / "beatass.html"
+
+SITE = "https://beatass.com"
+
+# The side pages (privacy, terms, about, contact, 404). Each source file in
+# pages/ holds ONLY its words; the shell below wraps them. That is deliberate:
+# the footer has to link to all four legal pages from every page, and building
+# it in one place is the only way that stays true after somebody edits a page.
+PAGES = {
+    "privacy.html": "Privacy",
+    "terms.html": "Terms",
+    "about.html": "About",
+    "contact.html": "Contact",
+    "404.html": "Page not found",
+}
+# everything in the sitemap: the app itself plus the four legal pages (never 404)
+SITEMAP = ["", "privacy.html", "terms.html", "about.html", "contact.html"]
+
+PAGE_SHELL = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title} — beatass</title>
+<meta name="description" content="{desc}">
+<meta name="theme-color" content="#fbf7ea">
+{robots}{canonical}<meta property="og:type" content="website">
+<meta property="og:site_name" content="beatass">
+{ogurl}<meta property="og:title" content="{title} — beatass">
+<meta property="og:description" content="{desc}">
+<meta property="og:image" content="{site}/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="{icon}">
+<style>{css}</style>
+</head>
+<body>
+<div class="sheet">
+  <header class="head">
+    <a class="word" href="/">beat<em>ass</em></a>
+  </header>
+  <main class="doc">
+{body}
+  </main>
+  <footer class="foot">
+    <nav><a href="/privacy.html">Privacy</a> <a href="/terms.html">Terms</a> <a href="/about.html">About</a> <a href="/contact.html">Contact</a></nav>
+    <p>18+ only. beatass.com sends anonymous messages to people who did not ask for them; every message carries a one-click block link.</p>
+  </footer>
+</div>
+</body>
+</html>
+"""
 
 # placeholder in template.html  ->  file whose contents replace it
 FONTS = {
@@ -60,8 +112,94 @@ def main() -> int:
     public.mkdir(exist_ok=True)
     (public / "index.html").write_text(html, encoding="utf-8")
 
+    built = build_pages(public, html)
+
     print(f"built {OUTPUT.name} + public/index.html — {len(html) / 1024:.0f} KB")
+    print(f"built {built} side pages + robots.txt + sitemap.xml")
     return 0
+
+
+def build_pages(public: pathlib.Path, app_html: str) -> int:
+    """Writes the side pages, robots.txt and sitemap.xml into public/."""
+    css = (HERE / "pages" / "_shared.css").read_text(encoding="utf-8")
+
+    # reuse the app's own favicon so the side pages carry the same doll
+    marker = '<link rel="icon" href="'
+    if marker not in app_html:
+        raise SystemExit(f"!! {marker!r} is missing from template.html — the side pages have no favicon")
+    icon = app_html.split(marker, 1)[1].split('"', 1)[0]
+
+    for slug, title in PAGES.items():
+        src = (HERE / "pages" / slug).read_text(encoding="utf-8").strip()
+        # first line of the source file is its meta description, then a blank line
+        if "\n\n" not in src:
+            raise SystemExit(
+                f"!! pages/{slug} needs a one-line description, a blank line, then the page"
+            )
+        desc, body = src.split("\n\n", 1)
+        is404 = slug == "404.html"
+        (public / slug).write_text(
+            PAGE_SHELL.format(
+                title=title,
+                desc=html_mod.escape(desc.strip(), quote=True),
+                body=body.rstrip(),
+                css=css,
+                icon=icon,
+                # A 404 lives at every wrong URL, so it gets neither a canonical
+                # nor an og:url — pointing those at the homepage while the page
+                # is noindex is a contradiction search engines resolve badly.
+                canonical="" if is404 else f'<link rel="canonical" href="{SITE}/{slug}">\n',
+                ogurl="" if is404 else f'<meta property="og:url" content="{SITE}/{slug}">\n',
+                robots='<meta name="robots" content="noindex">\n' if is404 else "",
+                site=SITE,
+            ),
+            encoding="utf-8",
+        )
+
+    (public / "robots.txt").write_text(
+        "# beatass.com — the pages here are meant to be found.\n"
+        "User-agent: *\n"
+        "Allow: /\n"
+        "# These two act on a click; a crawler must never follow one. The media\n"
+        "# is deliberately NOT disallowed here — mail clients fetch those images\n"
+        "# through their own proxies, and the way to keep them out of search is\n"
+        "# the X-Robots-Tag: noindex header the Worker sends, which cannot\n"
+        "# accidentally stop an email from rendering.\n"
+        "Disallow: /block\n"
+        "Disallow: /report\n"
+        f"\nSitemap: {SITE}/sitemap.xml\n",
+        encoding="utf-8",
+    )
+
+    # lastmod comes from the source file each page is built from, not from
+    # today. Stamping every URL with the build date teaches crawlers that this
+    # sitemap's dates mean nothing, and then they stop reading them.
+    def lastmod(slug: str) -> str:
+        src = TEMPLATE if slug == "" else HERE / "pages" / slug
+        return datetime.date.fromtimestamp(src.stat().st_mtime).isoformat()
+
+    locs = "\n".join(
+        f"  <url>\n    <loc>{SITE}/{s}</loc>\n    <lastmod>{lastmod(s)}</lastmod>\n"
+        f"    <changefreq>{'weekly' if s == '' else 'yearly'}</changefreq>\n"
+        f"    <priority>{'1.0' if s == '' else '0.4'}</priority>\n  </url>"
+        for s in SITEMAP
+    )
+    # the share card every pasted link shows. Regenerate with: node tools/make-og.mjs
+    og = HERE / "og.png"
+    if not og.is_file():
+        raise SystemExit(
+            "!! og.png is missing — every shared link would show a blank box. "
+            "Regenerate it with: node tools/make-og.mjs"
+        )
+    (public / "og.png").write_bytes(og.read_bytes())
+
+    (public / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"{locs}\n</urlset>\n",
+        encoding="utf-8",
+    )
+    return len(PAGES)
 
 
 if __name__ == "__main__":

@@ -11,8 +11,30 @@
 <meta property="og:url" content="https://beatass.com/">
 <meta property="og:title" content="beatass — say the thing you'd never say">
 <meta property="og:description" content="Write an anonymous confession, take it out on a voodoo doll, and send them the video.">
+<meta property="og:site_name" content="beatass">
 <meta property="og:image" content="https://beatass.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A hand-drawn voodoo doll on ruled paper, with the words: say the thing you'd never say.">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="beatass — say the thing you'd never say">
+<meta name="twitter:description" content="Write an anonymous confession, take it out on a voodoo doll, and send them the video.">
+<meta name="twitter:image" content="https://beatass.com/og.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"WebSite","@id":"https://beatass.com/#site","url":"https://beatass.com/","name":"beatass",
+ "description":"Write an anonymous confession, take it out on a voodoo doll, and send them the video.",
+ "inLanguage":"en"},
+{"@type":"WebApplication","@id":"https://beatass.com/#app","name":"beatass",
+ "url":"https://beatass.com/","applicationCategory":"CommunicationApplication",
+ "operatingSystem":"Any browser","browserRequirements":"Requires JavaScript",
+ "isAccessibleForFree":true,
+ "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},
+ "description":"Write an anonymous confession, take it out on a hand-drawn voodoo doll, and email them the recording. No sign-up, and the sender is never revealed.",
+ "featureList":["Anonymous message","Animated GIF of the doll","1080x1920 video for sharing","One-click block link in every email"],
+ "isPartOf":{"@id":"https://beatass.com/#site"}}
+]}
+</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 210'%3E%3Cg fill='none' stroke='%2326356e' stroke-width='9' stroke-linecap='round'%3E%3Cpath d='M75 4v34'/%3E%3Ccircle cx='75' cy='55' r='18'/%3E%3Cpath d='M75 74v58M75 88l-29 22M75 88l29 22M75 132l-19 36M75 132l20 36'/%3E%3C/g%3E%3C/svg%3E">
 <style>
 /* ============================================================
@@ -292,6 +314,17 @@ a{color:var(--red)}a:hover{color:var(--ink)}
 .ovnote.bad{color:var(--red);text-shadow:0 1px 4px rgba(0,0,0,.65)}
 .ovbtns{display:flex;gap:10px;justify-content:flex-end}
 
+/* The legal row. It has to be visible on every screen — a link that only
+   exists on desktop is not a link — so it lives inside the scrolling column
+   rather than in the send bar, whose text is hidden on phones. */
+.legal{display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+  margin-top:6px;padding-top:5px;border-top:1px solid rgba(38,53,110,.1);
+  font-size:11px;line-height:1.15;color:var(--pencil);flex:none}
+.legal span{font-family:var(--font-marker);color:var(--red)}
+.legal a{color:var(--pencil);text-decoration:underline;
+  text-decoration-color:rgba(38,53,110,.25);text-underline-offset:2px}
+.legal a:hover{color:var(--ink);text-decoration-color:var(--red)}
+
 .sent{background:var(--paper-2);border:var(--bw-pen-heavy) solid var(--ink);padding:24px 22px 22px;
   text-align:center;border-radius:var(--radius-pen-lg);color:var(--ink)}
 .sent h2{font-family:var(--font-script);font-weight:700;font-size:var(--fs-display-fluid);
@@ -504,6 +537,14 @@ a{color:var(--red)}a:hover{color:var(--ink)}
           </div>
         </div>
       </div>
+
+      <footer class="legal">
+        <span>18+</span>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/about.html">About</a>
+        <a href="/contact.html">Contact</a>
+      </footer>
 
     </div><!-- /.scroller -->
 
