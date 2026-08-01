@@ -60,3 +60,21 @@ Don't "fix" these without asking:
   defence against being treated as an abuse pipe. Keep them.
 - Instagram DM support was removed because Instagram's API cannot cold-DM a
   handle. Don't add it back on the assumption it's possible.
+
+## This project is a Banyan venture (grafted 2026-08-02)
+
+beatass is a venture of Banyan (`~/Claude/Projects/banyan`) — the tree that
+carries lessons between Sanjay's projects. Nothing about how this project works
+changed; it stays where it lives and keeps its own rules above.
+
+- **Passport:** `VENTURE.md` in this folder — what it produces, what it waits
+  on, who approves what, its budget line. Read it at session start.
+- **Banyan skills:** `~/Claude/Projects/banyan/skills/<name>/SKILL.md` — read
+  and follow when a task calls for one.
+- **Type playbook:** `~/Claude/Projects/banyan/brain/playbooks/product-build.md`
+- **The laws that bind this venture** (from Banyan's constitution): nothing goes
+  outward — no deploy, no DNS change, no public launch, no email to a real
+  recipient — without Sanjay's yes. Secrets never enter the repo. No money is
+  ever spent by an agent; a human clicks every payment button.
+
+@~/Claude/Projects/banyan/memory/GLOBAL-LESSONS.md
