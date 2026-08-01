@@ -1,0 +1,57 @@
+{
+  // beatass — one Worker serves the site AND the API.
+  //
+  //   /            -> public/index.html  (the built site, static, free bandwidth)
+  //   /api/*       -> src/index.js       (send, block, report)
+  //   /media/*     -> R2                 (the GIFs and MP4s; R2 charges nothing to download)
+  //
+  // Static files are matched first; anything that isn't a file falls through
+  // to the Worker.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "beatass",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+
+  // the GIFs and MP4s
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "beatass-media"
+    }
+  ],
+
+  // confessions + the block list
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "beatass-db",
+      "database_id": "a9133d8f-4232-4945-99ee-0cbb9c072c77"
+    }
+  ],
+
+  // rate limiting, keyed by sender IP
+  "kv_namespaces": [
+    {
+      "binding": "RATE",
+      "id": "54544f05b7204b5ca917b0490ef833f8"
+    }
+  ],
+
+  "vars": {
+    // Until beatass.com is verified inside Resend, mail can only go to the
+    // address that owns the Resend account. Swap this for
+    // "someone@beatass.com" once the domain is verified.
+    "MAIL_FROM": "beatass <onboarding@resend.dev>",
+    "SITE_URL": "https://beatass.com"
+  },
+
+  "observability": {
+    "enabled": true
+  }
+}

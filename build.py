@@ -53,7 +53,14 @@ def main() -> int:
         html = html.replace(placeholder, path.read_text(encoding="utf-8"))
 
     OUTPUT.write_text(html, encoding="utf-8")
-    print(f"built {OUTPUT.name} — {len(html) / 1024:.0f} KB")
+
+    # Cloudflare serves whatever is in public/ as static files, so the same
+    # build lands there as index.html. Nothing else belongs in that folder.
+    public = HERE / "public"
+    public.mkdir(exist_ok=True)
+    (public / "index.html").write_text(html, encoding="utf-8")
+
+    print(f"built {OUTPUT.name} + public/index.html — {len(html) / 1024:.0f} KB")
     return 0
 
 
