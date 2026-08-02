@@ -165,10 +165,13 @@ a{color:var(--red)}a:hover{color:var(--ink)}
 .field.bad input{border-bottom-style:solid;border-bottom-color:var(--red)}
 .field.bad .err{opacity:1}
 
-.chips{display:flex;gap:9px;flex:none;padding:3px 2px 5px}
-.chip{flex:none;cursor:pointer;border:0;white-space:nowrap;min-height:38px;
-  font-weight:600;font-size:var(--fs-ui);line-height:1;background:var(--sticky);color:var(--ink);
-  padding:10px 15px;box-shadow:var(--shadow-chip);
+/* Deliberately small. These are a nudge for anyone staring at a blank box, not
+   a choice the product needs you to make — at full button size they read as the
+   main event and crowd out the thing that actually matters, the message. */
+.chips{display:flex;gap:7px;flex:none;padding:2px 2px 4px}
+.chip{flex:none;cursor:pointer;border:0;white-space:nowrap;min-height:26px;
+  font-weight:600;font-size:var(--fs-tiny);line-height:1;background:var(--sticky);color:var(--ink);
+  padding:6px 10px;box-shadow:var(--shadow-chip);
   transition:transform var(--dur-press),background var(--dur-tool)}
 .chip:nth-child(odd){transform:rotate(1.2deg)}
 .chip:nth-child(even){transform:rotate(-1.6deg)}
@@ -314,12 +317,15 @@ a{color:var(--red)}a:hover{color:var(--ink)}
 .ovnote.bad{color:var(--red);text-shadow:0 1px 4px rgba(0,0,0,.65)}
 .ovbtns{display:flex;gap:10px;justify-content:flex-end}
 
-/* The legal row. It has to be visible on every screen — a link that only
-   exists on desktop is not a link — so it lives inside the scrolling column
-   rather than in the send bar, whose text is hidden on phones. */
-.legal{display:flex;flex-wrap:wrap;align-items:center;gap:10px;
-  margin-top:6px;padding-top:5px;border-top:1px solid rgba(38,53,110,.1);
-  font-size:11px;line-height:1.15;color:var(--pencil);flex:none}
+/* The legal row. It sits in the send bar, under the button, so it is pinned on
+   every screen and can never be pushed off or landed on by the scrolling
+   column above it — which is exactly what happened when it lived up there. */
+/* width, not flex-basis:100% — the send bar is a column on phones and a row on
+   desktop, and a basis of 100% would mean full HEIGHT on the phone. Width does
+   the right thing in both: a full line under the button either way. */
+.legal{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+  gap:10px;flex:0 0 auto;width:100%;margin-top:2px;
+  font-size:11px;line-height:1.15;color:var(--pencil)}
 .legal span{font-family:var(--font-marker);color:var(--red)}
 .legal a{color:var(--pencil);text-decoration:underline;
   text-decoration-color:rgba(38,53,110,.25);text-underline-offset:2px}
@@ -349,7 +355,7 @@ a{color:var(--red)}a:hover{color:var(--ink)}
   .app{height:100dvh;display:flex;flex-direction:column}
   /* scroll instead of clipping: a small scroll is cheaper than lost content */
   .scroller{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
-    display:flex;flex-direction:column;gap:10px;padding:0 var(--pad-page) 104px}
+    display:flex;flex-direction:column;gap:10px;padding:0 var(--pad-page) 10px}
   .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:8px;flex:none}
   .tagline{font-size:17px;max-width:48%}
   .who{grid-template-columns:1fr 1.35fr;gap:11px}
@@ -362,7 +368,12 @@ a{color:var(--red)}a:hover{color:var(--ink)}
   .tool{min-height:0}
   /* the two desktop columns collapse into one stack, then reorder:
      who it's for, the doll, then what to say. */
-  .grid{display:flex;flex-direction:column;gap:10px;flex:1 1 auto;min-height:0}
+  /* No min-height:0 here on purpose. With it, this column is allowed to be
+     squashed shorter than the things inside it; they then spill out of the
+     bottom, the scroll container never grows to cover the spill, and the
+     message box becomes unreachable. Letting it keep its content height means
+     .scroller simply scrolls instead. */
+  .grid{display:flex;flex-direction:column;gap:10px;flex:1 1 auto}
   .col{display:contents}
   .pane-label.desk{display:none}
   .who-label{order:1}
@@ -375,7 +386,11 @@ a{color:var(--red)}a:hover{color:var(--ink)}
     padding-left:var(--pad-page);padding-right:var(--pad-page)}
   .chips::-webkit-scrollbar{display:none}
   .confess .box{min-height:calc(var(--rule-h) * 3)}
-  .sendbar{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;align-items:center;gap:14px;
+  /* The bar is the last row of a 100dvh flex column, not a fixed overlay. Fixed
+     meant the column above had to reserve an exact matching gap in padding, and
+     that number silently went stale the moment anything in here changed height
+     — which is how the message box ended up 3px under the bar, unreachable. */
+  .sendbar{flex:none;display:flex;align-items:center;gap:10px;
     flex-direction:column;background:var(--paper);border-top:var(--bw-pen) solid var(--ink);
     padding:11px var(--pad-page) calc(11px + env(safe-area-inset-bottom));
     box-shadow:0 -6px 18px rgba(60,50,20,.1)}
@@ -402,7 +417,8 @@ a{color:var(--red)}a:hover{color:var(--ink)}
   .saybox{display:flex;flex-direction:column;gap:12px;flex:1 1 auto;min-height:0}
   .say,.confess{flex:1 1 auto;min-height:0}
   .chips{flex-wrap:wrap}
-  .sendbar{flex:none;display:flex;align-items:center;gap:14px;padding-top:12px;
+  /* wrap so the legal row drops onto its own line under the button */
+  .sendbar{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding-top:12px;
     border-top:var(--bw-pen) dotted var(--ink-faint)}
   .sendbar .safety{flex:1 1 auto}
   .mobile-only{display:none}
@@ -538,14 +554,6 @@ a{color:var(--red)}a:hover{color:var(--ink)}
         </div>
       </div>
 
-      <footer class="legal">
-        <span>18+</span>
-        <a href="/privacy.html">Privacy</a>
-        <a href="/terms.html">Terms</a>
-        <a href="/about.html">About</a>
-        <a href="/contact.html">Contact</a>
-      </footer>
-
     </div><!-- /.scroller -->
 
     <div class="sendbar">
@@ -554,6 +562,13 @@ a{color:var(--red)}a:hover{color:var(--ink)}
       <div class="encoding" id="enc-label" hidden>making your gif…</div>
       <div class="prog" id="prog" hidden><i></i></div>
       <button class="btn lg block" id="go" type="button">Preview &amp; send</button>
+      <footer class="legal">
+        <span>18+</span>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/about.html">About</a>
+        <a href="/contact.html">Contact</a>
+      </footer>
     </div>
   </div>
   </div>
@@ -1031,13 +1046,22 @@ const CSS = () => {
 let css = CSS();
 
 /* ---------- 1. the form ---------- */
+/* Swap the opener when the box is empty OR still holds an untouched opener, so
+   picking a different tone actually changes what you see. The moment a single
+   word of your own is in there it is yours and we never overwrite it. */
+const isUntouchedStarter = v => Object.values(STARTERS).some(s => s === v);
 $$('#tones .chip').forEach(c => c.onclick = () => {
   const on = c.classList.contains('on');
   $$('#tones .chip').forEach(o => o.classList.remove('on'));
   if(on) return;
   c.classList.add('on');
   const t = $('#i-msg');
-  if(!t.value.trim()){ t.value = STARTERS[c.dataset.tone]; t.focus(); bump(); }
+  if(!t.value.trim() || isUntouchedStarter(t.value)){
+    t.value = STARTERS[c.dataset.tone];
+    t.focus();
+    t.setSelectionRange(t.value.length, t.value.length);
+    bump();
+  }
 });
 function bump(){
   const n = $('#i-msg').value.length;

@@ -41,17 +41,41 @@ for(const [name,w,h] of sizes){
   p.on('pageerror',e=>errs.push(name+' PE: '+e.message));
   await p.goto('http://localhost:8894/',{waitUntil:'networkidle'});
   await p.waitForTimeout(700);
-  const m = await p.evaluate(()=>({
-    docH: document.documentElement.scrollHeight,
-    winH: window.innerHeight,
-    canScrollY: document.documentElement.scrollHeight > window.innerHeight + 1,
-    canScrollX: document.documentElement.scrollWidth  > window.innerWidth  + 1,
-    canvas: (()=>{const r=document.querySelector('#doll').getBoundingClientRect();
-      return {w:Math.round(r.width),h:Math.round(r.height),bottom:Math.round(r.bottom)};})(),
-    btnBottom: Math.round(document.querySelector('#go').getBoundingClientRect().bottom)
-  }));
+  /* Page-level scroll is NOT the whole story: on phones the column between the
+     header and the send bar is its own scroll box, so content can be squashed
+     out of reach while document height stays exactly one screen and this test
+     reports a clean pass. That is how the message box once ended up sitting
+     under the send bar, unreachable, with every size "passing". So scroll that
+     inner box to its end first, then check the things that must be reachable
+     really are. */
+  const m = await p.evaluate(()=>{
+    const sc = document.querySelector('.scroller');
+    sc.scrollTop = sc.scrollHeight;
+    return new Promise(res => requestAnimationFrame(()=>{
+      const box = s => { const r = document.querySelector(s).getBoundingClientRect();
+                         return {top:Math.round(r.top), bottom:Math.round(r.bottom)}; };
+      const bar = box('.sendbar'), msg = box('.confess'), legal = box('.legal'), btn = box('#go');
+      res({
+        docH: document.documentElement.scrollHeight,
+        winH: window.innerHeight,
+        canScrollY: document.documentElement.scrollHeight > window.innerHeight + 1,
+        canScrollX: document.documentElement.scrollWidth  > window.innerWidth  + 1,
+        canvas: (()=>{const r=document.querySelector('#doll').getBoundingClientRect();
+          return {w:Math.round(r.width),h:Math.round(r.height),bottom:Math.round(r.bottom)};})(),
+        btnBottom: Math.round(btn.bottom),
+        msgReachable: msg.bottom <= bar.top + 1,
+        legalBelowButton: legal.top >= btn.bottom - 1,
+        legalOnScreen: legal.top >= 0 && legal.bottom <= window.innerHeight + 1
+      });
+    }));
+  });
   console.log(name.padEnd(14), w+'x'+h, '| scrollY:', m.canScrollY, '| scrollX:', m.canScrollX,
-              '| doc', m.docH, 'vs win', m.winH, '| canvas', m.canvas.w+'px', '| btn bottom', m.btnBottom);
+              '| doc', m.docH, 'vs win', m.winH, '| canvas', m.canvas.w+'px', '| btn bottom', m.btnBottom,
+              '| msg reachable:', m.msgReachable, '| legal under btn:', m.legalBelowButton,
+              '| legal on screen:', m.legalOnScreen);
+  if(!m.msgReachable)     errs.push(name+': the message box cannot be scrolled clear of the send bar');
+  if(!m.legalBelowButton) errs.push(name+': the legal row is not below the send button');
+  if(!m.legalOnScreen)    errs.push(name+': the legal row is off screen');
   await p.screenshot({path:`${ROOT}/shots/v3-${name}.png`});
   await p.close();
 }

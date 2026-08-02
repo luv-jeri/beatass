@@ -58,12 +58,11 @@
   ],
 
   "vars": {
-    // Until beatass.com is verified inside Resend, mail can only go to the
-    // address that owns the Resend account, and only from a resend.dev
-    // address. The moment Resend shows the domain verified, this becomes
-    // "Someone <someone@beatass.com>" — the name is what the recipient reads
-    // first, so it carries the weight, not the letters before the @.
-    "MAIL_FROM": "beatass <onboarding@resend.dev>",
+    // beatass.com verified in Resend 2026-08-02. The display name is what the
+    // recipient's eye lands on first, before the subject and long before the
+    // address, so "Someone" is doing the real work here — and it is true, which
+    // a name like "Your friend" would not be.
+    "MAIL_FROM": "Someone <someone@beatass.com>",
 
     // Where a reply lands. Unlike the from address this needs no Resend
     // verification, so it can be the real address today. Cloudflare Email
