@@ -79,15 +79,88 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
   const line = caption
     ? esc(caption)
     : (stats ? `…and this is what they did to you. (${esc(stats)})` : '');
-  return `<!doctype html><html><body style="margin:0;background:#f4f4f5;padding:24px 12px;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#1c2333">
-<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;padding:22px 22px 18px">
-  <p style="margin:0 0 14px;font-size:15px;line-height:1.5">Hi ${esc(name)}, somebody used beatass.com to tell you something. They chose to stay anonymous.</p>
-  <div style="border-left:3px solid #cf3a2d;background:#faf9f6;padding:12px 14px;margin:0 0 16px;font-size:15px;line-height:1.55;white-space:pre-wrap;word-break:break-word">${esc(body)}</div>
-  ${gifUrl ? `<div style="text-align:center;margin:0 0 6px"><a href="${pageUrl}"><img src="${gifUrl}" alt="What they did to the doll" width="260" style="max-width:100%;border:1px solid #ececec;border-radius:6px"></a></div>` : ''}
-  ${line ? `<p style="margin:0 0 16px;text-align:center;font-size:12px;color:#77809a">${line}</p>` : ''}
-  <p style="margin:0 0 4px;font-size:12px;color:#98a0b3;border-top:1px solid #ececec;padding-top:12px">You're getting this because someone entered your address on beatass.com. We never share who sent it, and we never will. If you reply, your reply comes to us, not to them.</p>
-  <p style="margin:0;font-size:12px;color:#98a0b3"><a href="${reportUrl}" style="color:#77809a">Report this</a> &middot; <a href="${blockUrl}" style="color:#77809a">Block my address forever</a></p>
-</div></body></html>`;
+  /* Built out of tables and inline styles because that is the only layout every
+     mail client agrees on — Gmail strips <style> blocks, Outlook renders with
+     Word. The page's own fonts cannot come along (a mail client will not load a
+     web font), so the look is carried by what does survive: the cream paper, the
+     red margin rule down the left, blue ink for words and red pen for marks.
+     No background-image either; Outlook drops it, and a design that collapses to
+     a white void in one client is not a design. */
+  const PAPER = '#fbf7ea', PAPER2 = '#fffdf5', INK = '#26356e',
+        SOFT = '#5b6a9c', FAINT = '#93a0c2', RED = '#cf3a2d', MARGIN = '#e3a8a2';
+  const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+
+  return `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Somebody wanted you to see this</title></head>
+<body style="margin:0;padding:0;background:#e8e0cc;">
+<!-- what shows in the inbox list before anything is opened -->
+<div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(body).slice(0, 90)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#e8e0cc;padding:22px 10px">
+<tr><td align="center">
+
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;background:${PAPER};border:2px solid ${INK};border-radius:14px 10px 16px 9px">
+
+  <!-- the red margin rule, the way it runs down the page on the site -->
+  <tr><td style="padding:0">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td width="10" style="width:10px;background:${MARGIN};border-radius:12px 0 0 8px">&nbsp;</td>
+      <td style="padding:0">
+
+        <!-- The handwriting, as a picture. A mail client will not load a web
+             font, so the one thing that makes this product look like itself has
+             to arrive as pixels or not at all. Drawn at 2x by
+             tools/make-email-header.mjs from the same doll the site uses. -->
+        <a href="${pageUrl}" style="text-decoration:none"><img src="${pageUrl}/email-header.png" alt="beatass — say the thing you'd never say" width="536" style="display:block;width:100%;max-width:536px;height:auto;border:0"></a>
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding:4px 26px 22px">
+
+        <p style="margin:0 0 20px;font-family:${SANS};font-size:16px;line-height:1.55;color:${SOFT}">Hi ${esc(name)}, someone used beatass.com to say something to you. They chose to stay anonymous.</p>
+
+        <!-- the message itself, on its own sheet, and the biggest thing here -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${PAPER2};border:2px solid ${INK};border-radius:12px 9px 14px 8px">
+          <tr>
+            <td width="8" style="width:8px;background:${RED};border-radius:10px 0 0 6px">&nbsp;</td>
+            <td style="padding:20px 22px;font-family:${SANS};font-size:19px;line-height:1.6;color:${INK};white-space:pre-wrap;word-break:break-word">${esc(body)}</td>
+          </tr>
+        </table>
+
+        ${gifUrl ? `
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px">
+          <tr><td align="center" style="padding:0">
+            <a href="${pageUrl}" style="text-decoration:none"><img src="${gifUrl}" alt="What they did to the doll" width="300" style="display:block;max-width:100%;border:2px solid ${INK};border-radius:9px 12px 8px 11px"></a>
+          </td></tr>
+          ${line ? `<tr><td align="center" style="padding:11px 0 0;font-family:${SANS};font-size:14px;color:${RED}">${line}</td></tr>` : ''}
+        </table>` : (line ? `<p style="margin:18px 0 0;text-align:center;font-family:${SANS};font-size:14px;color:${RED}">${line}</p>` : '')}
+
+        <!-- The one thing people asked for and could not find: how to send one
+             back. Reply goes to us, not to them, so a button is the only honest
+             answer to "how do I respond to this?" -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px">
+          <tr><td align="center" style="padding:22px 0 0;border-top:2px dotted ${FAINT}">
+            <p style="margin:0 0 4px;font-family:${SANS};font-size:15px;line-height:1.5;color:${INK};font-weight:700">Want to say something back?</p>
+            <p style="margin:0 0 16px;font-family:${SANS};font-size:14px;line-height:1.5;color:${SOFT}">Hitting reply reaches us, not them.<br>Send them one of your own instead:</p>
+            <!-- a table around the button so Outlook gives it real edges -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr>
+              <td align="center" style="background:${RED};border-radius:10px 13px 9px 12px">
+                <a href="${pageUrl}" style="display:inline-block;color:#ffffff;font-family:${SANS};font-size:18px;font-weight:700;text-decoration:none;padding:15px 34px">Hit him back</a>
+              </td>
+            </tr></table>
+            <p style="margin:12px 0 0;font-family:${SANS};font-size:12px;color:${FAINT}">Free. Anonymous. No sign-up. Ten seconds.</p>
+          </td></tr>
+        </table>
+
+        <p style="margin:28px 0 6px;font-family:${SANS};font-size:12px;line-height:1.5;color:${FAINT};border-top:1px solid ${FAINT};padding-top:16px">You're getting this because someone entered your address on beatass.com. We never share who sent it, and we never will.</p>
+        <p style="margin:0;font-family:${SANS};font-size:12px;color:${FAINT}"><a href="${reportUrl}" style="color:${SOFT}">Report this</a> &nbsp;&middot;&nbsp; <a href="${blockUrl}" style="color:${SOFT}">Block my address forever</a></p>
+
+        </td></tr></table>
+      </td>
+    </tr></table>
+  </td></tr>
+</table>
+
+</td></tr></table>
+</body></html>`;
 }
 
 /* A tiny styled page for the block/report confirmations, so the one moment
@@ -118,6 +191,11 @@ const confirm = (title, line, label, action) =>
 </div>`,
     { headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex' } }
   );
+
+/* Exported so tools/email-preview.mjs can render the real thing to a file. The
+   whole point is that what you look at is the same function the Worker sends,
+   not a copy that drifts. Unused by the Worker itself. */
+export { emailHtml };
 
 export default {
   async fetch(request, env) {
@@ -307,7 +385,7 @@ async function handle(request, env) {
           to: [email],
           subject: `${name}, someone finally said it`,
           html: emailHtml({ name, body, stats, caption, gifUrl, pageUrl: site, blockUrl, reportUrl }),
-          text: `Hi ${name}, somebody used beatass.com to tell you something anonymously.\n\n"${body}"\n\nIf you reply, your reply comes to us, not to them.\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`,
+          text: `Hi ${name}, somebody used beatass.com to say something to you. They chose to stay anonymous.\n\n"${body}"\n\nReplying to this email reaches us, not them. To say something back, send your own — free, anonymous, no sign-up:\n${site}\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`,
           // one-click unsubscribe: mail providers treat this as a strong
           // positive signal, and it keeps us out of the spam folder
           headers: { 'List-Unsubscribe': `<${blockUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }

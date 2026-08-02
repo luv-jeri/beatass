@@ -193,6 +193,17 @@ def build_pages(public: pathlib.Path, app_html: str) -> int:
         )
     (public / "og.png").write_bytes(og.read_bytes())
 
+    # The email's masthead. It is fetched from the live site by every email we
+    # send, so if it stops shipping, every email loses its head and nobody finds
+    # out until someone opens one. Regenerate with: node tools/make-email-header.mjs
+    header = HERE / "email-header.png"
+    if not header.is_file():
+        raise SystemExit(
+            "!! email-header.png is missing — every email would arrive headless. "
+            "Regenerate it with: node tools/make-email-header.mjs"
+        )
+    (public / "email-header.png").write_bytes(header.read_bytes())
+
     (public / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'

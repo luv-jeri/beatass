@@ -155,14 +155,19 @@ a{color:var(--red)}a:hover{color:var(--ink)}
 .field{position:relative;padding-bottom:17px;min-width:0}
 .field label{display:block;font-weight:700;font-size:var(--fs-small);color:var(--ink-soft);
   line-height:1;margin-bottom:5px;transition:color var(--dur-err)}
-.field input{width:100%;min-height:34px;font-size:var(--fs-input);color:var(--ink);
-  background:transparent;border:0;border-bottom:var(--bw-pen) dotted var(--ink-faint);
-  padding:2px 2px 6px;outline:none;border-radius:0}
-.field input:focus{border-bottom-style:solid;border-bottom-color:var(--ink)}
+/* A box drawn in pen, not a bare underline. The underline version read as
+   decoration and people walked straight past it without realising it was a
+   thing you type in. */
+.field input{width:100%;min-height:40px;font-size:var(--fs-input);color:var(--ink);
+  background:var(--paper-2);border:var(--bw-pen) solid var(--ink-faint);
+  border-radius:var(--radius-pen-sm);padding:6px 10px;outline:none;
+  box-shadow:2px 2px 0 rgba(38,53,110,.09);
+  transition:border-color var(--dur-err),box-shadow var(--dur-err)}
+.field input:focus{border-color:var(--ink);box-shadow:2px 3px 0 rgba(38,53,110,.2)}
 .field .err{position:absolute;left:0;bottom:0;font-weight:600;color:var(--red);
   font-size:var(--fs-caption);line-height:1;opacity:0;transition:opacity var(--dur-err)}
 .field.bad label{color:var(--red)}
-.field.bad input{border-bottom-style:solid;border-bottom-color:var(--red)}
+.field.bad input{border-color:var(--red);box-shadow:2px 2px 0 rgba(207,58,45,.18)}
 .field.bad .err{opacity:1}
 
 /* Deliberately small. These are a nudge for anyone staring at a blank box, not
@@ -179,10 +184,17 @@ a{color:var(--red)}a:hover{color:var(--ink)}
 
 .say{display:flex;flex-direction:column;gap:9px;min-height:0}
 .confess{display:flex;flex-direction:column;gap:5px;min-height:0}
-.confess .box{flex:1 1 auto;min-height:0}
+/* Same reasoning as the name and email boxes: on ruled paper an unbordered
+   textarea is invisible, and people could not tell where the message went. */
+.confess .box{flex:1 1 auto;min-height:0;background:var(--paper-2);
+  border:var(--bw-pen) solid var(--ink-faint);border-radius:var(--radius-pen-md);
+  box-shadow:2px 2px 0 rgba(38,53,110,.09);padding:4px 6px;
+  transition:border-color var(--dur-err),box-shadow var(--dur-err)}
+.confess .box:focus-within{border-color:var(--ink);box-shadow:2px 3px 0 rgba(38,53,110,.2)}
 .confess textarea{width:100%;height:100%;display:block;resize:none;font-size:var(--fs-input);
   line-height:var(--rule-h);color:var(--ink);background:transparent;border:0;outline:none;
   padding:0 4px;border-radius:0;background-image:var(--bg-ruled-ink)}
+.confess.bad .box{border-color:var(--red);box-shadow:2px 2px 0 rgba(207,58,45,.18)}
 .confess.bad textarea{background-image:var(--bg-ruled-bad)}
 .confess textarea::placeholder,.field input::placeholder{color:var(--ink-faint);opacity:.85}
 .count{flex:none;text-align:right;font-weight:600;font-size:var(--fs-caption);
@@ -200,11 +212,33 @@ a{color:var(--red)}a:hover{color:var(--ink)}
 .stage-body{position:relative;flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center}
 #doll{display:block;aspect-ratio:1/1;width:auto;height:auto;max-width:100%;max-height:100%;
   flex:0 0 auto;margin:auto;touch-action:none;cursor:pointer}
-.rec{position:absolute;top:10px;left:15px;display:none;align-items:center;gap:7px;transform:rotate(-2deg)}
+/* The clock used to be a whisper in the corner and people never noticed the run
+   was timed. It is now a badge you cannot miss, and it turns urgent at 3s. */
+.rec{position:absolute;top:9px;left:12px;display:none;align-items:center;gap:8px;
+  transform:rotate(-1.6deg);background:var(--paper-2);
+  border:var(--bw-pen) solid var(--red);border-radius:var(--radius-pen-sm);
+  padding:5px 11px;box-shadow:2px 2px 0 rgba(207,58,45,.2)}
 .rec.on{display:flex}
-.rec i{width:10px;height:10px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
-.rec span{font-weight:700;font-size:var(--fs-small);color:var(--red)}
+.rec i{width:11px;height:11px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
+.rec span{font-weight:700;font-size:var(--fs-ui);color:var(--red);
+  font-variant-numeric:tabular-nums;line-height:1}
+.rec.ending{animation:urge .5s steps(2,end) infinite}
+@keyframes urge{50%{transform:rotate(-1.6deg) scale(1.07)}}
 @keyframes blink{50%{opacity:.15}}
+
+/* Says the run is timed before it starts, so ten seconds is not a surprise. */
+.clock{position:absolute;top:11px;left:14px;display:flex;align-items:center;gap:6px;
+  font-weight:700;font-size:var(--fs-caption);color:var(--pencil);
+  transform:rotate(-1.4deg);pointer-events:none;transition:opacity var(--dur-fade)}
+.rec.on ~ .clock{opacity:0}
+
+.redo{position:absolute;top:6px;right:96px;display:none;background:var(--hl);
+  border:var(--bw-pen) solid var(--ink);border-radius:var(--radius-pen-sm);cursor:pointer;
+  font-weight:700;font-size:var(--fs-caption);color:var(--ink);padding:7px 11px;min-height:36px;
+  box-shadow:2px 2px 0 rgba(38,53,110,.2)}
+.redo.on{display:block}
+.redo:hover{background:#ffe14d}
+.redo:active{transform:translate(1px,2px);box-shadow:1px 1px 0 rgba(38,53,110,.2)}
 .reset{position:absolute;top:6px;right:8px;background:none;border:0;cursor:pointer;font-weight:600;
   font-size:var(--fs-caption);color:var(--pencil);text-decoration:underline;text-underline-offset:3px;
   padding:8px 10px;min-height:40px}
@@ -539,7 +573,9 @@ a{color:var(--red)}a:hover{color:var(--ink)}
               </div>
               <div class="stage-body">
                 <canvas id="doll" width="440" height="440" aria-label="A hand-drawn voodoo doll. Tap or drag to hit him."></canvas>
-                <div class="rec" id="rec"><i></i><span id="rec-t">REC 4.8s</span></div>
+                <div class="rec" id="rec"><i></i><span id="rec-t">10.0s left</span></div>
+                <div class="clock" id="clock">you get <span id="clock-n">10</span> seconds</div>
+                <button class="redo" id="btn-redo" type="button">record again</button>
                 <button class="reset" id="btn-reset" type="button">start over</button>
                 <div class="hint" id="hint"></div>
               </div>
@@ -561,7 +597,8 @@ a{color:var(--red)}a:hover{color:var(--ink)}
         glad you sent tomorrow.</div>
       <div class="encoding" id="enc-label" hidden>making your gif…</div>
       <div class="prog" id="prog" hidden><i></i></div>
-      <button class="btn lg block" id="go" type="button">Preview &amp; send</button>
+      <!-- says what the next screen is, so nobody thinks this fires it off -->
+      <button class="btn lg block" id="go" type="button">Show me what they'll get</button>
       <footer class="legal">
         <span>18+</span>
         <a href="/privacy.html">Privacy</a>
@@ -1095,18 +1132,114 @@ $$('.tool').forEach(b => b.onclick = () => {
     const key = b.dataset.tool === 'fire' ? 'onFire' : 'loving';
     D[key] = !D[key];
     b.classList.toggle('on', D[key]);
-    if(D[key]) firstTouch();
+    if(D[key]){ firstTouch(); play(b.dataset.tool); nudge(b.dataset.tool); }
     if(b.dataset.tool === 'fire' && D.onFire){ D.loving = false; toolBtn('love').classList.remove('on'); }
     if(b.dataset.tool === 'love' && D.loving){ D.onFire = false; toolBtn('fire').classList.remove('on'); }
     return;
   }
   tool = b.dataset.tool;
   $$('.tool:not([data-toggle])').forEach(o => o.classList.toggle('on', o === b));
+  /* Punch and Pin only make their noise when he is actually hit, which is
+     correct — but pressing the button and hearing nothing at all reads as
+     "the sound is broken" rather than "that was only picking a tool". A small
+     tick says the press registered without pretending a hit happened. */
+  play('select');
+  nudge(b.dataset.tool);
 });
+
+/* Picking a tool is only half the action and people kept stopping there — they
+   chose Punch, nothing happened, and they assumed it was broken. Say the
+   missing half out loud, in the tool's own words, until they do it once. */
+const NUDGES = {
+  punch: 'now tap him',
+  pin:   'now tap where it goes',
+  fire:  'now tap him to make it worse',
+  love:  'tap him to be kind instead'
+};
+/* Each tool explains itself the first time it is picked, and never again. Tying
+   this to "have they touched him yet" instead was worse twice over: it swallowed
+   the nudge for fire and love, which mark him as touched the instant they switch
+   on, and it left the previous tool's words sitting there describing something
+   that was no longer happening. Four sentences, once each, is the whole budget. */
+const NUDGED = new Set();
+let nudgeTimer = null;
+function nudge(which){
+  const txt = NUDGES[which] || '';
+  const stale = Object.values(NUDGES).includes($('#hint').textContent);
+  if(NUDGED.has(which)){
+    if(stale) showHint('');                    // never leave the last tool's words up
+    return;
+  }
+  NUDGED.add(which);
+  showHint(txt);
+  clearTimeout(nudgeTimer);
+  nudgeTimer = setTimeout(() => {
+    // only clear our own words — something else may have put a hint up since
+    if($('#hint').textContent === txt) showHint('');
+  }, 2600);
+}
+
+/* ---------- sound ----------
+   Synthesised, not sampled. Four short noises do not justify four audio files:
+   files mean weight on a page that is one document, a licence to check for
+   every clip, and a request that can fail. This is a few lines of maths and
+   always sounds the same. Built on the first real tap because a browser will
+   not let a page make noise before it has been touched, and torn down to
+   nothing if the browser refuses — silence is a fine outcome, an error is not. */
+let AC = null;
+function audio(){
+  if(AC === false) return null;
+  if(!AC){
+    try { AC = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(err){ AC = false; return null; }
+  }
+  if(AC.state === 'suspended') AC.resume().catch(()=>{});
+  return AC;
+}
+/* one short burst of filtered noise — a thud, a hiss, whatever the numbers say */
+function noise(dur, from, to, gain, type){
+  const ac = audio(); if(!ac) return;
+  const n = Math.floor(ac.sampleRate * dur);
+  const buf = ac.createBuffer(1, n, ac.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const src = ac.createBufferSource(); src.buffer = buf;
+  const f = ac.createBiquadFilter(); f.type = type || 'lowpass';
+  f.frequency.setValueAtTime(from, ac.currentTime);
+  f.frequency.exponentialRampToValueAtTime(Math.max(to, 40), ac.currentTime + dur);
+  const g = ac.createGain();
+  g.gain.setValueAtTime(gain, ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
+  src.connect(f); f.connect(g); g.connect(ac.destination);
+  src.start();
+}
+/* one short pitched tone — for anything that should feel deliberate, not messy */
+function tone(freq, end, dur, gain, shape){
+  const ac = audio(); if(!ac) return;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = shape || 'sine';
+  o.frequency.setValueAtTime(freq, ac.currentTime);
+  o.frequency.exponentialRampToValueAtTime(Math.max(end, 20), ac.currentTime + dur);
+  g.gain.setValueAtTime(gain, ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
+  o.connect(g); g.connect(ac.destination);
+  o.start(); o.stop(ac.currentTime + dur);
+}
+const SFX = {
+  punch(){ noise(0.13, 900, 90, 0.42); tone(150, 55, 0.11, 0.3, 'triangle'); },
+  pin(){   tone(2300, 1500, 0.05, 0.16, 'square'); noise(0.05, 5000, 2600, 0.1, 'highpass'); },
+  fire(){  noise(0.55, 1300, 320, 0.15, 'bandpass'); },
+  love(){  tone(660, 990, 0.16, 0.13); setTimeout(() => tone(880, 1320, 0.2, 0.1), 90); },
+  reset(){ noise(0.22, 2400, 200, 0.1, 'highpass'); },
+  select(){ tone(1100, 1100, 0.035, 0.09, 'square'); }
+};
+let muted = false;
+function play(n){ if(!muted && SFX[n]) try{ SFX[n](); }catch(err){} }
 
 function strike(e){
   const p = toLocal(cv, D, e.clientX, e.clientY);
-  if(tool === 'punch') punch(D, p); else addPin(D, p);
+  if(tool === 'punch'){ punch(D, p); play('punch'); }
+  else { addPin(D, p); play('pin'); }
 }
 let hold = null;
 cv.addEventListener('pointerdown', e => {
@@ -1133,10 +1266,29 @@ function resetDoll(){
   D = newDoll();
   $$('.tool[data-toggle]').forEach(b => b.classList.remove('on'));
   stopRecording(true);
-  state.gifUrl = ''; state.gifBlob = null; state.isStill = false;
-  state.videoUrl = ''; state.videoBlob = null; state.videoExt = '';
+  clearCapture();
+  $('#clock').style.opacity = '';
+  $('#btn-redo').classList.remove('on');
+  play('reset');
   showHint('');
   paintMeters();
+}
+
+/* Keep the bruises, throw away the tape. Ten seconds goes fast and the first
+   run is usually someone working out what the buttons do — this gives them the
+   take they meant without making them start the whole thing again. */
+$('#btn-redo').onclick = () => {
+  stopRecording(true);
+  clearCapture();
+  D.touched = false;              // so the next tap starts a clean run
+  $('#clock').style.opacity = '';
+  $('#btn-redo').classList.remove('on');
+  showHint('hit him again — recording restarts');
+};
+
+function clearCapture(){
+  state.gifUrl = ''; state.gifBlob = null; state.isStill = false;
+  state.videoUrl = ''; state.videoBlob = null; state.videoExt = '';
 }
 function showHint(txt){
   $('#hint').textContent = txt;
@@ -1172,7 +1324,14 @@ function loop(now){
    The video is composed live into a 1080x1920 Story frame while you play,
    so it is finished the moment you stop. No waiting screen.
    ===================================================================== */
-const FPS_MS = 150, MAX_FRAMES = 32;      /* ~4.8 seconds */
+/* Ten seconds of beating. The video can have every one of those ticks, but the
+   GIF cannot: it goes in an email, and 67 frames of it weighs about 1.4MB where
+   the current 600KB already sits near the limit. So the two are decoupled — the
+   video samples every tick, the GIF takes every other one and doubles its frame
+   delay, which is the same ten seconds at the same weight, just softer. */
+const FPS_MS = 150, MAX_FRAMES = 67;      /* ~10 seconds */
+const GIF_EVERY = 2, GIF_DELAY = FPS_MS * GIF_EVERY;
+const REC_SECONDS = Math.round(MAX_FRAMES * FPS_MS / 1000);
 const GIF_W = 260, GIF_H = 260;           /* small on purpose — it has to fit in an email */
 const VID_W = 1080, VID_H = 1920;         /* 9:16 — the Story shape */
 
@@ -1256,24 +1415,30 @@ function startRecording(){
   }
 
   $('#rec').classList.add('on');
+  $('#clock').style.opacity = '0';
+  $('#btn-redo').classList.remove('on');
   capTimer = setInterval(() => {
-    if(gif){
+    if(gif && frames % GIF_EVERY === 0){
       rctx.drawImage(cv, 0, 0, DOLL_W, DOLL_H, 0, 0, GIF_W, GIF_H);
-      gif.addFrame(rc, {copy:true, delay:FPS_MS});
+      gif.addFrame(rc, {copy:true, delay:GIF_DELAY});
     }
     if(recorder && recorder.state === 'recording'){
       composeStoryFrame();
       try{ recorder._track.requestFrame(); }catch(e){}
     }
     frames++;
-    $('#rec-t').textContent = 'REC ' + ((MAX_FRAMES-frames)*FPS_MS/1000).toFixed(1) + 's';
+    const left = (MAX_FRAMES - frames) * FPS_MS / 1000;
+    $('#rec-t').textContent = left.toFixed(1) + 's left';
+    $('#rec').classList.toggle('ending', left <= 3);
     if(frames >= MAX_FRAMES) stopRecording();
   }, FPS_MS);
 }
 
 function stopRecording(discard){
   clearInterval(capTimer); capTimer = null;
-  $('#rec').classList.remove('on');
+  $('#rec').classList.remove('on', 'ending');
+  // ten seconds is not long, and the first run is usually a rehearsal
+  $('#btn-redo').classList.toggle('on', !discard && D.touched);
   if(recorder && recorder.state === 'recording'){
     try{ recorder.stop(); }catch(e){}
   }
