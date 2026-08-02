@@ -121,6 +121,19 @@ const confirm = (title, line, label, action) =>
 
 export default {
   async fetch(request, env) {
+    /* Anything that escapes below used to reach the visitor as Cloudflare's bare
+       "error code: 1101" with nothing in the response and nothing readable in
+       the logs. One catch turns every such case into a real answer. */
+    try {
+      return await handle(request, env);
+    } catch (err) {
+      console.error('unhandled', err && err.stack || String(err));
+      return json({ error: 'Something broke on our side.', ref: 'unhandled' }, 500);
+    }
+  }
+};
+
+async function handle(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
     const site = env.SITE_URL || url.origin;
@@ -262,10 +275,27 @@ export default {
       const reportUrl = `${site}/report?id=${mid}&t=${await token(env.BLOCK_SECRET, 'r:' + mid)}`;
       const gifUrl = gif && gif.size ? `${site}/media/${mid}.gif` : '';
 
-      const res = await fetch('https://api.resend.com/emails', {
+      /* A key gets here by being copied, and a copied secret picks up whitespace
+         — a trailing newline, or a line break in the middle if the box it was
+         copied from wrapped. Any of those is illegal in a header value and the
+         request throws before it is ever sent, which reads as a total outage
+         rather than a bad key. A Resend key is "re_" plus letters, digits and
+         underscores and never contains whitespace, so removing all of it can
+         only ever repair the paste. */
+      const key = String(env.RESEND_API_KEY || '').replace(/\s+/g, '');
+      if (!/^re_[A-Za-z0-9_]+$/.test(key)) {
+        // shape only — length and prefix say what is wrong without leaking it
+        console.error('resend: key does not look like a Resend key', 'len=' + key.length);
+        return json({ error: "We couldn't deliver that. Try again in a minute.",
+                      ref: 'key_shape', len: key.length, starts: key.slice(0, 3) }, 502);
+      }
+
+      let res;
+      try {
+        res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
-          authorization: 'Bearer ' + env.RESEND_API_KEY,
+          authorization: 'Bearer ' + key,
           'content-type': 'application/json'
         },
         body: JSON.stringify({
@@ -282,12 +312,21 @@ export default {
           // positive signal, and it keeps us out of the spam folder
           headers: { 'List-Unsubscribe': `<${blockUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }
         })
-      });
+        });
+      } catch (err) {
+        console.error('resend threw', err && err.stack || String(err));
+        // TEMPORARY diagnostic: the log stream is unreachable from here, so the
+        // reason has to travel in the response. The key is scrubbed out of it.
+        const why = String((err && (err.name + ': ' + err.message)) || err)
+          .split(key).join('[redacted]').slice(0, 200);
+        return json({ error: "We couldn't deliver that. Try again in a minute.", ref: 'resend_threw', why }, 502);
+      }
 
       if (!res.ok) {
         const detail = await res.text();
         console.error('resend failed', res.status, detail);
-        return json({ error: "We couldn't deliver that. Try again in a minute." }, 502);
+        // the status is safe to surface; the body is not, it can echo the key
+        return json({ error: "We couldn't deliver that. Try again in a minute.", ref: 'resend_' + res.status }, 502);
       }
 
       return json({ ok: true, id: mid });
@@ -313,5 +352,4 @@ export default {
       status: 404,
       headers: { 'content-type': 'text/html; charset=utf-8' }
     });
-  }
-};
+}
