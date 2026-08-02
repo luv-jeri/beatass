@@ -56,6 +56,8 @@ PAGE_SHELL = """<!DOCTYPE html>
 <meta property="og:image" content="{site}/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="{icon}">
+<link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <style>{css}</style>
 </head>
 <body>
@@ -210,6 +212,14 @@ def build_pages(public: pathlib.Path, app_html: str) -> int:
     if not touch.is_file():
         raise SystemExit("!! design/assets/brand/png/apple-touch-180.png is missing")
     (public / "apple-touch-icon.png").write_bytes(touch.read_bytes())
+    # Real favicon files: Google's favicon crawler cannot read the inline
+    # data-URI icon, so search results show a grey globe without these.
+    png = HERE / "design" / "assets" / "brand" / "png"
+    for src, dst in [("icon-512.png", "icon-512.png"), ("favicon-32.png", "favicon-32.png")]:
+        f = png / src
+        if not f.is_file():
+            raise SystemExit(f"!! design/assets/brand/png/{src} is missing")
+        (public / dst).write_bytes(f.read_bytes())
 
     (public / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
