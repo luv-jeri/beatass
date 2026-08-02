@@ -95,9 +95,15 @@ console.log('errors shown:', await p.isVisible('#f-name.bad'), await p.isVisible
 await p.fill('#i-name','Priya'); await p.fill('#i-email','priya@example.com');
 await p.click('.chip[data-tone="grudge"]'); await p.waitForTimeout(200);
 await p.fill('#i-msg',"You told everyone what I said in confidence. I smiled at you the next day anyway. I've been carrying that around for three years and you have no idea.");
+// the doll is optional: a valid form previews immediately, words-only, no clip
 await p.click('#go');
 await p.waitForTimeout(300);
-console.log('blocked until doll touched:', !(await p.isVisible('#ov-preview.on')), '| hint:', await p.textContent('#hint'));
+const noDollOpen = await p.isVisible('#ov-preview.on');
+const noDollClip = await p.evaluate(()=>document.querySelector('#ov-preview .gifwrap').hidden);
+console.log('previews without touching the doll:', noDollOpen, '| clip hidden:', noDollClip);
+if(!noDollOpen) errs.push('preview did not open without touching the doll');
+if(noDollOpen && !noDollClip) errs.push('untouched preview still shows a clip');
+await p.click('#btn-back'); await p.waitForTimeout(250);
 
 const box=await p.locator('#doll').boundingBox(); const at=(x,y)=>({x:box.x+box.width*x,y:box.y+box.height*y});
 for(const c of [[0.42,0.3],[0.58,0.4],[0.44,0.5],[0.6,0.32]]){const q=at(...c);await p.mouse.click(q.x,q.y);await p.waitForTimeout(170);}

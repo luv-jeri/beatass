@@ -1582,12 +1582,15 @@ $('#go').onclick = preview;
 function preview(){
   const v = validate();
   if(!v) return;
+  if(state.gifUrl){ openPreview(v); return; }
+
+  /* The doll is optional. No touch means no recording — the message goes
+     words-only, and the preview simply shows no clip. */
   if(!D.touched){
-    showHint('hit me first!');
-    setTimeout(() => { if(!D.touched) showHint(''); }, 2500);
+    state.stats = '';
+    openPreview(v);
     return;
   }
-  if(state.gifUrl){ openPreview(v); return; }
 
   stopRecording();
   const btn = $('#go');
@@ -1623,7 +1626,11 @@ function openPreview(v){
   $('#p-greet').textContent = 'Hi ' + v.name + ', somebody used beatass.com to tell you something.';
   $('#p-msg').textContent   = v.msg;
   $('#p-sub').textContent   = v.name + ', someone finally said it';
-  $('#p-gif').src = state.gifUrl;
+  /* No recording = no clip in the mock email, and no caption either. The
+     server side already renders both email and view page without a GIF. */
+  const hasClip = !!state.gifUrl;
+  $('#p-gif').closest('.gifwrap').hidden = !hasClip;
+  $('#p-gif').src = hasClip ? state.gifUrl : '';
   state.v = v;                       // send() needs these after the overlay opens
   showSendErr('');
   /* The front end is the only place that knows whether this was love or a
@@ -1631,7 +1638,8 @@ function openPreview(v){
      Worker used to rebuild it from the stats alone, which meant a loving
      message arrived captioned as an assault. */
   const loved = D.loveMs > D.fireMs && D.love > 40;
-  state.caption = loved
+  state.caption = !hasClip ? ''
+    : loved
     ? '…and this is how they feel about you.'
     : '…and this is what they did to you. (' + state.stats + ')';
   $('#p-cap').textContent = state.caption;
