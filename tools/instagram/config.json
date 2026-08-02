@@ -5,6 +5,15 @@
 
   "contentDir": "content/instagram",
 
+  "_formats": "Which outputs a message's tone chip produces. fury earns the beating reel, soft stays a quiet story card; everything gets the feed post.",
+  "formats": {
+    "fury":  ["post", "reel"],
+    "petty": ["post", "story"],
+    "sad":   ["post", "story"],
+    "soft":  ["post", "story"],
+    "default": ["post"]
+  },
+
   "caption": "say the thing you'd never say. anonymous, free, at beatass.com",
 
   "hashtags": [
