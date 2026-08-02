@@ -17,8 +17,9 @@ pin him, set him on fire, or love him — and the site records ten seconds of th
 and emails it to them as a short looping animation alongside your words.
 
 It is funny, a little mean, and quietly sincere. The joke is the doll. The point
-is the message. It is not a prank tool and it is not cute — someone receiving one
-should feel seen, not attacked.
+is the message. The doll is soft and a little cute on purpose — hurting something
+that adorable is the tension the whole product runs on. But it is not a prank
+tool: someone receiving one should feel seen, not attacked.
 
 Free, no sign-up, one page.
 
@@ -55,10 +56,12 @@ drawn by hand in pen on ruled paper.
    loudest "made by a machine" signal in the design.
 4. **Lines look drawn, not plotted.** Slightly uneven weight, ends that overshoot
    the corner a little, a wobble in a long stroke. Confident, not shaky.
-5. **The doll is a stick figure.** Round head, dot eyes, a straight-line body and
-   four straight limbs, all in ballpoint blue, hanging from a thin string. He has
-   a faint smile even while being hit — that contrast is most of the joke. He is
-   drawn on graph paper, not ruled paper.
+5. **The doll is a soft plush voodoo doll, drawn by hand.** A big round head with
+   two solid dot eyes, worried little brows, pink cheek blush and a small smile; a
+   chubby bean-shaped body with a stitched seam down the tummy; stubby arms and
+   legs. All of it in ballpoint blue line with a plush off-white fill, hanging
+   from a thin string. He keeps the faint smile even while being hit — that
+   contrast is most of the joke. He is drawn on graph paper, not ruled paper.
 6. **Typography is handwriting.** Three hands are already in use: a rounded print
    hand for body text, a looser script for the tagline, and a thick marker for
    the logo word. Match that spirit; do not introduce a geometric sans.
@@ -82,9 +85,10 @@ Give me:
 
 ### 2. The icon (the doll's head)
 
-A mark that works at 16 pixels. The full stick figure will not survive that, so
-I need his head alone: the circle, the two dot eyes, the little smile, and the
-string coming off the top. Ballpoint blue line on paper cream.
+A mark that works at 16 pixels. The full doll will not survive that, so I need
+his head alone: the big round circle, the two solid dot eyes, the pink cheek
+blush, the little smile, and the string coming off the top. Ballpoint blue line
+on paper cream. If the blush muddies at tiny sizes, drop it there.
 
 Give me:
 - **Full detail** — for 512px and up.
@@ -148,8 +152,9 @@ existing one — treat it as a first attempt to beat, not as a constraint.
   in the product is a hard offset one, like a sticker lifted off the page.
 - A polished startup logo. If it looks like it came from a brand agency, it is
   wrong.
-- A cartoon character with personality, big expressive eyes, or a mascot pose.
-  He is a stick figure someone drew while bored in a lesson. That is the point.
+- A corporate mascot. He is cute, but homemade-cute — a small stuffed doll
+  someone drew by hand in a lesson — never Pixar-cute. No mascot poses, no
+  glossy rendering, no giant sparkly eyes. Dot eyes, wobbly line, done.
 - Anything that reads as violent or genuinely nasty. He gets hit and he keeps
   smiling. Menace kills it.
 - Emoji. Not once.

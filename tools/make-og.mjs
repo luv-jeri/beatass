@@ -20,11 +20,15 @@ const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 // the real doll, lifted from template.html's <defs> so the card can never
 // drift into being a different drawing than the site's
 const DOLL = `
-<path d="M75 4v30c0 5 8 6 12 9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-<path d="M92 56c1-11-7-19-17-19s-18 8-17 19c1 10 8 17 17 17s16-7 17-17z" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linejoin="round"/>
-<path d="M67 51c1.5 1 3 1 4.5 0M83 51c-1.5 1-3 1-4.5 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-<path d="M68 63c4-3 10-3 14 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-<path d="M75 74v58M75 88c-14 5-22 12-29 22M75 88c14 5 23 12 29 22M75 132c-8 14-14 24-19 36M75 132c8 14 15 24 20 36" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>`;
+<path d="M75 3v13c0 4 4 5 7 7" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+<path d="M52 122c-8 4-14 9-18 15M98 122c8 4 14 9 18 15M65 168c-1 12-2 22-3 30M85 168c1 12 2 22 3 30" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+<ellipse cx="75" cy="130" rx="30" ry="46" fill="#fffdf5" stroke="currentColor" stroke-width="5"/>
+<path d="M75 112v34M71 122h8M71 132h8M71 142h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".45"/>
+<ellipse cx="75" cy="54" rx="37" ry="34" fill="#fffdf5" stroke="currentColor" stroke-width="5"/>
+<path d="M53 39c3-3 7-4 10-3M97 39c-3-3-7-4-10-3" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+<circle cx="62" cy="51" r="4.5" fill="currentColor"/><circle cx="88" cy="51" r="4.5" fill="currentColor"/>
+<circle cx="52" cy="63" r="5" fill="#e0507f" opacity=".3"/><circle cx="98" cy="63" r="5" fill="#e0507f" opacity=".3"/>
+<path d="M69 66c3 3 9 3 12 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`;
 
 const font = (f) => fs.readFileSync(path.join(ROOT, 'fonts', f)).toString('base64');
 
@@ -54,7 +58,7 @@ body:before{content:'';position:absolute;left:56px;top:0;bottom:0;width:2px;back
 <svg class="doll" viewBox="0 0 150 210">
   ${DOLL}
   <g stroke="#cf3a2d" stroke-width="3" stroke-linecap="round">
-    <path d="M62 96l-11-7M96 112l12-6M70 120l-12 5"/>
+    <path d="M56 116l8 7M64 116l-8 7M86 146l8 7M94 146l-8 7"/>
   </g>
 </svg>`;
 

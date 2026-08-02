@@ -14,6 +14,7 @@
  * The login session is stored OUTSIDE this repo, in
  * ~/.config/beatass-instagram/, because a saved session is a credential and
  * credentials never live in a repo.
+ * The username/password also live there, in credentials.json.
  *
  * Instagram redesigns its web interface regularly. When a step stops matching,
  * the run stops and writes a screenshot to tools/instagram/last-failure.png so
@@ -31,6 +32,18 @@ const CONFIG = JSON.parse(fs.readFileSync(path.join(HERE, 'config.json'), 'utf8'
 
 // a saved browser session is a credential: keep it out of the repo
 const SESSION = path.join(os.homedir(), '.config', 'beatass-instagram');
+
+// Username/password live OUTSIDE the repo too, next to the saved session.
+// Fill them in at ~/.config/beatass-instagram/credentials.json:
+//   { "username": "your_handle", "password": "your_password" }
+function credentials() {
+  const f = path.join(SESSION, 'credentials.json');
+  try {
+    const c = JSON.parse(fs.readFileSync(f, 'utf8'));
+    if (c.username && c.password) return c;
+  } catch (e) { /* fall through to env vars */ }
+  return { username: process.env.IG_USERNAME, password: process.env.IG_PASSWORD };
+}
 
 const DRY = process.argv.includes('--dry-run');
 const LOGIN_ONLY = process.argv.includes('--login');
@@ -82,10 +95,9 @@ async function ensureLoggedIn(page) {
 
   const loginField = page.locator('input[name="username"]');
   if (await loginField.count() && await loginField.isVisible().catch(() => false)) {
-    const user = process.env.IG_USERNAME;
-    const pass = process.env.IG_PASSWORD;
+    const { username: user, password: pass } = credentials();
     if (!user || !pass)
-      die('Not logged in, and IG_USERNAME / IG_PASSWORD are not set.\n  Run:  IG_USERNAME=you IG_PASSWORD=... node tools/instagram/post.mjs --login');
+      die('Not logged in, and no credentials found.\n  Put them in ' + path.join(SESSION, 'credentials.json') + ' like:\n  { "username": "your_handle", "password": "your_password" }');
 
     say('logging in...');
     await loginField.fill(user);
