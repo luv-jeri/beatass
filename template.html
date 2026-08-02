@@ -212,8 +212,6 @@ a{color:var(--red)}a:hover{color:var(--ink)}
 .stage{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;
   border:var(--bw-pen-heavy) solid var(--ink);background:var(--paper-2);
   border-radius:var(--radius-pen-lg);min-height:0;margin:0 auto;max-width:100%}
-.stage-head{flex:none;padding:11px 12px 10px;border-bottom:var(--bw-pen) dotted var(--ink-faint);
-  display:flex;gap:14px}
 .stage-body{position:relative;flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center}
 #doll{display:block;aspect-ratio:1/1;width:auto;height:auto;max-width:100%;max-height:100%;
   flex:0 0 auto;margin:auto;touch-action:none;cursor:pointer}
@@ -269,17 +267,6 @@ a{color:var(--red)}a:hover{color:var(--ink)}
 .tool[data-tool="fire"].on{background:rgba(255,150,40,.26)}
 .tool[data-tool="love"].on{background:rgba(255,185,207,.55);border-color:var(--heart);color:var(--heart)}
 
-.gauge{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
-.gauge .head{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
-.gauge .head span{font-weight:700;font-size:var(--fs-small);line-height:1;color:var(--pencil);
-  transition:color var(--dur-fill)}
-.gauge .head .pct{font-variant-numeric:tabular-nums;color:var(--ink-faint)}
-.gauge.live .head span{color:var(--red)}
-.gauge.love.live .head span{color:var(--heart)}
-.gauge .track{height:16px;overflow:hidden;background:var(--paper-2);
-  border:var(--bw-pen) solid var(--ink);border-radius:var(--radius-pen-sm)}
-.gauge .track i{display:block;height:100%;width:0;background:var(--red);transition:width var(--dur-fill)}
-.gauge.love .track i{background:var(--hl-pink)}
 
 /* ============================================================
    BUTTONS
@@ -558,16 +545,6 @@ a{color:var(--red)}a:hover{color:var(--ink)}
           <div class="pane-label desk">now take it out on him</div>
           <div class="arena">
             <div class="stage">
-              <div class="stage-head">
-                <div class="gauge" id="g-dmg">
-                  <div class="head"><span>damage</span><span class="pct">0%</span></div>
-                  <div class="track"><i></i></div>
-                </div>
-                <div class="gauge love" id="g-love">
-                  <div class="head"><span>love</span><span class="pct">0%</span></div>
-                  <div class="track"><i></i></div>
-                </div>
-              </div>
               <div class="stage-body">
                 <canvas id="doll" width="440" height="440" aria-label="A hand-drawn voodoo doll. Tap or drag to hit him."></canvas>
                 <div class="rec" id="rec"><i></i><span id="rec-t">10.0s left</span></div>
@@ -1334,16 +1311,9 @@ function showHint(txt){
   $('#hint').textContent = txt;
   $('#hint').classList.toggle('on', !!txt);
 }
-function paintMeters(){
-  const set = (sel, v) => {
-    const g = $(sel);
-    g.querySelector('.track i').style.width = v + '%';
-    g.querySelector('.pct').textContent = Math.round(v) + '%';
-    g.classList.toggle('live', v > 4);
-  };
-  set('#g-dmg', D.damage);
-  set('#g-love', D.love);
-}
+/* the damage/love bars were removed 2026-08-02 (bad feedback) — the numbers
+   still drive the faces and the recording's side note */
+function paintMeters(){}
 
 let last = performance.now();
 function loop(now){
