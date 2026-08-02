@@ -648,16 +648,19 @@ async function handle(request, env) {
 
       const sent = await sendViaResend(env, {
         from: env.MAIL_FROM,
-        // When the sender left an address, a plain mail-app reply must reach
-        // them - so the reply-to carries the message id back to our email()
-        // handler. When they left nothing, replies still land with us.
-        reply_to: senderEmail ? replyAddr(env, mid) : env.MAIL_REPLY_TO,
+        // ALWAYS route replies through reply+<id>@ back to our email() handler,
+        // whether or not the sender left an address. With an address it relays
+        // to them; without one the handler answers the anonymity notice. If we
+        // pointed no-address replies at a plain mailbox instead, that notice
+        // branch would be dead code and a reply would vanish with no feedback -
+        // which is exactly the "I replied and nothing happened" bug.
+        reply_to: replyAddr(env, mid),
         to: [email],
         subject: `${name}, someone finally said it`,
         html: emailHtml({ name, body, stats, caption, gifUrl, pageUrl: site, blockUrl, reportUrl, replyUrl }),
         text: senderEmail
           ? `Hi ${name}, somebody used beatass.com to say something to you. They chose to stay anonymous.\n\n"${body}"\n\nThey left a way to hear back. Reply to this email and it reaches them (they stay anonymous), or write it here:\n${replyUrl}\n\nSend one of your own - free, anonymous, no sign-up:\n${site}\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`
-          : `Hi ${name}, somebody used beatass.com to say something to you. They chose to stay anonymous.\n\n"${body}"\n\nReplying to this email reaches us, not them. To say something back, send your own - free, anonymous, no sign-up:\n${site}\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`,
+          : `Hi ${name}, somebody used beatass.com to say something to you. They chose to stay anonymous.\n\n"${body}"\n\nThey stayed anonymous, so a reply can't reach them - hit reply and we'll tell you so, we won't leave you hanging. To say something back, send your own - free, anonymous, no sign-up:\n${site}\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`,
         // one-click unsubscribe: mail providers treat this as a strong
         // positive signal, and it keeps us out of the spam folder
         headers: { 'List-Unsubscribe': `<${blockUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }
