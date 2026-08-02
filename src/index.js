@@ -417,13 +417,273 @@ async function sendViaResend(env, payload) {
    not a copy that drifts. Unused by the Worker itself. */
 export { emailHtml };
 
+/* ---------- admin dashboard ----------
+   Password-gated, never indexed, fail-closed. One page that shows the product
+   end to end - messages, channels, media, reports, and site visits - so the
+   operator never has to open the database by hand. It reads D1 directly and
+   writes nothing except the anonymous visit counter. Privacy is the whole
+   promise of this product, so this door stays shut unless a secret opens it. */
+
+function cookieVal(request, name) {
+  const c = request.headers.get('cookie') || '';
+  const m = c.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'));
+  return m ? decodeURIComponent(m[1]) : '';
+}
+
+/* The cookie is <exp>.<sig>; sig is signed over the one admin email + its
+   expiry with the same secret the block links use, so a cookie cannot be
+   forged and lapses on its own after seven days. */
+const adminSig = (env, exp) =>
+  token(env.BLOCK_SECRET, 'admin:' + String(env.ADMIN_EMAIL).trim().toLowerCase() + ':' + exp);
+
+/* Fail-closed: with no password set, nobody is admin - so the code is safe to
+   deploy before the secret exists. Sanjay sets ADMIN_EMAIL + ADMIN_PASSWORD
+   with `wrangler secret put` to open the door. */
+async function requireAdmin(request, env) {
+  if (!env.ADMIN_PASSWORD || !env.ADMIN_EMAIL) return false;
+  const raw = cookieVal(request, 'ba_admin');
+  const dot = raw.lastIndexOf('.');
+  if (dot < 1) return false;
+  const exp = raw.slice(0, dot);
+  const sig = raw.slice(dot + 1);
+  if (!/^\d+$/.test(exp) || parseInt(exp, 10) < Math.floor(Date.now() / 1000)) return false;
+  return sameToken(sig, await adminSig(env, exp));
+}
+
+/* A page view, counted without a cookie or a raw IP - only day + path +
+   country. The table is created on first use because local wrangler cannot
+   reach remote D1 to migrate it. Always runs under waitUntil, so a visitor
+   never waits on it. */
+async function logVisit(env, path, country) {
+  try {
+    const day = new Date().toISOString().slice(0, 10);
+    await env.DB.prepare(
+      'CREATE TABLE IF NOT EXISTS visits (day TEXT, path TEXT, country TEXT, n INTEGER, PRIMARY KEY (day, path, country))'
+    ).run();
+    await env.DB.prepare(
+      'INSERT INTO visits (day, path, country, n) VALUES (?, ?, ?, 1) ' +
+      'ON CONFLICT(day, path, country) DO UPDATE SET n = n + 1'
+    ).bind(day, path, country).run();
+  } catch (err) {
+    console.error('visit log', err && err.stack || String(err));
+  }
+}
+
+/* Everything the dashboard shows, in one gather. created_at is unix SECONDS
+   (not an ISO string), so every window compares against strftime('%s', ...)
+   cast to an integer - a text/date compare here would silently return nothing
+   and every number would read as zero. */
+async function adminData(env) {
+  // the visits table may not exist yet (no visit logged since deploy)
+  await env.DB.prepare(
+    'CREATE TABLE IF NOT EXISTS visits (day TEXT, path TEXT, country TEXT, n INTEGER, PRIMARY KEY (day, path, country))'
+  ).run();
+
+  const stats = await env.DB.prepare(
+    `SELECT COUNT(*) total,
+       SUM(CASE WHEN created_at >= CAST(strftime('%s','now','-1 day')  AS INTEGER) THEN 1 ELSE 0 END) d1,
+       SUM(CASE WHEN created_at >= CAST(strftime('%s','now','-7 days')  AS INTEGER) THEN 1 ELSE 0 END) d7,
+       SUM(CASE WHEN created_at >= CAST(strftime('%s','now','-30 days') AS INTEGER) THEN 1 ELSE 0 END) d30,
+       COALESCE(SUM(has_gif),0) gifs,
+       COALESCE(SUM(has_mp4),0) mp4s,
+       COALESCE(SUM(reports),0) reports_total,
+       SUM(CASE WHEN reports > 0 THEN 1 ELSE 0 END) reported_rows,
+       SUM(CASE WHEN to_email <> '' THEN 1 ELSE 0 END) with_email,
+       SUM(CASE WHEN to_handle IS NOT NULL AND to_handle <> '' THEN 1 ELSE 0 END) with_handle,
+       SUM(CASE WHEN sender_email IS NOT NULL AND sender_email <> '' THEN 1 ELSE 0 END) with_reply
+     FROM messages`
+  ).first();
+
+  const chart = await env.DB.prepare(
+    `SELECT date(created_at,'unixepoch') d, COUNT(*) n FROM messages
+     WHERE created_at >= CAST(strftime('%s','now','-13 days') AS INTEGER)
+     GROUP BY d`
+  ).all();
+
+  const blocks = await env.DB.prepare('SELECT COUNT(*) c FROM blocklist').first();
+
+  const recent = await env.DB.prepare(
+    `SELECT id, to_name, to_email, to_handle, body, has_gif, has_mp4, reports, sender_email, created_at
+     FROM messages ORDER BY created_at DESC LIMIT 50`
+  ).all();
+
+  const vToday = await env.DB.prepare("SELECT COALESCE(SUM(n),0) n FROM visits WHERE day = date('now')").first();
+  const vWeek  = await env.DB.prepare("SELECT COALESCE(SUM(n),0) n FROM visits WHERE day >= date('now','-6 days')").first();
+  const vPaths = await env.DB.prepare("SELECT path, SUM(n) n FROM visits WHERE day >= date('now','-6 days') GROUP BY path ORDER BY n DESC LIMIT 5").all();
+  const vCountries = await env.DB.prepare("SELECT country, SUM(n) n FROM visits WHERE day >= date('now','-6 days') GROUP BY country ORDER BY n DESC LIMIT 8").all();
+
+  return {
+    stats: stats || {},
+    chart: chart.results || [],
+    blocks: (blocks && blocks.c) || 0,
+    recent: recent.results || [],
+    visits: {
+      today: (vToday && vToday.n) || 0,
+      week: (vWeek && vWeek.n) || 0,
+      paths: vPaths.results || [],
+      countries: vCountries.results || []
+    }
+  };
+}
+
+const ADMIN_SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+
+/* The login card. Same paper and ink as the site, so the door looks like it
+   belongs to the house. Shown for GET, and re-shown with a message on a bad
+   POST. Never indexed, never cached. */
+function loginPage(errmsg, status = 200) {
+  return new Response(
+    `<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><meta name="color-scheme" content="light only">
+<title>control room - beatass</title></head>
+<body style="margin:0;min-height:100dvh;display:grid;place-items:center;background:#e8e0cc;font-family:${ADMIN_SANS};color:#26356e;padding:24px">
+<form method="POST" action="/admin/login" style="width:100%;max-width:360px;background:#fbf7ea;border:2px solid #26356e;border-radius:16px 11px 18px 10px;padding:26px 24px">
+<h1 style="margin:0 0 4px;font-size:24px">beatass control room</h1>
+<p style="margin:0 0 20px;font-size:14px;color:#5b6a9c">Admin only. Sign in to see everything.</p>
+${errmsg ? `<p style="margin:0 0 16px;font-size:14px;color:#cf3a2d;font-weight:700">${esc(errmsg)}</p>` : ''}
+<label style="display:block;font-size:13px;color:#5b6a9c;margin:0 0 5px">email</label>
+<input name="email" type="email" autocomplete="username" required style="width:100%;box-sizing:border-box;font:inherit;font-size:16px;color:#26356e;background:#fffdf5;border:2px solid #26356e;border-radius:10px 8px 11px 7px;padding:11px 12px;margin:0 0 14px">
+<label style="display:block;font-size:13px;color:#5b6a9c;margin:0 0 5px">password</label>
+<input name="password" type="password" autocomplete="current-password" required style="width:100%;box-sizing:border-box;font:inherit;font-size:16px;color:#26356e;background:#fffdf5;border:2px solid #26356e;border-radius:10px 8px 11px 7px;padding:11px 12px;margin:0 0 20px">
+<button type="submit" style="width:100%;font:inherit;font-size:16px;font-weight:700;padding:13px;color:#fff;background:#cf3a2d;border:0;border-radius:12px 9px 13px 8px;cursor:pointer">Sign in</button>
+</form>
+</body></html>`,
+    { status, headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex', 'cache-control': 'no-store' } }
+  );
+}
+
+/* The dashboard itself. All output escaped; body text is shown so the operator
+   can moderate, and that is the reason the page is password-gated. */
+function adminPage(data) {
+  const PAPER = '#fbf7ea', PAPER2 = '#fffdf5', INK = '#26356e',
+        RED = '#cf3a2d', SOFT = '#5b6a9c', FAINT = '#93a0c2';
+  const n = (x) => Number(x || 0).toLocaleString('en-US');
+  const s = data.stats || {};
+
+  // 14 calendar days, oldest -> newest, with gaps filled to zero
+  const byDay = {};
+  for (const r of data.chart) byDay[r.d] = r.n;
+  const days = [];
+  for (let i = 13; i >= 0; i--) {
+    const key = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+    days.push({ key, label: key.slice(5), num: byDay[key] || 0 });
+  }
+  const peak = Math.max(1, ...days.map((d) => d.num));
+  const bars = days.map((d) =>
+    `<div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;text-align:center">
+      <div style="font-size:11px;font-weight:700;color:${d.num ? INK : FAINT};margin:0 0 3px">${d.num}</div>
+      <div title="${esc(d.key)}: ${d.num}" style="width:66%;height:${Math.round(d.num / peak * 100)}%;min-height:3px;background:${d.num ? RED : '#e3d9bd'};border-radius:6px 5px 3px 5px"></div>
+      <div style="font-size:9px;color:${FAINT};margin:5px 0 0">${esc(d.label)}</div>
+    </div>`
+  ).join('');
+
+  const card = (title, inner) =>
+    `<div style="background:${PAPER2};border:2px solid ${INK};border-radius:16px 11px 18px 10px;padding:16px 18px">
+      <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:${FAINT};margin:0 0 10px">${esc(title)}</div>
+      ${inner}</div>`;
+
+  const stat = (label, value, sub) =>
+    `<div style="background:${PAPER2};border:2px solid ${INK};border-radius:16px 11px 18px 10px;padding:16px 18px">
+      <div style="font-size:34px;font-weight:800;line-height:1;color:${INK}">${value}</div>
+      <div style="font-size:13px;color:${SOFT};margin:8px 0 0">${esc(label)}</div>
+      ${sub ? `<div style="font-size:12px;color:${FAINT};margin:3px 0 0">${esc(sub)}</div>` : ''}
+    </div>`;
+
+  const rows = (list, empty) =>
+    (list && list.length)
+      ? list.map((r) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:14px;color:${INK}"><span style="color:${SOFT};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.k)}</span><span style="font-weight:700">${n(r.n)}</span></div>`).join('')
+      : `<div style="font-size:13px;color:${FAINT}">${esc(empty)}</div>`;
+
+  const recentRows = (data.recent || []).map((r) => {
+    const when = new Date(r.created_at * 1000).toISOString().slice(0, 16).replace('T', ' ');
+    const chan = (r.to_email && r.to_handle) ? 'email + ig'
+      : r.to_email ? 'email'
+      : r.to_handle ? '@' + r.to_handle : '-';
+    const dest = r.to_email ? r.to_email : (r.to_handle ? '@' + r.to_handle : '');
+    const media = [r.has_gif ? 'GIF' : '', r.has_mp4 ? 'MP4' : ''].filter(Boolean).join(' ') || '-';
+    return `<tr style="border-top:1px solid #e3d9bd">
+      <td style="padding:8px 8px;color:${FAINT};white-space:nowrap;font-size:12px">${esc(when)}</td>
+      <td style="padding:8px 8px;color:${INK}">${esc(r.to_name)}<div style="font-size:11px;color:${FAINT}">${esc(dest)}</div></td>
+      <td style="padding:8px 8px;color:${SOFT};white-space:nowrap">${esc(chan)}</td>
+      <td style="padding:8px 8px;color:${SOFT};white-space:nowrap">${esc(media)}</td>
+      <td style="padding:8px 8px;text-align:center;font-weight:700;color:${r.reports ? RED : FAINT}">${n(r.reports)}</td>
+      <td style="padding:8px 8px;color:${INK};max-width:340px">${esc(r.body)}</td>
+    </tr>`;
+  }).join('');
+
+  return `<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><meta name="color-scheme" content="light only">
+<title>control room - beatass</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:${PAPER};font-family:${ADMIN_SANS};color:${INK}}
+  .wrap{max-width:1040px;margin:0 auto;padding:26px 18px 60px}
+  .grid{display:grid;gap:14px}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  @media (max-width:820px){.g4{grid-template-columns:repeat(2,1fr)}.g3,.g2{grid-template-columns:1fr}}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;padding:8px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:${FAINT};font-weight:700}
+</style></head>
+<body>
+<div class="wrap">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin:0 0 6px">
+    <h1 style="margin:0;font-size:28px">beatass control room</h1>
+    <a href="/admin/logout" style="font-size:14px;color:${SOFT}">Sign out</a>
+  </div>
+  <p style="margin:0 0 22px;font-size:14px;color:${FAINT}">Everything the site knows, in one place. Only you can see this.</p>
+
+  <div class="grid g4" style="margin:0 0 14px">
+    ${stat('confessions, all time', n(s.total))}
+    ${stat('last 24 hours', n(s.d1))}
+    ${stat('last 7 days', n(s.d7))}
+    ${stat('last 30 days', n(s.d30))}
+  </div>
+
+  ${card('confessions per day (last 14 days)',
+    `<div style="display:flex;align-items:flex-end;gap:5px;height:170px">${bars}</div>`)}
+
+  <div class="grid g3" style="margin:14px 0">
+    ${card('how they were reached',
+      `<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:15px"><span style="color:${SOFT}">by email</span><span style="font-weight:700">${n(s.with_email)}</span></div>
+       <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:15px"><span style="color:${SOFT}">by instagram handle</span><span style="font-weight:700">${n(s.with_handle)}</span></div>
+       <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:15px"><span style="color:${SOFT}">left a reply address</span><span style="font-weight:700">${n(s.with_reply)}</span></div>`)}
+    ${card('clips made',
+      `<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:15px"><span style="color:${SOFT}">GIFs</span><span style="font-weight:700">${n(s.gifs)}</span></div>
+       <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:15px"><span style="color:${SOFT}">MP4s</span><span style="font-weight:700">${n(s.mp4s)}</span></div>`)}
+    ${card('safety',
+      `<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:15px"><span style="color:${SOFT}">messages reported</span><span style="font-weight:700;color:${s.reported_rows ? RED : INK}">${n(s.reported_rows)}</span></div>
+       <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:15px"><span style="color:${SOFT}">reports total</span><span style="font-weight:700">${n(s.reports_total)}</span></div>
+       <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:15px"><span style="color:${SOFT}">addresses blocked</span><span style="font-weight:700">${n(data.blocks)}</span></div>`)}
+  </div>
+
+  <div class="grid g3" style="margin:14px 0">
+    ${stat('site visits today', n(data.visits.today), 'homepage + message views')}
+    ${stat('visits, last 7 days', n(data.visits.week), 'server-logged, no cookies')}
+    ${card('top countries (7d)', rows((data.visits.countries || []).map((r) => ({ k: r.country || '??', n: r.n })), 'no visits logged yet'))}
+  </div>
+
+  ${card('recent confessions (latest 50)',
+    `<div style="overflow-x:auto"><table>
+      <thead><tr><th>when (UTC)</th><th>to</th><th>channel</th><th>media</th><th>reports</th><th>message</th></tr></thead>
+      <tbody>${recentRows || `<tr><td colspan="6" style="padding:14px 8px;color:${FAINT}">Nothing sent yet.</td></tr>`}</tbody>
+    </table></div>`)}
+
+  <p style="margin:22px 0 0;font-size:12px;color:${FAINT}">Email opens and delivery, and live Instagram numbers, are not here yet - they live outside this database. Coming in a later pass; nothing above is estimated.</p>
+</div>
+</body></html>`;
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     /* Anything that escapes below used to reach the visitor as Cloudflare's bare
        "error code: 1101" with nothing in the response and nothing readable in
        the logs. One catch turns every such case into a real answer. */
     try {
-      return await handle(request, env);
+      return await handle(request, env, ctx);
     } catch (err) {
       console.error('unhandled', err && err.stack || String(err));
       return json({ error: 'Something broke on our side.', ref: 'unhandled' }, 500);
@@ -551,10 +811,78 @@ export default {
   }
 };
 
-async function handle(request, env) {
+async function handle(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname;
     const site = env.SITE_URL || url.origin;
+
+    /* Count real page views the Worker actually sees - the homepage and the
+       message page. Static pages (about/privacy/terms) are served by Cloudflare
+       before this Worker runs, so they never reach here; the dashboard says so
+       rather than pretending to count them. No cookie, no raw IP, off the
+       response path. */
+    if ((path === '/' || path === '/m') && ctx && ctx.waitUntil)
+      ctx.waitUntil(logVisit(env, path, request.cf?.country || '??'));
+
+    /* ---------- admin dashboard (password-gated, never indexed) ----------
+       Fail-closed: with no ADMIN_PASSWORD/ADMIN_EMAIL secret set, the login
+       always rejects and /admin always bounces to it - so this is safe to ship
+       before the secrets exist. */
+    if (path === '/admin/login') {
+      if (request.method === 'POST') {
+        // brute-force guard: a public login gets a per-IP attempt ceiling
+        const ip = request.headers.get('CF-Connecting-IP') || '0.0.0.0';
+        const ipHash = await hashIp(env.BLOCK_SECRET, ip);
+        const lk = 'al:' + ipHash;
+        const tries = parseInt((await env.RATE.get(lk)) || '0', 10);
+        if (tries >= 10) return loginPage('Too many attempts. Wait a few minutes.', 429);
+        await env.RATE.put(lk, String(tries + 1), { expirationTtl: 15 * 60 });
+
+        if (!env.ADMIN_PASSWORD || !env.ADMIN_EMAIL)
+          return loginPage('Admin access is not set up yet.', 503);
+
+        let form;
+        try { form = await request.formData(); } catch { return loginPage('Something went wrong. Try again.', 400); }
+        const email = String(form.get('email') || '').trim().toLowerCase();
+        const pw = String(form.get('password') || '');
+        // compare via HMAC so both sides are always equal-length and the
+        // constant-time check can't leak the password's length through timing
+        const emailOk = sameToken(
+          await hmac(env.BLOCK_SECRET, 'ae:' + email),
+          await hmac(env.BLOCK_SECRET, 'ae:' + String(env.ADMIN_EMAIL).trim().toLowerCase()));
+        const pwOk = sameToken(
+          await hmac(env.BLOCK_SECRET, 'ap:' + pw),
+          await hmac(env.BLOCK_SECRET, 'ap:' + String(env.ADMIN_PASSWORD)));
+        if (!emailOk || !pwOk) return loginPage('That email or password is wrong.', 401);
+
+        const exp = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+        const val = exp + '.' + await adminSig(env, exp);
+        return new Response(null, { status: 302, headers: {
+          location: '/admin',
+          'set-cookie': `ba_admin=${val}; HttpOnly; Secure; SameSite=Lax; Path=/admin; Max-Age=${7 * 24 * 60 * 60}`,
+          'x-robots-tag': 'noindex'
+        } });
+      }
+      return loginPage();
+    }
+
+    if (path === '/admin/logout')
+      return new Response(null, { status: 302, headers: {
+        location: '/admin/login',
+        'set-cookie': 'ba_admin=; HttpOnly; Secure; SameSite=Lax; Path=/admin; Max-Age=0',
+        'x-robots-tag': 'noindex'
+      } });
+
+    if (path === '/admin') {
+      if (!(await requireAdmin(request, env)))
+        return new Response(null, { status: 302, headers: { location: '/admin/login', 'x-robots-tag': 'noindex' } });
+      const data = await adminData(env);
+      return new Response(adminPage(data), { headers: {
+        'content-type': 'text/html; charset=utf-8',
+        'x-robots-tag': 'noindex',
+        'cache-control': 'no-store'
+      } });
+    }
 
     /* ---------- media out of R2 ---------- */
     if (path.startsWith('/media/')) {
