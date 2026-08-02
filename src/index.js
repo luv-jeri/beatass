@@ -72,14 +72,19 @@ const esc = (s) =>
 /* ---------- the email ----------
    Plain, white, and boring on purpose. It is pretending to be a normal
    message, and every hand-drawn flourish we add here costs deliverability. */
-function emailHtml({ name, body, stats, gifUrl, pageUrl, blockUrl, reportUrl }) {
-  const caption = stats ? `…and this is what they did to you. (${esc(stats)})` : '';
+function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, reportUrl }) {
+  /* The front end sends the finished caption because it is the only side that
+     knows whether the visit was loving or a beating. Falling back to the stats
+     keeps older clients working, and an empty caption is fine. */
+  const line = caption
+    ? esc(caption)
+    : (stats ? `…and this is what they did to you. (${esc(stats)})` : '');
   return `<!doctype html><html><body style="margin:0;background:#f4f4f5;padding:24px 12px;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#1c2333">
 <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:10px;padding:22px 22px 18px">
   <p style="margin:0 0 14px;font-size:15px;line-height:1.5">Hi ${esc(name)}, somebody used beatass.com to tell you something. They chose to stay anonymous.</p>
   <div style="border-left:3px solid #cf3a2d;background:#faf9f6;padding:12px 14px;margin:0 0 16px;font-size:15px;line-height:1.55;white-space:pre-wrap;word-break:break-word">${esc(body)}</div>
   ${gifUrl ? `<div style="text-align:center;margin:0 0 6px"><a href="${pageUrl}"><img src="${gifUrl}" alt="What they did to the doll" width="260" style="max-width:100%;border:1px solid #ececec;border-radius:6px"></a></div>` : ''}
-  ${caption ? `<p style="margin:0 0 16px;text-align:center;font-size:12px;color:#77809a">${caption}</p>` : ''}
+  ${line ? `<p style="margin:0 0 16px;text-align:center;font-size:12px;color:#77809a">${line}</p>` : ''}
   <p style="margin:0 0 4px;font-size:12px;color:#98a0b3;border-top:1px solid #ececec;padding-top:12px">You're getting this because someone entered your address on beatass.com. We never share who sent it, and we never will.</p>
   <p style="margin:0;font-size:12px;color:#98a0b3"><a href="${reportUrl}" style="color:#77809a">Report this</a> &middot; <a href="${blockUrl}" style="color:#77809a">Block my address forever</a></p>
 </div></body></html>`;
@@ -96,6 +101,22 @@ const notice = (title, line) =>
 <p style="font-size:16px;line-height:1.5;color:#5b6a9c;margin:0">${esc(line)}</p>
 </div>`,
     { headers: { 'content-type': 'text/html; charset=utf-8' } }
+  );
+
+/* The same page, but with a button that does the thing. The button is the
+   whole point: a link scanner follows links, it does not submit forms. */
+const confirm = (title, line, label, action) =>
+  new Response(
+    `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${esc(title)} — beatass</title>
+<body style="margin:0;min-height:100dvh;display:grid;place-items:center;background:#fbf7ea;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#26356e;padding:24px">
+<div style="max-width:420px;text-align:center">
+<h1 style="font-size:26px;margin:0 0 10px">${esc(title)}</h1>
+<p style="font-size:16px;line-height:1.5;color:#5b6a9c;margin:0 0 22px">${line}</p>
+<form method="POST" action="${esc(action)}">
+<button type="submit" style="font:inherit;font-size:16px;padding:13px 26px;color:#fff;background:#cf3a2d;border:0;border-radius:225px 18px 235px 16px/16px 245px 14px 230px;cursor:pointer">${esc(label)}</button>
+</form>
+</div>`,
+    { headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex' } }
   );
 
 export default {
@@ -125,12 +146,27 @@ export default {
       });
     }
 
-    /* ---------- block: one click, permanent ---------- */
+    /* ---------- block: confirm, then permanent ----------
+       These used to act on the GET. Corporate mail security (Defender
+       SafeLinks, Proofpoint and friends) opens every link in an incoming
+       message to check it is safe, BEFORE the human ever sees the email — so a
+       GET that blocks would silently and permanently cut off a recipient who
+       never clicked, with no unblock route by design. A scanner will not press
+       a button, so the click opens a page and the button POSTs. */
     if (path === '/block') {
       const email = (url.searchParams.get('e') || '').toLowerCase().trim();
       const t = url.searchParams.get('t') || '';
       if (!okEmail(email) || !sameToken(t, await token(env.BLOCK_SECRET, email)))
         return notice('That link has expired', 'Reply to the email instead and we will sort it out.');
+
+      if (request.method !== 'POST')
+        return confirm(
+          'Block this address?',
+          `Nobody will be able to use beatass.com to send anything to ${esc(email)} again. This cannot be undone.`,
+          'Yes, block it forever',
+          `/block?e=${encodeURIComponent(email)}&t=${encodeURIComponent(t)}`
+        );
+
       await env.DB.prepare('INSERT OR IGNORE INTO blocklist (email, created_at) VALUES (?, ?)')
         .bind(email, Math.floor(Date.now() / 1000))
         .run();
@@ -144,6 +180,16 @@ export default {
       const t = url.searchParams.get('t') || '';
       if (!/^[a-f0-9]{16}$/.test(mid) || !sameToken(t, await token(env.BLOCK_SECRET, 'r:' + mid)))
         return notice('That link has expired', 'Reply to the email instead and we will sort it out.');
+
+      // same reason as /block: a link scanner must not be able to file a report
+      if (request.method !== 'POST')
+        return confirm(
+          'Report this message?',
+          'A person will read it and decide what to do. Reporting does not stop future messages on its own — use the block link for that.',
+          'Yes, report it',
+          `/report?id=${encodeURIComponent(mid)}&t=${encodeURIComponent(t)}`
+        );
+
       await env.DB.prepare('UPDATE messages SET reports = reports + 1 WHERE id = ?').bind(mid).run();
       return notice('Reported. Thank you.',
         'A human will look at this message. If you also want to stop all future mail, use the block link in the email.');
@@ -164,6 +210,8 @@ export default {
       const email = String(form.get('email') || '').trim().toLowerCase();
       const body = String(form.get('message') || '').trim();
       const stats = String(form.get('stats') || '').trim().slice(0, 80);
+      // the finished caption line, decided by the front end (love vs beating)
+      const caption = String(form.get('caption') || '').trim().slice(0, 120);
 
       if (!name || name.length > MAX_NAME) return json({ error: 'That name looks wrong.' }, 400);
       if (!okEmail(email)) return json({ error: "That's not an email address." }, 400);
@@ -224,7 +272,7 @@ export default {
           from: env.MAIL_FROM,
           to: [email],
           subject: `${name}, someone finally said it`,
-          html: emailHtml({ name, body, stats, gifUrl, pageUrl: site, blockUrl, reportUrl }),
+          html: emailHtml({ name, body, stats, caption, gifUrl, pageUrl: site, blockUrl, reportUrl }),
           text: `Hi ${name}, somebody used beatass.com to tell you something anonymously.\n\n"${body}"\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`,
           // one-click unsubscribe: mail providers treat this as a strong
           // positive signal, and it keeps us out of the spam folder

@@ -1,0 +1,20 @@
+{
+  "_comment": "Change 'handle' to post from a different account. The script checks it is logged in as this exact handle before it posts anything, so a wrong handle stops the run instead of posting to the wrong account.",
+
+  "handle": "beatass.app",
+
+  "contentDir": "content/instagram",
+
+  "caption": "say the thing you'd never say. anonymous, free, at beatass.com",
+
+  "hashtags": [
+    "beatass",
+    "anonymousmessage",
+    "confession",
+    "sendit",
+    "voodoodoll"
+  ],
+
+  "_headless": "false lets you watch it work, which is what you want the first few times. true runs it invisibly.",
+  "headless": false
+}

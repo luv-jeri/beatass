@@ -1315,10 +1315,15 @@ function openPreview(v){
   $('#p-gif').src = state.gifUrl;
   state.v = v;                       // send() needs these after the overlay opens
   showSendErr('');
+  /* The front end is the only place that knows whether this was love or a
+     beating, so it decides the caption and sends the finished line. The
+     Worker used to rebuild it from the stats alone, which meant a loving
+     message arrived captioned as an assault. */
   const loved = D.loveMs > D.fireMs && D.love > 40;
-  $('#p-cap').textContent = loved
+  state.caption = loved
     ? '…and this is how they feel about you.'
     : '…and this is what they did to you. (' + state.stats + ')';
+  $('#p-cap').textContent = state.caption;
   $('#ov-preview').classList.add('on');
 }
 
@@ -1358,6 +1363,7 @@ async function send(){
   fd.append('email', v.mail);
   fd.append('message', v.msg);
   fd.append('stats', state.stats || '');
+  fd.append('caption', state.caption || '');
   if(state.gifBlob)   fd.append('gif', state.gifBlob, 'beatass.gif');
   if(state.videoBlob) fd.append('mp4', state.videoBlob, 'beatass.mp4');
 

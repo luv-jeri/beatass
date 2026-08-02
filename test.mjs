@@ -128,7 +128,7 @@ console.log('sent overlay:', await p.isVisible('#ov-sent.on'));
 if(!(await p.isVisible('#ov-sent.on'))) errs.push('the sent screen never opened after a successful send');
 
 // prove the POST carried everything the Worker reads out of it
-const want = ['name="name"','name="email"','name="message"','name="stats"','name="gif"'];
+const want = ['name="name"','name="email"','name="message"','name="stats"','name="caption"','name="gif"'];
 if(vid.made) want.push('name="mp4"');
 const missing = want.filter(f => !sent.body.includes(f));
 console.log('POST /api/send:', sent.count, 'calls |', Math.round(sent.body.length/1024)+'KB |',
