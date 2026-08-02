@@ -93,7 +93,9 @@ async function ensureLoggedIn(page) {
   await page.waitForTimeout(2500);
   await dismissPopups(page);
 
-  const loginField = page.locator('input[name="username"]');
+  // Instagram has shipped both of these login forms recently (username/password
+  // and the newer email/pass). Match whichever is actually on the page.
+  const loginField = page.locator('input[name="username"], input[name="email"]').first();
   if (await loginField.count() && await loginField.isVisible().catch(() => false)) {
     const { username: user, password: pass } = credentials();
     if (!user || !pass)
@@ -101,14 +103,25 @@ async function ensureLoggedIn(page) {
 
     say('logging in...');
     await loginField.fill(user);
-    await page.locator('input[name="password"]').fill(pass);
-    await page.locator('button[type="submit"]').click();
+    const passField = page.locator('input[name="password"], input[name="pass"]').first();
+    await passField.fill(pass);
+    // Enter in the password field submits on every variant of the form;
+    // the submit button is not always a real <button>.
+    await passField.press('Enter');
 
     // two-factor, or a "we saved your login" screen, both need a human
     await page.waitForTimeout(9000);
     await dismissPopups(page);
     if (await page.locator('input[name="verificationCode"]').count())
       die('Instagram is asking for a two-factor code. Run with "headless": false in config.json, type the code in the window, then run again — the session is saved after that.');
+
+    // the ds_user_id cookie only exists once Instagram accepts the login
+    const ok = (await page.context().cookies('https://www.instagram.com'))
+      .some((c) => c.name === 'ds_user_id');
+    if (!ok) {
+      const why = await page.evaluate(() => document.body.innerText.slice(0, 300)).catch(() => '');
+      die('Instagram did not accept the login. What the page says:\n  ' + why.replace(/\n+/g, ' | '));
+    }
   }
 
   await dismissPopups(page);
@@ -117,8 +130,20 @@ async function ensureLoggedIn(page) {
   // the one mistake here that cannot be taken back.
   await page.goto('https://www.instagram.com/accounts/edit/', { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(2500);
-  const who = await page.locator('input[id*="username" i], input[name="username"]').first()
+  let who = await page.locator('input[id*="username" i], input[name="username"]').first()
     .inputValue().catch(() => '');
+  if (!who) {
+    // newer settings UI: the username is plain text next to the profile photo,
+    // and the home page's nav profile link is /<username>/
+    await page.goto('https://www.instagram.com/', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(2500);
+    who = await page.evaluate(() => {
+      const img = document.querySelector('a[href^="/"] img[alt*="profile picture" i]');
+      const a = img && img.closest('a');
+      const m = a && (a.getAttribute('href') || '').match(/^\/([A-Za-z0-9._]+)\/?$/);
+      return m ? m[1] : '';
+    }).catch(() => '');
+  }
   if (!who) die('Could not read which account is signed in. Run with "headless": false and look at the window.');
   if (who.toLowerCase() !== String(CONFIG.handle).toLowerCase().replace(/^@/, ''))
     die(`Signed in as "${who}" but config.json says "${CONFIG.handle}".\n  Either fix the handle in config.json, or delete ${SESSION} and log in again.`);
@@ -139,17 +164,29 @@ async function post(page, filePath, caption) {
   await create.click({ timeout: 20000 });
   await page.waitForTimeout(1500);
 
-  // some layouts show a "Post" sub-item under Create
-  const postItem = page.getByRole('link', { name: /^post$/i }).first();
-  if (await postItem.count() && await postItem.isVisible().catch(() => false)) {
-    await postItem.click();
-    await page.waitForTimeout(1200);
-  }
+  // Create opens a small menu (Post / Live video / Ad). Its rows are anchors
+  // with obfuscated class names and unreliable accessible names, so find the
+  // text node that says exactly "Post" and click its nearest clickable parent.
+  await page.evaluate(() => {
+    const el = [...document.querySelectorAll('span, div')]
+      .find(e => (e.innerText || '').trim() === 'Post' && e.offsetParent && e.childElementCount === 0);
+    const target = el && (el.closest('a,[role="button"],[role="link"],[role="menuitem"],button') || el);
+    if (target) target.click();
+  });
+  await page.waitForTimeout(2500);
 
   say('uploading ' + path.basename(filePath));
-  const chooser = page.waitForEvent('filechooser', { timeout: 20000 });
-  await page.getByRole('button', { name: /select from computer/i }).first().click();
-  (await chooser).setFiles(filePath);
+  // the dialog carries a hidden file input; feeding it directly beats waiting
+  // for the file-chooser popup, which never fires if the dialog is missing
+  const fileInput = page.locator('[role="dialog"] input[type="file"], form input[type="file"]').first();
+  await fileInput.waitFor({ state: 'attached', timeout: 20000 }).catch(() => {});
+  if (await fileInput.count()) {
+    await fileInput.setInputFiles(filePath);
+  } else {
+    const chooser = page.waitForEvent('filechooser', { timeout: 20000 });
+    await page.getByRole('button', { name: /select from computer/i }).first().click();
+    (await chooser).setFiles(filePath);
+  }
 
   // a video gets an extra "how do you want to share this" step
   await page.waitForTimeout(6000);
