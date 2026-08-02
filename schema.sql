@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS messages (
   sender_hash  TEXT NOT NULL DEFAULT '',  -- hashed IP. Never the raw address.
   reports      INTEGER NOT NULL DEFAULT 0,
   sender_email TEXT,                       -- the sender's own address, if they want replies. Never shown.
-  to_handle    TEXT                        -- the recipient's Instagram handle, if given. Never shown.
+  to_handle    TEXT,                       -- the recipient's Instagram handle, if given. Never shown.
+  view_token   TEXT                        -- /m link token, minted at send time for the IG notifier. Set only when to_handle is.
 );
 
 CREATE INDEX IF NOT EXISTS idx_messages_created ON messages (created_at);

@@ -651,7 +651,7 @@ a{color:var(--red)}a:hover{color:var(--ink)}
         <svg viewBox="0 0 150 110" aria-hidden="true" style="width:118px;height:auto;margin:0 auto;display:block"><use href="#i-plane"/></svg>
       </div>
       <h2>It's gone.</h2>
-      <p>They'll never know it was you.</p>
+      <p id="sent-line">They'll never know it was you.</p>
       <div class="row" id="share-row" hidden>
         <button class="btn" id="btn-share" type="button">Share</button>
         <button class="btn ghost" id="btn-save" type="button">Save video</button>
@@ -1721,6 +1721,12 @@ async function send(){
 function showSent(){
   buzz('send');
   $('#ov-preview').classList.remove('on');
+
+  /* Say where it actually went. Email delivers instantly; an Instagram-only
+     message is delivered to their DMs, which is slower - be honest about it. */
+  $('#sent-line').textContent = state.v && state.v.mail
+    ? "They'll never know it was you."
+    : "It's headed for their Instagram DMs. They'll never know it was you.";
 
   const media = $('#sent-media');
   if(state.videoUrl){

@@ -740,14 +740,22 @@ async function handle(request, env) {
       await Promise.all(puts);
 
       await env.DB.prepare(
-        `INSERT INTO messages (id, to_email, to_name, body, stats, has_gif, has_mp4, created_at, sender_hash, sender_email, to_handle)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO messages (id, to_email, to_name, body, stats, has_gif, has_mp4, created_at, sender_hash, sender_email, to_handle, view_token)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
         // to_email is NOT NULL in the schema, so a handle-only message stores it
         // as '' (empty string). Every read treats '' as "no email" - it is falsy,
         // like the null we use for the newer sender_email / to_handle columns.
+        //
+        // view_token: when the recipient is reached on Instagram, the notifier
+        // (tools/instagram/notify.mjs, runs on Sanjay's machine) needs the /m
+        // link for this message. It can query D1 but cannot compute the token -
+        // BLOCK_SECRET lives only in the Worker. So the token is minted here at
+        // send time and stored beside the row. It grants exactly what the DM
+        // will contain anyway: the right to view this one message.
         .bind(mid, email, name, body, stats, gif && gif.size ? 1 : 0, mp4 && mp4.size ? 1 : 0,
-              Math.floor(Date.now() / 1000), ipHash, senderEmail || null, toHandle || null)
+              Math.floor(Date.now() / 1000), ipHash, senderEmail || null, toHandle || null,
+              toHandle ? await token(env.BLOCK_SECRET, 'view:' + mid) : null)
         .run();
 
       const gifUrl = gif && gif.size ? `${site}/media/${mid}.gif` : '';
