@@ -119,8 +119,8 @@ const linkFor = (m) => `${SITE}/m?id=${m.id}&t=${m.view_token}`;
 const dmText = (link) =>
   'hey - someone left you an anonymous message on beatass.com\n\n' +
   'read it here: ' + link + '\n\n' +
-  'this is an automated message from beatass.com. the link also lets you ' +
-  'reply, report it, or block us. reply STOP and we will never message you again.';
+  'this is an automated message from beatass.com. open the link to read it, ' +
+  'report it, or block us so we never message you again.';
 
 /* ---------- the browser walk (selectors captured live, G27) ---------- */
 
