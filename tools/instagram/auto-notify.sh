@@ -1,6 +1,6 @@
 #!/bin/sh
 # Runs the Instagram DM notifier over the whole waiting queue, unattended.
-# Scheduled by com.beatass.notify (launchd, every 10 min). Sends the disclosed
+# Scheduled by com.beatass.notify (launchd, every 2 min). Sends the disclosed
 # DM for every message that carries a handle, honouring the block list, the
 # daily cap, and the never-send-twice log inside notify.mjs.
 #
