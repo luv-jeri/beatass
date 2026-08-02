@@ -102,6 +102,13 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
         HL = '#ffe873';
   const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
 
+  // Let the recipient broadcast it. Email can't do a native share sheet, so
+  // these are plain links; "Open & share the clip" hands off to the /m page,
+  // which has the real Share button. The sender is never named in any of it.
+  const shareText = "someone said the thing they'd never say about me \u{1F440} beatass.com";
+  const xShare = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent('https://beatass.com');
+  const waShare = 'https://wa.me/?text=' + encodeURIComponent(shareText + ' https://beatass.com');
+
   return `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light only">
@@ -204,6 +211,13 @@ ${replyUrl ? `
           </td></tr>
         </table>`}
 
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:26px">
+          <tr><td align="center" style="padding:18px 0 0;border-top:2px dotted ${FAINT}">
+            <p style="margin:0 0 10px;font-family:${SANS};font-size:14px;line-height:1.5;color:${SOFT}">Someone put you on the doll. Want everyone to know?</p>
+            <p style="margin:0;font-family:${SANS};font-size:14px"><a href="${xShare}" style="color:${RED};font-weight:700;text-decoration:none">Post on X</a> &nbsp;&middot;&nbsp; <a href="${waShare}" style="color:${RED};font-weight:700;text-decoration:none">WhatsApp</a> &nbsp;&middot;&nbsp; <a href="${pageUrl}" style="color:${RED};font-weight:700;text-decoration:none">Open &amp; share the clip</a></p>
+          </td></tr>
+        </table>
+
         <p style="margin:28px 0 6px;font-family:${SANS};font-size:12px;line-height:1.5;color:${FAINT};border-top:1px solid ${FAINT};padding-top:16px">You're getting this because someone entered your address on beatass.com. We never share who sent it, and we never will.</p>
         <p style="margin:0;font-family:${SANS};font-size:12px;color:${FAINT}"><a href="${reportUrl}" style="color:${SOFT}">Report this</a> &nbsp;&middot;&nbsp; <a href="${blockUrl}" style="color:${SOFT}">Block my address forever</a></p>
 
@@ -222,8 +236,17 @@ ${replyUrl ? `
    the same confession an email would: the words, the doll recording, and every
    safety control - report, block, and a reply box when the sender left a way to
    hear back. The sender's address never appears. noindex: never search-visible. */
-function viewPage({ name, body, gifUrl, blockUrl, reportUrl, replyUrl }) {
+function viewPage({ name, body, gifUrl, mp4Url, pageUrl, blockUrl, reportUrl, replyUrl }) {
   const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+  // What the recipient can broadcast. The clip (video if we have it, else the
+  // GIF) is the shareable artifact; the sender is never named in any of it.
+  const clip = mp4Url || gifUrl;
+  const share = JSON.stringify({
+    text: "someone said the thing they'd never say about me \u{1F440} beatass.com",
+    url: 'https://beatass.com',
+    clip,
+    page: pageUrl || 'https://beatass.com'
+  }).replace(/</g, '\\u003c');
   return `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex"><meta name="color-scheme" content="light only">
@@ -240,6 +263,12 @@ function viewPage({ name, body, gifUrl, blockUrl, reportUrl, replyUrl }) {
 <td style="padding:22px 20px;font-size:19px;line-height:1.6;font-weight:700;color:#26356e;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere">${esc(body)}</td></tr>
 </table>
 ${gifUrl ? `<div style="margin:18px 0 0;text-align:center"><img src="${gifUrl}" alt="what they did to the doll" style="max-width:280px;width:100%;border:3px solid #26356e;border-radius:14px 10px 16px 9px"></div>` : ''}
+<div style="margin:26px 0 0;text-align:center">
+<p style="margin:0 0 12px;font-size:15px;color:#5b6a9c">someone put you on the doll. put it on blast so everyone knows.</p>
+<button type="button" data-share style="display:inline-block;background:#cf3a2d;color:#fff;font-size:17px;font-weight:700;border:0;padding:13px 30px;border-radius:225px 18px 235px 16px/16px 245px 14px 230px;cursor:pointer">Share this</button>
+<div style="margin:14px 0 0;font-size:14px;color:#5b6a9c">${clip ? `<a href="${clip}" download style="color:#5b6a9c;margin:0 8px">Save the clip</a>` : ''}<a href="#" data-copy style="color:#5b6a9c;margin:0 8px">Copy link</a></div>
+<div data-fallback hidden style="margin:12px 0 0;font-size:14px;color:#93a0c2"><a data-x target="_blank" rel="noopener" style="color:#5b6a9c;margin:0 8px">Post on X</a><a data-wa target="_blank" rel="noopener" style="color:#5b6a9c;margin:0 8px">WhatsApp</a></div>
+</div>
 ${replyUrl ? `<div style="margin:24px 0 0;text-align:center">
 <p style="margin:0 0 12px;font-size:15px;color:#5b6a9c">they left a way to hear back. they stay anonymous either way.</p>
 <a href="${replyUrl}" style="display:inline-block;background:#cf3a2d;color:#fff;font-size:17px;font-weight:700;text-decoration:none;padding:13px 30px;border-radius:225px 18px 235px 16px/16px 245px 14px 230px">Reply to them</a>
@@ -247,6 +276,35 @@ ${replyUrl ? `<div style="margin:24px 0 0;text-align:center">
 <p style="margin:26px 0 0;padding-top:16px;border-top:1px solid #cddaea;font-size:12px;line-height:1.6;color:#93a0c2">This is an automated message from beatass.com. We never reveal who sent it. <a href="${reportUrl}" style="color:#5b6a9c">Report this</a> &nbsp;&middot;&nbsp; <a href="${blockUrl}" style="color:#5b6a9c">Block my address forever</a></p>
 </td></tr></table>
 </td></tr></table>
+<script>
+(function(){
+  var S = ${share};
+  var btn = document.querySelector('[data-share]');
+  var copy = document.querySelector('[data-copy]');
+  var fb = document.querySelector('[data-fallback]');
+  var x = document.querySelector('[data-x]');
+  var wa = document.querySelector('[data-wa]');
+  if (x) x.href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(S.text) + '&url=' + encodeURIComponent(S.url);
+  if (wa) wa.href = 'https://wa.me/?text=' + encodeURIComponent(S.text + ' ' + S.url);
+  async function go(){
+    try {
+      if (S.clip && navigator.canShare) {
+        var r = await fetch(S.clip); var b = await r.blob();
+        var f = new File([b], S.clip.indexOf('.mp4') > -1 ? 'beatass.mp4' : 'beatass.gif', { type: b.type });
+        if (navigator.canShare({ files: [f] })) { await navigator.share({ text: S.text, files: [f] }); return true; }
+      }
+      if (navigator.share) { await navigator.share({ title: 'beatass', text: S.text, url: S.url }); return true; }
+    } catch (e) { if (e && e.name === 'AbortError') return true; }
+    return false;
+  }
+  if (btn) btn.addEventListener('click', async function(){ if (!(await go()) && fb) fb.hidden = false; });
+  if (copy) copy.addEventListener('click', function(e){
+    e.preventDefault();
+    if (navigator.clipboard) navigator.clipboard.writeText(S.page).then(function(){ copy.textContent = 'link copied'; }, function(){ if (fb) fb.hidden = false; });
+    else if (fb) fb.hidden = false;
+  });
+})();
+</script>
 </body></html>`;
 }
 
@@ -663,11 +721,13 @@ async function handle(request, env) {
       if (!/^[a-f0-9]{16}$/.test(mid) || !sameToken(t, await token(env.BLOCK_SECRET, 'view:' + mid)))
         return notice('That link has expired', 'Ask whoever sent it to share it again.');
       const row = await env.DB.prepare(
-        'SELECT to_email, to_name, body, has_gif, sender_email, to_handle FROM messages WHERE id = ?'
+        'SELECT to_email, to_name, body, has_gif, has_mp4, sender_email, to_handle FROM messages WHERE id = ?'
       ).bind(mid).first();
       if (!row) return notice('That link has expired', 'Ask whoever sent it to share it again.');
 
       const gifUrl = row.has_gif ? `${site}/media/${mid}.gif` : '';
+      const mp4Url = row.has_mp4 ? `${site}/media/${mid}.mp4` : '';
+      const pageUrl = `${site}/m?id=${mid}&t=${t}`;
       // block by email when we have one, otherwise by the Instagram handle
       const blockUrl = row.to_email
         ? `${site}/block?e=${encodeURIComponent(row.to_email)}&t=${await token(env.BLOCK_SECRET, row.to_email)}`
@@ -679,7 +739,7 @@ async function handle(request, env) {
         ? `${site}/reply?id=${mid}&t=${await token(env.BLOCK_SECRET, 'reply:' + mid)}`
         : '';
       return new Response(
-        viewPage({ name: row.to_name, body: row.body, gifUrl, blockUrl, reportUrl, replyUrl }),
+        viewPage({ name: row.to_name, body: row.body, gifUrl, mp4Url, pageUrl, blockUrl, reportUrl, replyUrl }),
         { headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex' } }
       );
     }

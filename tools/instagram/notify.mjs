@@ -118,9 +118,9 @@ function loadOne(id) {
 const linkFor = (m) => `${SITE}/m?id=${m.id}&t=${m.view_token}`;
 const dmText = (link) =>
   'hey - someone left you an anonymous message on beatass.com\n\n' +
-  'read it here: ' + link + '\n\n' +
+  'read it (and put it on blast) here: ' + link + '\n\n' +
   'this is an automated message from beatass.com. open the link to read it, ' +
-  'report it, or block us so we never message you again.';
+  'share it, report it, or block us so we never message you again.';
 
 /* ---------- the browser walk (selectors captured live, G27) ---------- */
 
