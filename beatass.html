@@ -1220,11 +1220,32 @@ function tone(freq, end, dur, gain, shape){
   o.start(); o.stop(ac.currentTime + dur);
 }
 const SFX = {
-  punch(){ noise(0.13, 900, 90, 0.42); tone(150, 55, 0.11, 0.3, 'triangle'); },
-  pin(){   tone(2300, 1500, 0.05, 0.16, 'square'); noise(0.05, 5000, 2600, 0.1, 'highpass'); },
-  fire(){  noise(0.55, 1300, 320, 0.15, 'bandpass'); },
-  love(){  tone(660, 990, 0.16, 0.13); setTimeout(() => tone(880, 1320, 0.2, 0.1), 90); },
-  reset(){ noise(0.22, 2400, 200, 0.1, 'highpass'); },
+  /* a punch is three sounds at once: the slap (noise), the body (a low thump
+     that drops in pitch), and a knuckle crack on top. Tiny random detune so
+     two punches never sound like a recording played twice. */
+  punch(){
+    const v = .9 + Math.random()*.25;
+    noise(0.11, 1400*v, 110, 0.4);
+    tone(120*v, 42, 0.16, 0.4, 'sine');
+    tone(300*v, 90, 0.05, 0.16, 'triangle');
+    noise(0.03, 6000, 3000, 0.12, 'highpass');
+  },
+  pin(){
+    const v = .95 + Math.random()*.15;
+    tone(2600*v, 1400, 0.04, 0.15, 'square');
+    noise(0.06, 7000, 2400, 0.1, 'highpass');
+    tone(180, 70, 0.05, 0.12, 'sine');           /* the doll takes it in the body */
+  },
+  fire(){
+    noise(0.7, 900, 260, 0.16, 'bandpass');
+    noise(0.25, 3400, 900, 0.07, 'highpass');    /* the first crackle */
+    tone(70, 45, 0.5, 0.08, 'sine');             /* low whoosh underneath */
+  },
+  love(){
+    const t = (f, d) => setTimeout(() => tone(f, f*1.4, 0.22, 0.1), d);
+    tone(523, 740, 0.18, 0.12); t(659, 90); t(784, 190);
+  },
+  reset(){ noise(0.22, 2400, 200, 0.1, 'highpass'); tone(240, 120, 0.12, 0.08, 'triangle'); },
   select(){ tone(1100, 1100, 0.035, 0.09, 'square'); }
 };
 let muted = false;
