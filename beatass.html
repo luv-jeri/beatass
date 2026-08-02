@@ -527,6 +527,11 @@ a{color:var(--red)}a:hover{color:var(--ink)}
               <div class="err">that's not an email</div>
             </div>
           </div>
+          <div class="field" id="f-handle" style="margin-top:14px">
+            <label for="i-handle">their instagram <span style="color:var(--ink-faint);font-weight:400">(optional - so we can reach them there too)</span></label>
+            <input type="text" id="i-handle" placeholder="@theirhandle" autocomplete="off">
+            <div class="err">handle is letters, numbers, dots and underscores only</div>
+          </div>
 
           <div class="saybox">
             <div class="pane-label">what do you want to say?</div>
@@ -1141,7 +1146,7 @@ function bump(){
 }
 $('#i-msg').addEventListener('input', bump);
 /* stop shouting the moment they start fixing it */
-[['#i-name','#f-name'],['#i-email','#f-email'],['#i-msg','#f-msg'],['#i-sender','#f-sender']].forEach(([i,f]) =>
+[['#i-name','#f-name'],['#i-email','#f-email'],['#i-handle','#f-handle'],['#i-msg','#f-msg'],['#i-sender','#f-sender']].forEach(([i,f]) =>
   $(i).addEventListener('input', () => $(f).classList.remove('bad')));
 
 function validate(){
@@ -1658,6 +1663,14 @@ async function send(){
     $('#i-sender').focus();
     return;
   }
+  /* Optional Instagram handle. Strip a leading @, allow only IG-legal chars. */
+  const handle = $('#i-handle').value.trim().replace(/^@+/,'').toLowerCase();
+  if(handle && !/^[a-z0-9._]{1,30}$/.test(handle)){
+    $('#f-handle').classList.add('bad');
+    buzz('error');
+    $('#i-handle').focus();
+    return;
+  }
   const btn = $('#btn-send');
   const label = btn.textContent;
   btn.disabled = true;
@@ -1671,6 +1684,7 @@ async function send(){
   fd.append('stats', state.stats || '');
   fd.append('caption', state.caption || '');
   if(sender) fd.append('senderEmail', sender);
+  if(handle) fd.append('handle', handle);
   if(state.gifBlob)   fd.append('gif', state.gifBlob, 'beatass.gif');
   if(state.videoBlob) fd.append('mp4', state.videoBlob, 'beatass.mp4');
 
@@ -1741,7 +1755,7 @@ $('#btn-save').onclick = () => {
 $('#btn-restart').onclick = restart;
 function restart(){
   $('#ov-sent').classList.remove('on');
-  $('#i-name').value = $('#i-email').value = $('#i-msg').value = $('#i-sender').value = '';
+  $('#i-name').value = $('#i-email').value = $('#i-msg').value = $('#i-sender').value = $('#i-handle').value = '';
   bump();
   $$('.chip').forEach(c => c.classList.remove('on'));
   $('#share-row').hidden = true;

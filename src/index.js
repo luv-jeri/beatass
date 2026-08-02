@@ -217,6 +217,39 @@ ${replyUrl ? `
 </body></html>`;
 }
 
+/* The "view your message" page. When a confession is delivered by Instagram
+   DM or comment (not email), that message links here with a tokened URL. Shows
+   the same confession an email would: the words, the doll recording, and every
+   safety control - report, block, and a reply box when the sender left a way to
+   hear back. The sender's address never appears. noindex: never search-visible. */
+function viewPage({ name, body, gifUrl, blockUrl, reportUrl, replyUrl }) {
+  const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+  return `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><meta name="color-scheme" content="light only">
+<title>a message for you - beatass</title></head>
+<body style="margin:0;padding:0;background:#e8e0cc;font-family:${SANS}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#e8e0cc;padding:26px 12px">
+<tr><td align="center">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;background:#fbf7ea;border:2px solid #26356e;border-radius:14px 10px 16px 9px">
+<tr><td style="padding:26px 28px">
+<p style="margin:0 0 6px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#93a0c2">delivered anonymously via beatass.com</p>
+<h1 style="margin:0 0 16px;font-size:26px;color:#26356e">${esc(name)}, someone said it.</h1>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fffdf5;border:3px solid #26356e;border-radius:14px 10px 16px 9px">
+<tr><td width="11" style="width:11px;background:#cf3a2d;border-radius:11px 0 0 7px">&nbsp;</td>
+<td style="padding:22px 20px;font-size:19px;line-height:1.6;font-weight:700;color:#26356e;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere">${esc(body)}</td></tr>
+</table>
+${gifUrl ? `<div style="margin:18px 0 0;text-align:center"><img src="${gifUrl}" alt="what they did to the doll" style="max-width:280px;width:100%;border:3px solid #26356e;border-radius:14px 10px 16px 9px"></div>` : ''}
+${replyUrl ? `<div style="margin:24px 0 0;text-align:center">
+<p style="margin:0 0 12px;font-size:15px;color:#5b6a9c">they left a way to hear back. they stay anonymous either way.</p>
+<a href="${replyUrl}" style="display:inline-block;background:#cf3a2d;color:#fff;font-size:17px;font-weight:700;text-decoration:none;padding:13px 30px;border-radius:225px 18px 235px 16px/16px 245px 14px 230px">Reply to them</a>
+</div>` : ''}
+<p style="margin:26px 0 0;padding-top:16px;border-top:1px solid #cddaea;font-size:12px;line-height:1.6;color:#93a0c2">This is an automated message from beatass.com. We never reveal who sent it. <a href="${reportUrl}" style="color:#5b6a9c">Report this</a> &nbsp;&middot;&nbsp; <a href="${blockUrl}" style="color:#5b6a9c">Block my address forever</a></p>
+</td></tr></table>
+</td></tr></table>
+</body></html>`;
+}
+
 /* The relay email: somebody's actual words coming back. Same paper as the
    confession but quieter chrome - this one is a private letter, not an event. */
 function relayHtml({ intro, body, footer, pageUrl }) {
@@ -569,6 +602,32 @@ async function handle(request, env) {
       return notice('Sent', 'Your reply is on its way to whoever sent that message.');
     }
 
+    /* ---------- view: the confession, for a recipient reached via Instagram ----------
+       The DM/comment carries this tokened link. Shows the message + the doll
+       recording + block + report + a reply box. The sender's address never
+       appears in anything this route returns. */
+    if (path === '/m') {
+      const mid = url.searchParams.get('id') || '';
+      const t = url.searchParams.get('t') || '';
+      if (!/^[a-f0-9]{16}$/.test(mid) || !sameToken(t, await token(env.BLOCK_SECRET, 'view:' + mid)))
+        return notice('That link has expired', 'Ask whoever sent it to share it again.');
+      const row = await env.DB.prepare(
+        'SELECT to_email, to_name, body, has_gif, sender_email FROM messages WHERE id = ?'
+      ).bind(mid).first();
+      if (!row) return notice('That link has expired', 'Ask whoever sent it to share it again.');
+
+      const gifUrl = row.has_gif ? `${site}/media/${mid}.gif` : '';
+      const blockUrl = `${site}/block?e=${encodeURIComponent(row.to_email)}&t=${await token(env.BLOCK_SECRET, row.to_email)}`;
+      const reportUrl = `${site}/report?id=${mid}&t=${await token(env.BLOCK_SECRET, 'r:' + mid)}`;
+      const replyUrl = row.sender_email
+        ? `${site}/reply?id=${mid}&t=${await token(env.BLOCK_SECRET, 'reply:' + mid)}`
+        : '';
+      return new Response(
+        viewPage({ name: row.to_name, body: row.body, gifUrl, blockUrl, reportUrl, replyUrl }),
+        { headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex' } }
+      );
+    }
+
     /* ---------- send ---------- */
     if (path === '/api/send' && request.method === 'POST') {
       const ip = request.headers.get('CF-Connecting-IP') || '0.0.0.0';
@@ -590,6 +649,9 @@ async function handle(request, env) {
       // It is stored and never shown to anyone - not in the email, not in any
       // API response. It is the reply relay's only routing table.
       const senderEmail = String(form.get('senderEmail') || '').trim().toLowerCase();
+      // Optional: the recipient's Instagram handle, for delivery by DM/comment
+      // when the sender knows the handle. Stored, never shown to anyone.
+      const toHandle = String(form.get('handle') || '').trim().replace(/^@+/, '').toLowerCase().slice(0, 30);
 
       if (!name || name.length > MAX_NAME) return json({ error: 'That name looks wrong.' }, 400);
       if (!okEmail(email)) return json({ error: "That's not an email address." }, 400);
@@ -597,6 +659,8 @@ async function handle(request, env) {
         return json({ error: 'Say a little more than that.' }, 400);
       if (senderEmail && !okEmail(senderEmail))
         return json({ error: 'Your own email looks wrong. Fix it or leave it empty.' }, 400);
+      if (toHandle && !/^[a-z0-9._]{1,30}$/.test(toHandle))
+        return json({ error: 'That Instagram handle looks wrong. Letters, numbers, dots and underscores only.' }, 400);
 
       // never send to somebody who has already told us to stop
       const blocked = await env.DB.prepare('SELECT 1 FROM blocklist WHERE email = ?')
@@ -631,11 +695,11 @@ async function handle(request, env) {
       await Promise.all(puts);
 
       await env.DB.prepare(
-        `INSERT INTO messages (id, to_email, to_name, body, stats, has_gif, has_mp4, created_at, sender_hash, sender_email)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO messages (id, to_email, to_name, body, stats, has_gif, has_mp4, created_at, sender_hash, sender_email, to_handle)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
         .bind(mid, email, name, body, stats, gif && gif.size ? 1 : 0, mp4 && mp4.size ? 1 : 0,
-              Math.floor(Date.now() / 1000), ipHash, senderEmail || null)
+              Math.floor(Date.now() / 1000), ipHash, senderEmail || null, toHandle || null)
         .run();
 
       const blockUrl = `${site}/block?e=${encodeURIComponent(email)}&t=${await token(env.BLOCK_SECRET, email)}`;
