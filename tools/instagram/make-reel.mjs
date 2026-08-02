@@ -94,7 +94,7 @@ const run = (name, args) => {
   }
 };
 
-const concatEntry = (file) => `file '${file.replace(/'/g, "'\\\\''")}'`;
+const concatEntry = (file) => `file '${file.replace(/'/g, "'\\''")}'`;
 const render = async (html, output, transparent = false) => {
   const browser = await chromium.launch();
   try {

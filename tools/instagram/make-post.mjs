@@ -52,7 +52,7 @@ if (!slug || !message) {
 const svg = (f) => fs.readFileSync(path.join(DESIGN, f), 'utf8')
   .replace(/<\?xml[^>]*>/, '');
 const font = (f) => fs.readFileSync(path.join(ROOT, 'fonts', f)).toString('base64');
-const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 const html = `<!doctype html><meta charset="utf-8"><style>
 @font-face{font-family:'Patrick';src:url(data:font/woff2;base64,${font('PatrickHand.woff2')}) format('woff2')}
