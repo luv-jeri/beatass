@@ -1,4 +1,4 @@
-# The reply relay — spec (Sanjay, 2026-08-02, in conversation)
+Ant it # The reply relay — spec (Sanjay, 2026-08-02, in conversation)
 
 The recipient of a confession can answer it, and the answer reaches the sender
 without the sender ever being named. One side of the conversation stays
