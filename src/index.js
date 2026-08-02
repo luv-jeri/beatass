@@ -285,9 +285,9 @@ async function handle(request, env) {
       const key = String(env.RESEND_API_KEY || '').replace(/\s+/g, '');
       if (!/^re_[A-Za-z0-9_]+$/.test(key)) {
         // shape only — length and prefix say what is wrong without leaking it
-        console.error('resend: key does not look like a Resend key', 'len=' + key.length);
-        return json({ error: "We couldn't deliver that. Try again in a minute.",
-                      ref: 'key_shape', len: key.length, starts: key.slice(0, 3) }, 502);
+        console.error('resend: key does not look like a Resend key', 'len=' + key.length,
+                      'starts=' + key.slice(0, 3));
+        return json({ error: "We couldn't deliver that. Try again in a minute.", ref: 'key_shape' }, 502);
       }
 
       let res;
@@ -315,11 +315,7 @@ async function handle(request, env) {
         });
       } catch (err) {
         console.error('resend threw', err && err.stack || String(err));
-        // TEMPORARY diagnostic: the log stream is unreachable from here, so the
-        // reason has to travel in the response. The key is scrubbed out of it.
-        const why = String((err && (err.name + ': ' + err.message)) || err)
-          .split(key).join('[redacted]').slice(0, 200);
-        return json({ error: "We couldn't deliver that. Try again in a minute.", ref: 'resend_threw', why }, 502);
+        return json({ error: "We couldn't deliver that. Try again in a minute.", ref: 'resend_threw' }, 502);
       }
 
       if (!res.ok) {
