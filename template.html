@@ -546,7 +546,8 @@ a{color:var(--red)}a:hover{color:var(--ink)}
           <div class="arena">
             <div class="stage">
               <div class="stage-body">
-                <canvas id="doll" width="440" height="440" aria-label="A hand-drawn voodoo doll. Tap or drag to hit him."></canvas>
+                <label style="position:fixed;left:-99px;top:0;width:1px;height:1px;opacity:.01;pointer-events:none" aria-hidden="true"><input type="checkbox" switch id="ios-tick" tabindex="-1"></label>
+                <canvas id="doll" width="440" height="440" aria-label="A hand-drawn voodoo doll. Tap or drag to hit it."></canvas>
                 <div class="rec" id="rec"><i></i><span id="rec-t">10.0s left</span></div>
                 <div class="clock" id="clock">you get <span id="clock-n">10</span> seconds</div>
                 <button class="redo" id="btn-redo" type="button">record again</button>
@@ -1032,7 +1033,7 @@ function drawDoll(ctx, D, boil, css){
     ctx.globalAlpha = Math.min(1, pulse + .3);
     ctx.font = '26px Scrawl, cursive'; ctx.textAlign = 'center';
     ctx.fillStyle = css.red;
-    ctx.fillText('hit him', cx, cy - r - 14);
+    ctx.fillText('hit me', cx, cy - r - 14);
     ctx.restore();
   }
 
@@ -1166,10 +1167,10 @@ $$('.tool').forEach(b => b.onclick = () => {
    chose Punch, nothing happened, and they assumed it was broken. Say the
    missing half out loud, in the tool's own words, until they do it once. */
 const NUDGES = {
-  punch: 'now tap him',
+  punch: 'now tap me',
   pin:   'now tap where it goes',
-  fire:  'now tap him to make it worse',
-  love:  'tap him to be kind instead'
+  fire:  'now tap me to make it worse',
+  love:  'tap me to be kind instead'
 };
 /* Each tool explains itself the first time it is picked, and never again. Tying
    this to "have they touched him yet" instead was worse twice over: it swallowed
@@ -1287,23 +1288,52 @@ function buzz(n, k){
   let p = HAPTIC[n];
   /* a punch buzzes harder the deeper the combo, and a big streak double-taps */
   if(n === 'punch' && k){ const c = Math.min(k, 10); p = c >= 5 ? [16 + c*5, 40, 20] : 16 + c*5; }
-  if(p && navigator.vibrate) try{ navigator.vibrate(p); }catch(err){}
+  if(!p) return;
+  if(navigator.vibrate){ try{ navigator.vibrate(p); }catch(err){} }
+  else {
+    /* iPhone: no vibration API, but clicking a native switch control inside a
+       real tap makes the Taptic engine tick (iOS 17.4+) */
+    const t = document.getElementById('ios-tick');
+    if(t) try{ t.click(); }catch(err){}
+  }
 }
 function play(n, k){
   buzz(n, k);
   if(!muted && SFX[n]) try{ SFX[n](k); }catch(err){}
 }
 
+/* Only contact counts. A tap must land ON the doll (with a thumb-sized margin
+   of forgiveness that pulls near-misses onto him); a clean miss does nothing —
+   he doesn't move, nothing records. Shapes = the art's own geometry. */
+const DOLL_SHAPES = [
+  [0, 60, 37, 34],      /* head */
+  [0, 130, 32, 41],     /* body */
+  [-38, 115, 15, 15], [38, 115, 15, 15],   /* mitt arms */
+  [-14, 182, 15, 26], [14, 182, 15, 26]    /* stubby legs */
+];
+function nearestOnDoll(q){
+  let best = null, bestT = 1e9;
+  for(const [cx, cy, rx, ry] of DOLL_SHAPES){
+    const t = Math.hypot((q.x - cx)/rx, (q.y - cy)/ry);
+    if(t < bestT){ bestT = t; best = [cx, cy]; }
+  }
+  if(bestT <= 1) return q;                               /* direct hit */
+  if(bestT <= 1.5)                                       /* close — pull it on */
+    return { x: best[0] + (q.x - best[0])/bestT, y: best[1] + (q.y - best[1])/bestT };
+  return null;                                           /* a swing and a miss */
+}
 function strike(e){
-  const p = toLocal(cv, D, e.clientX, e.clientY);
+  const p = nearestOnDoll(toLocal(cv, D, e.clientX, e.clientY));
+  if(!p) return false;
   if(tool === 'punch'){ punch(D, p); play('punch', D.combo); }
   else { addPin(D, p); play('pin'); }
+  return true;
 }
 let hold = null;
 cv.addEventListener('pointerdown', e => {
   e.preventDefault();
+  if(!strike(e)) return;          /* a miss starts nothing, records nothing */
   firstTouch();
-  strike(e);
   try{ cv.setPointerCapture(e.pointerId); }catch(err){}
   hold = {id:e.pointerId, last:0};
 });
@@ -1341,7 +1371,7 @@ $('#btn-redo').onclick = () => {
   D.touched = false;              // so the next tap starts a clean run
   $('#clock').style.opacity = '';
   $('#btn-redo').classList.remove('on');
-  showHint('hit him again — recording restarts');
+  showHint('hit me again — recording restarts');
 };
 
 function clearCapture(){
@@ -1520,7 +1550,7 @@ function preview(){
   const v = validate();
   if(!v) return;
   if(!D.touched){
-    showHint('hit him first!');
+    showHint('hit me first!');
     setTimeout(() => { if(!D.touched) showHint(''); }, 2500);
     return;
   }

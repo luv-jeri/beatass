@@ -148,7 +148,7 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${PAPER2};border:3px solid ${INK};border-radius:14px 10px 16px 9px">
           <tr>
             <td width="11" style="width:11px;background:${RED};border-radius:11px 0 0 7px">&nbsp;</td>
-            <td class="msg" style="padding:28px 26px;font-family:${SANS};font-size:22px;line-height:1.62;font-weight:700;color:${INK};white-space:pre-wrap;word-break:break-word">${esc(body)}</td>
+            <td class="msg" style="padding:28px 26px;font-family:${SANS};font-size:22px;line-height:1.62;font-weight:700;color:${INK};white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;word-break:break-word">${esc(body)}</td>
           </tr>
         </table>
 
