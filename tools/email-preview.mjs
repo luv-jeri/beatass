@@ -56,8 +56,18 @@ I smiled at you the next day anyway. I've been carrying that around for three ye
 const variants = [
   ['as it is normally sent', sample],
   ['no picture (the browser could not record)', { ...sample, gifUrl: '' }],
-  ['a one line message', { ...sample, body: 'i still think about you.' }]
+  ['a one line message', { ...sample, body: 'i still think about you.' }],
+  ['they left a reply path (sender email on file)', { ...sample, replyUrl: `${SITE}/reply?id=preview&t=preview` }]
 ];
+
+/* The reply button must exist exactly when a reply path exists. This is the
+   privacy promise in test form: no sender email, no button. */
+const withBtn = emailHtml({ ...sample, replyUrl: SITE + '/reply?id=x&t=y' }).includes('Reply to them');
+const withoutBtn = emailHtml(sample).includes('Reply to them');
+if (!withBtn || withoutBtn) {
+  console.error('FAIL: reply button gating broken', { withBtn, withoutBtn });
+  process.exit(1);
+}
 
 const page = `<!doctype html><meta charset="utf-8"><title>beatass email preview</title>
 <body style="margin:0;background:#33302a;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif">

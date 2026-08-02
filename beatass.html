@@ -615,6 +615,11 @@ a{color:var(--red)}a:hover{color:var(--ink)}
     <div>
       <div class="ovnote">Once it's sent it can't be taken back, and they'll never know it was you.</div>
       <div class="ovnote bad" id="send-err" hidden></div>
+      <div class="field" id="f-sender" style="margin-top:12px;text-align:left">
+        <label for="i-sender">your email (optional) - only if you want to hear their reply</label>
+        <input type="email" id="i-sender" placeholder="you@example.com" autocomplete="off" inputmode="email">
+        <div class="err">that's not an email - leave it empty to stay unreachable</div>
+      </div>
       <div class="ovbtns" style="margin-top:12px">
         <button class="btn ghost sm" id="dl" type="button">Save GIF</button>
         <button class="btn ink sm" id="btn-back" type="button">Back</button>
@@ -1128,7 +1133,7 @@ function bump(){
 }
 $('#i-msg').addEventListener('input', bump);
 /* stop shouting the moment they start fixing it */
-[['#i-name','#f-name'],['#i-email','#f-email'],['#i-msg','#f-msg']].forEach(([i,f]) =>
+[['#i-name','#f-name'],['#i-email','#f-email'],['#i-msg','#f-msg'],['#i-sender','#f-sender']].forEach(([i,f]) =>
   $(i).addEventListener('input', () => $(f).classList.remove('bad')));
 
 function validate(){
@@ -1636,6 +1641,15 @@ function showSendErr(msg){
 async function send(){
   const v = state.v;
   if(!v) return;
+  /* The one optional field: their own address, so the other side can answer.
+     Empty is a valid answer - it means "don't make me reachable". */
+  const sender = $('#i-sender').value.trim().toLowerCase();
+  if(sender && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(sender)){
+    $('#f-sender').classList.add('bad');
+    buzz('error');
+    $('#i-sender').focus();
+    return;
+  }
   const btn = $('#btn-send');
   const label = btn.textContent;
   btn.disabled = true;
@@ -1648,6 +1662,7 @@ async function send(){
   fd.append('message', v.msg);
   fd.append('stats', state.stats || '');
   fd.append('caption', state.caption || '');
+  if(sender) fd.append('senderEmail', sender);
   if(state.gifBlob)   fd.append('gif', state.gifBlob, 'beatass.gif');
   if(state.videoBlob) fd.append('mp4', state.videoBlob, 'beatass.mp4');
 
@@ -1718,7 +1733,7 @@ $('#btn-save').onclick = () => {
 $('#btn-restart').onclick = restart;
 function restart(){
   $('#ov-sent').classList.remove('on');
-  $('#i-name').value = $('#i-email').value = $('#i-msg').value = '';
+  $('#i-name').value = $('#i-email').value = $('#i-msg').value = $('#i-sender').value = '';
   bump();
   $$('.chip').forEach(c => c.classList.remove('on'));
   $('#share-row').hidden = true;

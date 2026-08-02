@@ -110,6 +110,8 @@ await p.waitForTimeout(2600);
 await p.click('#go');
 await p.waitForFunction(()=>document.querySelector('#ov-preview').classList.contains('on'),null,{timeout:60000});
 await p.waitForTimeout(400);
+// the optional reply-to address lives in the preview, next to the send button
+await p.fill('#i-sender','me@example.com');
 const sig=await p.evaluate(async()=>{const r=await fetch(document.querySelector('#p-gif').src);const bl=await r.blob();
   const u=new Uint8Array(await bl.slice(0,6).arrayBuffer());return String.fromCharCode(...u)+' '+Math.round(bl.size/1024)+'KB';});
 console.log('gif in preview:', sig);
@@ -152,7 +154,7 @@ console.log('sent overlay:', await p.isVisible('#ov-sent.on'));
 if(!(await p.isVisible('#ov-sent.on'))) errs.push('the sent screen never opened after a successful send');
 
 // prove the POST carried everything the Worker reads out of it
-const want = ['name="name"','name="email"','name="message"','name="stats"','name="caption"','name="gif"'];
+const want = ['name="name"','name="email"','name="message"','name="stats"','name="caption"','name="senderEmail"','name="gif"'];
 if(vid.made) want.push('name="mp4"');
 const missing = want.filter(f => !sent.body.includes(f));
 console.log('POST /api/send:', sent.count, 'calls |', Math.round(sent.body.length/1024)+'KB |',
@@ -160,6 +162,7 @@ console.log('POST /api/send:', sent.count, 'calls |', Math.round(sent.body.lengt
   '| recipient carried:', sent.body.includes('priya@example.com'));
 if(missing.length) errs.push('fields missing from the POST body: '+missing.join(', '));
 if(!sent.body.includes('priya@example.com')) errs.push('the recipient address never reached the API');
+if(!sent.body.includes('me@example.com')) errs.push('the sender reply-to address never reached the API');
 if(!/^multipart\/form-data/.test(sent.type)) errs.push('the POST was not multipart/form-data');
 if(!sent.body.includes('GIF89a')) errs.push('no real GIF bytes in the POST body');
 await p.screenshot({path:ROOT+'/shots/v3-sent.png'});

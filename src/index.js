@@ -1,11 +1,15 @@
+import PostalMime from 'postal-mime';
+
 /**
  * beatass — the API.
  *
- * Four jobs, and nothing else:
+ * Six jobs, and nothing else:
  *   POST /api/send   take a confession + its GIF/MP4, store them, email it
  *   GET  /media/:id  serve the GIF or MP4 out of R2
  *   GET  /block      permanently stop mail to an address (one click, from the email)
  *   GET  /report     flag a message so it can be looked at
+ *   GET/POST /reply  the recipient answers; we relay it to the sender's stored address
+ *   email()          inbound mail to reply+<id>@ is relayed between the two parties
  *
  * Everything else on the domain is a static file, served before this runs.
  *
@@ -19,6 +23,7 @@ const MAX_GIF = 3 * 1024 * 1024;   //  3 MB — comfortably above the ~670 KB we
 const MAX_MP4 = 12 * 1024 * 1024;  // 12 MB — a 4.8s 1080x1920 clip lands near 260 KB
 const MAX_BODY = 600;
 const MAX_NAME = 60;
+const MAX_REPLY = 1000;
 const RATE_LIMIT = 5;              // sends
 const RATE_WINDOW = 60 * 60;       // per hour, per IP
 
@@ -59,6 +64,10 @@ function sameToken(a, b) {
  *  investigate a report, not enough to identify anybody. */
 const hashIp = (secret, ip) => hmac(secret, 'ip:' + ip).then((h) => h.slice(0, 24));
 
+/** The address a mail-app reply lands on. The +id part routes it back to this
+ *  Worker, which is how a reply finds its way to the right stored sender. */
+const replyAddr = (env, mid) => 'reply+' + mid + '@' + String(env.MAIL_REPLY_TO).split('@').pop();
+
 const id16 = () =>
   [...crypto.getRandomValues(new Uint8Array(8))]
     .map((b) => b.toString(16).padStart(2, '0'))
@@ -72,7 +81,7 @@ const esc = (s) =>
 /* ---------- the email ----------
    Plain, white, and boring on purpose. It is pretending to be a normal
    message, and every hand-drawn flourish we add here costs deliverability. */
-function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, reportUrl }) {
+function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, reportUrl, replyUrl }) {
   /* The front end sends the finished caption because it is the only side that
      knows whether the visit was loving or a beating. Falling back to the stats
      keeps older clients working, and an empty caption is fine. */
@@ -160,6 +169,19 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
           ${line ? `<tr><td align="center" style="padding:11px 0 0;font-family:${SANS};font-size:14px;color:${RED}">${line}</td></tr>` : ''}
         </table>` : (line ? `<p style="margin:18px 0 0;text-align:center;font-family:${SANS};font-size:14px;color:${RED}">${line}</p>` : '')}
 
+${replyUrl ? `
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px">
+          <tr><td align="center" style="padding:22px 0 0;border-top:2px dotted ${FAINT}">
+            <p style="margin:0 0 4px;font-family:${SANS};font-size:15px;line-height:1.5;color:${INK};font-weight:700">Want to answer them?</p>
+            <p style="margin:0 0 16px;font-family:${SANS};font-size:14px;line-height:1.5;color:${SOFT}">Whoever sent this left a way to hear back.<br>Hit reply, or use the button. They stay anonymous either way.</p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr>
+              <td align="center" style="background:${RED};border-radius:10px 13px 9px 12px">
+                <a href="${replyUrl}" class="cta" style="display:inline-block;color:#ffffff;font-family:${SANS};font-size:18px;font-weight:700;text-decoration:none;padding:15px 34px">Reply to them</a>
+              </td>
+            </tr></table>
+            <p style="margin:12px 0 0;font-family:${SANS};font-size:12px;color:${FAINT}"><a href="${pageUrl}" style="color:${SOFT}">or send a fresh one of your own</a></p>
+          </td></tr>
+        </table>` : `
         <!-- The one thing people asked for and could not find: how to send one
              back. Reply goes to us, not to them, so a button is the only honest
              answer to "how do I respond to this?" -->
@@ -178,7 +200,7 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
             </tr></table>
             <p style="margin:12px 0 0;font-family:${SANS};font-size:12px;color:${FAINT}">Free. Anonymous. No sign-up. Ten seconds.</p>
           </td></tr>
-        </table>
+        </table>`}
 
         <p style="margin:28px 0 6px;font-family:${SANS};font-size:12px;line-height:1.5;color:${FAINT};border-top:1px solid ${FAINT};padding-top:16px">You're getting this because someone entered your address on beatass.com. We never share who sent it, and we never will.</p>
         <p style="margin:0;font-family:${SANS};font-size:12px;color:${FAINT}"><a href="${reportUrl}" style="color:${SOFT}">Report this</a> &nbsp;&middot;&nbsp; <a href="${blockUrl}" style="color:${SOFT}">Block my address forever</a></p>
@@ -189,6 +211,30 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
   </td></tr>
 </table>
 
+</td></tr></table>
+</body></html>`;
+}
+
+/* The relay email: somebody's actual words coming back. Same paper as the
+   confession but quieter chrome - this one is a private letter, not an event. */
+function relayHtml({ intro, body, footer, pageUrl }) {
+  const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+  const note = footer || 'Reply to this email to answer. beatass.com is the go-between; the anonymous side stays anonymous.';
+  return `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light only"><title>beatass</title></head>
+<body style="margin:0;padding:0;background:#e8e0cc;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#e8e0cc;padding:22px 10px">
+<tr><td align="center">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;background:#fbf7ea;border:2px solid #26356e;border-radius:14px 10px 16px 9px">
+<tr><td style="padding:24px 26px">
+<p style="margin:0 0 18px;font-family:${SANS};font-size:16px;line-height:1.6;color:#5b6a9c">${esc(intro)}</p>
+${body ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fffdf5;border:3px solid #26356e;border-radius:14px 10px 16px 9px">
+<tr><td width="11" style="width:11px;background:#cf3a2d;border-radius:11px 0 0 7px">&nbsp;</td>
+<td style="padding:24px 22px;font-family:${SANS};font-size:19px;line-height:1.6;font-weight:700;color:#26356e;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere">${esc(body)}</td></tr>
+</table>` : ''}
+<p style="margin:20px 0 0;font-family:${SANS};font-size:13px;line-height:1.6;color:#93a0c2">${esc(note)} <a href="${pageUrl}" style="color:#5b6a9c">beatass.com</a></p>
+</td></tr></table>
 </td></tr></table>
 </body></html>`;
 }
@@ -222,6 +268,57 @@ const confirm = (title, line, label, action) =>
     { headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex' } }
   );
 
+/* The reply box. Same one-job page as confirm(): a mail scanner following the
+   GET sees a form; only a human presses send. */
+const replyForm = (action) => new Response(
+  `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Answer them - beatass</title>
+<body style="margin:0;min-height:100dvh;display:grid;place-items:center;background:#fbf7ea;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#26356e;padding:24px">
+<div style="max-width:460px;width:100%">
+<h1 style="font-size:24px;margin:0 0 8px">Answer them</h1>
+<p style="font-size:15px;line-height:1.5;color:#5b6a9c;margin:0 0 18px">This goes straight back to whoever sent you that message. They stay anonymous; nothing about you is added either.</p>
+<form method="POST" action="${esc(action)}">
+<textarea name="reply" required maxlength="${MAX_REPLY}" rows="6" placeholder="Say it." style="width:100%;box-sizing:border-box;font:inherit;font-size:16px;line-height:1.5;color:#26356e;background:#fffdf5;border:3px solid #26356e;border-radius:14px 10px 16px 9px;padding:14px"></textarea>
+<button type="submit" style="margin-top:14px;font:inherit;font-size:16px;font-weight:700;padding:13px 26px;color:#fff;background:#cf3a2d;border:0;border-radius:225px 18px 235px 16px/16px 245px 14px 230px;cursor:pointer">Send the reply</button>
+</form>
+</div>`,
+  { headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex' } }
+);
+
+/* One place sends every email we send. A key gets here by being copied, and a
+   copied secret picks up whitespace - a trailing newline, or a line break in
+   the middle if the box it was copied from wrapped. Any of those is illegal in
+   a header value and the request throws before it is ever sent, which reads as
+   a total outage rather than a bad key. A Resend key is "re_" plus letters,
+   digits and underscores and never contains whitespace, so removing all of it
+   can only ever repair the paste. */
+async function sendViaResend(env, payload) {
+  const key = String(env.RESEND_API_KEY || '').replace(/\s+/g, '');
+  if (!/^re_[A-Za-z0-9_]+$/.test(key)) {
+    // shape only - length and prefix say what is wrong without leaking it
+    console.error('resend: key does not look like a Resend key', 'len=' + key.length,
+                  'starts=' + key.slice(0, 3));
+    return { ok: false, ref: 'key_shape' };
+  }
+  let res;
+  try {
+    res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { authorization: 'Bearer ' + key, 'content-type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.error('resend threw', err && err.stack || String(err));
+    return { ok: false, ref: 'resend_threw' };
+  }
+  if (!res.ok) {
+    const detail = await res.text();
+    console.error('resend failed', res.status, detail);
+    // the status is safe to surface; the body is not, it can echo the key
+    return { ok: false, ref: 'resend_' + res.status };
+  }
+  return { ok: true };
+}
+
 /* Exported so tools/email-preview.mjs can render the real thing to a file. The
    whole point is that what you look at is the same function the Worker sends,
    not a copy that drifts. Unused by the Worker itself. */
@@ -237,6 +334,81 @@ export default {
     } catch (err) {
       console.error('unhandled', err && err.stack || String(err));
       return json({ error: 'Something broke on our side.', ref: 'unhandled' }, 500);
+    }
+  }
+  ,
+
+  /* Inbound mail. Email Routing hands us everything addressed to reply+<id>@
+     (subaddressing matches it against the reply@ rule). We are the post
+     office: look up the message, forward the words to the OTHER party, never
+     let either address show to the other side. */
+  async email(message, env) {
+    try {
+      const to = String(message.to || '').toLowerCase();
+      const m = to.match(/^reply\+([a-f0-9]{16})@/);
+      if (!m) { message.setReject('No such address'); return; }
+      const mid = m[1];
+
+      /* machine-generated mail (out-of-office, bounces) must never start a loop */
+      const auto = String(message.headers.get('auto-submitted') || '').toLowerCase();
+      if (auto && auto !== 'no') return;
+
+      const row = await env.DB.prepare('SELECT sender_email, to_email FROM messages WHERE id = ?')
+        .bind(mid).first();
+      if (!row) { message.setReject('No such message'); return; }
+
+      const from = String(message.from || '').toLowerCase();
+      const pageUrl = env.SITE_URL || 'https://beatass.com';
+
+      if (!row.sender_email) {
+        /* The sender left no address. Answer the anonymity notice exactly once
+           per message, so a frustrated double-reply doesn't get spammed back. */
+        if (await env.RATE.get('an:' + mid)) return;
+        await env.RATE.put('an:' + mid, '1', { expirationTtl: 60 * 60 * 24 * 30 });
+        await sendViaResend(env, {
+          from: env.MAIL_FROM,
+          to: [from],
+          subject: 'That sender chose to stay anonymous',
+          html: relayHtml({
+            intro: 'You replied to a beatass.com message, but whoever sent it left no way to be reached - not even by us. Your reply could not be delivered. That is a privacy promise, not a bug.',
+            footer: 'Want to say something back anyway? Send one of your own from',
+            pageUrl
+          }),
+          text: 'You replied to a beatass.com message, but whoever sent it left no way to be reached - not even by us. Your reply could not be delivered. That is a privacy promise, not a bug.\n\nWant to say something back anyway? Send one of your own: ' + pageUrl
+        });
+        return;
+      }
+
+      /* only the two people in this exchange may use the relay */
+      if (from !== row.sender_email && from !== row.to_email) {
+        message.setReject('Not part of this conversation');
+        return;
+      }
+      const target = from === row.sender_email ? row.to_email : row.sender_email;
+
+      // the block list is absolute, in every direction
+      const blocked = await env.DB.prepare('SELECT 1 FROM blocklist WHERE email = ?')
+        .bind(target).first();
+      if (blocked) return;
+
+      const parsed = await PostalMime.parse(message.raw);
+      let text = (parsed.text || '').trim();
+      if (!text && parsed.html)
+        text = String(parsed.html).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      text = text.slice(0, 5000);
+      if (!text) return;
+
+      await sendViaResend(env, {
+        from: env.MAIL_FROM,
+        reply_to: replyAddr(env, mid),
+        to: [target],
+        subject: 'They answered your beatass message',
+        html: relayHtml({ intro: 'They read what you sent. This is what they said back:', body: text, pageUrl }),
+        text: text + '\n\n-\nReply to this email to answer. beatass.com is the go-between; the anonymous side stays anonymous.'
+      });
+    } catch (err) {
+      /* a throw here would bounce the mail with our stack trace in it */
+      console.error('email handler', err && err.stack || String(err));
     }
   }
 };
@@ -316,6 +488,60 @@ async function handle(request, env) {
         'A human will look at this message. If you also want to stop all future mail, use the block link in the email.');
     }
 
+    /* ---------- reply: the recipient answers, we relay it ----------
+       Only reachable through the tokened link in the email, and only useful
+       when the sender left an address. The sender's address never appears in
+       anything this route returns. */
+    if (path === '/reply') {
+      const mid = url.searchParams.get('id') || '';
+      const t = url.searchParams.get('t') || '';
+      if (!/^[a-f0-9]{16}$/.test(mid) || !sameToken(t, await token(env.BLOCK_SECRET, 'reply:' + mid)))
+        return notice('That link has expired', 'Open the email again and use its reply button.');
+
+      const row = await env.DB.prepare('SELECT sender_email FROM messages WHERE id = ?').bind(mid).first();
+      if (!row)
+        return notice('That link has expired', 'Open the email again and use its reply button.');
+      if (!row.sender_email)
+        return notice('This sender chose to stay anonymous',
+          'They left no way to reach them, not even for us. That is a privacy promise, not a bug.');
+
+      // the block list kills the reply path too - a blocked address gets NO mail
+      const senderBlocked = await env.DB.prepare('SELECT 1 FROM blocklist WHERE email = ?')
+        .bind(row.sender_email).first();
+      if (senderBlocked)
+        return notice('This address is closed',
+          'The person behind that message asked never to receive mail from beatass.com. We are honouring that.');
+
+      if (request.method !== 'POST')
+        return replyForm(`/reply?id=${encodeURIComponent(mid)}&t=${encodeURIComponent(t)}`);
+
+      // same ceiling as sending: a reply chain is still two strangers
+      const ip = request.headers.get('CF-Connecting-IP') || '0.0.0.0';
+      const ipHash = await hashIp(env.BLOCK_SECRET, ip);
+      const rk = 'rp:' + ipHash;
+      const used = parseInt((await env.RATE.get(rk)) || '0', 10);
+      if (used >= RATE_LIMIT)
+        return notice("That's enough for one hour", 'Come back later and try again.');
+      await env.RATE.put(rk, String(used + 1), { expirationTtl: RATE_WINDOW });
+
+      let form;
+      try { form = await request.formData(); } catch { return notice('Something went wrong', 'Go back and try again.'); }
+      const reply = String(form.get('reply') || '').trim();
+      if (reply.length < 1 || reply.length > MAX_REPLY)
+        return notice('Write the reply first', 'Go back, write it, then press send.');
+
+      const sent = await sendViaResend(env, {
+        from: env.MAIL_FROM,
+        reply_to: replyAddr(env, mid),
+        to: [row.sender_email],
+        subject: 'They answered your beatass message',
+        html: relayHtml({ intro: 'They read what you sent. This is what they said back:', body: reply, pageUrl: site }),
+        text: reply + '\n\n-\nReply to this email to answer. beatass.com is the go-between; the anonymous side stays anonymous.'
+      });
+      if (!sent.ok) return notice("That didn't go through", 'Try again in a minute.');
+      return notice('Sent', 'Your reply is on its way to whoever sent that message.');
+    }
+
     /* ---------- send ---------- */
     if (path === '/api/send' && request.method === 'POST') {
       const ip = request.headers.get('CF-Connecting-IP') || '0.0.0.0';
@@ -333,11 +559,17 @@ async function handle(request, env) {
       const stats = String(form.get('stats') || '').trim().slice(0, 80);
       // the finished caption line, decided by the front end (love vs beating)
       const caption = String(form.get('caption') || '').trim().slice(0, 120);
+      // Optional: the sender's own address, only if they want to hear back.
+      // It is stored and never shown to anyone - not in the email, not in any
+      // API response. It is the reply relay's only routing table.
+      const senderEmail = String(form.get('senderEmail') || '').trim().toLowerCase();
 
       if (!name || name.length > MAX_NAME) return json({ error: 'That name looks wrong.' }, 400);
       if (!okEmail(email)) return json({ error: "That's not an email address." }, 400);
       if (body.length < 3 || body.length > MAX_BODY)
         return json({ error: 'Say a little more than that.' }, 400);
+      if (senderEmail && !okEmail(senderEmail))
+        return json({ error: 'Your own email looks wrong. Fix it or leave it empty.' }, 400);
 
       // never send to somebody who has already told us to stop
       const blocked = await env.DB.prepare('SELECT 1 FROM blocklist WHERE email = ?')
@@ -372,66 +604,39 @@ async function handle(request, env) {
       await Promise.all(puts);
 
       await env.DB.prepare(
-        `INSERT INTO messages (id, to_email, to_name, body, stats, has_gif, has_mp4, created_at, sender_hash)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO messages (id, to_email, to_name, body, stats, has_gif, has_mp4, created_at, sender_hash, sender_email)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
         .bind(mid, email, name, body, stats, gif && gif.size ? 1 : 0, mp4 && mp4.size ? 1 : 0,
-              Math.floor(Date.now() / 1000), ipHash)
+              Math.floor(Date.now() / 1000), ipHash, senderEmail || null)
         .run();
 
       const blockUrl = `${site}/block?e=${encodeURIComponent(email)}&t=${await token(env.BLOCK_SECRET, email)}`;
       const reportUrl = `${site}/report?id=${mid}&t=${await token(env.BLOCK_SECRET, 'r:' + mid)}`;
       const gifUrl = gif && gif.size ? `${site}/media/${mid}.gif` : '';
+      // The reply page link only exists when there is somebody to deliver to.
+      const replyUrl = senderEmail
+        ? `${site}/reply?id=${mid}&t=${await token(env.BLOCK_SECRET, 'reply:' + mid)}`
+        : '';
 
-      /* A key gets here by being copied, and a copied secret picks up whitespace
-         — a trailing newline, or a line break in the middle if the box it was
-         copied from wrapped. Any of those is illegal in a header value and the
-         request throws before it is ever sent, which reads as a total outage
-         rather than a bad key. A Resend key is "re_" plus letters, digits and
-         underscores and never contains whitespace, so removing all of it can
-         only ever repair the paste. */
-      const key = String(env.RESEND_API_KEY || '').replace(/\s+/g, '');
-      if (!/^re_[A-Za-z0-9_]+$/.test(key)) {
-        // shape only — length and prefix say what is wrong without leaking it
-        console.error('resend: key does not look like a Resend key', 'len=' + key.length,
-                      'starts=' + key.slice(0, 3));
-        return json({ error: "We couldn't deliver that. Try again in a minute.", ref: 'key_shape' }, 502);
-      }
-
-      let res;
-      try {
-        res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          authorization: 'Bearer ' + key,
-          'content-type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: env.MAIL_FROM,
-          // A reply must reach a human. It reaches us, not the sender — the
-          // footer says so, because a reply that quietly vanishes into an
-          // anonymous void is the moment somebody stops trusting this.
-          reply_to: env.MAIL_REPLY_TO,
-          to: [email],
-          subject: `${name}, someone finally said it`,
-          html: emailHtml({ name, body, stats, caption, gifUrl, pageUrl: site, blockUrl, reportUrl }),
-          text: `Hi ${name}, somebody used beatass.com to say something to you. They chose to stay anonymous.\n\n"${body}"\n\nReplying to this email reaches us, not them. To say something back, send your own — free, anonymous, no sign-up:\n${site}\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`,
-          // one-click unsubscribe: mail providers treat this as a strong
-          // positive signal, and it keeps us out of the spam folder
-          headers: { 'List-Unsubscribe': `<${blockUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }
-        })
-        });
-      } catch (err) {
-        console.error('resend threw', err && err.stack || String(err));
-        return json({ error: "We couldn't deliver that. Try again in a minute.", ref: 'resend_threw' }, 502);
-      }
-
-      if (!res.ok) {
-        const detail = await res.text();
-        console.error('resend failed', res.status, detail);
-        // the status is safe to surface; the body is not, it can echo the key
-        return json({ error: "We couldn't deliver that. Try again in a minute.", ref: 'resend_' + res.status }, 502);
-      }
+      const sent = await sendViaResend(env, {
+        from: env.MAIL_FROM,
+        // When the sender left an address, a plain mail-app reply must reach
+        // them - so the reply-to carries the message id back to our email()
+        // handler. When they left nothing, replies still land with us.
+        reply_to: senderEmail ? replyAddr(env, mid) : env.MAIL_REPLY_TO,
+        to: [email],
+        subject: `${name}, someone finally said it`,
+        html: emailHtml({ name, body, stats, caption, gifUrl, pageUrl: site, blockUrl, reportUrl, replyUrl }),
+        text: senderEmail
+          ? `Hi ${name}, somebody used beatass.com to say something to you. They chose to stay anonymous.\n\n"${body}"\n\nThey left a way to hear back. Reply to this email and it reaches them (they stay anonymous), or write it here:\n${replyUrl}\n\nSend one of your own - free, anonymous, no sign-up:\n${site}\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`
+          : `Hi ${name}, somebody used beatass.com to say something to you. They chose to stay anonymous.\n\n"${body}"\n\nReplying to this email reaches us, not them. To say something back, send your own - free, anonymous, no sign-up:\n${site}\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`,
+        // one-click unsubscribe: mail providers treat this as a strong
+        // positive signal, and it keeps us out of the spam folder
+        headers: { 'List-Unsubscribe': `<${blockUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }
+      });
+      if (!sent.ok)
+        return json({ error: "We couldn't deliver that. Try again in a minute.", ref: sent.ref }, 502);
 
       return json({ ok: true, id: mid });
     }

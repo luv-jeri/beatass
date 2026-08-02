@@ -1,4 +1,4 @@
-Ant it # The reply relay — spec (Sanjay, 2026-08-02, in conversation)
+# The reply relay — spec (Sanjay, 2026-08-02, in conversation)
 
 The recipient of a confession can answer it, and the answer reaches the sender
 without the sender ever being named. One side of the conversation stays
@@ -42,6 +42,20 @@ Two ways to answer, both only doing anything when the sender left an address:
   /block).
 - D1: add `sender_email TEXT` (nullable) to the messages table; keep it out of
   every API response.
+
+## Verified facts (2026-08-02, from Cloudflare's own docs)
+
+- Email Routing DOES support plus-addressing (RFC 5233 subaddressing), but it
+  is **off by default** — a toggle at Cloudflare dashboard → Compute →
+  Email Service → Email Routing → **Settings** → Subaddressing.
+- Once on, mail to `reply+anything@beatass.com` matches the plain
+  `reply@beatass.com` routing rule, and the Worker still sees the full
+  `reply+<id>@` address in `message.to`. So Sanjay's manual step is exactly
+  two clicks: enable Subaddressing, and add one routing rule
+  `reply@beatass.com → Send to a Worker → beatass`.
+- The catch-all rule stays on **Drop** — nothing else changes.
+- MIME parsing in the email handler uses `postal-mime`, the parser Cloudflare's
+  Email Workers docs themselves recommend.
 
 ## Build order
 
