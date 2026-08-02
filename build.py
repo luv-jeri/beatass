@@ -204,6 +204,13 @@ def build_pages(public: pathlib.Path, app_html: str) -> int:
         )
     (public / "email-header.png").write_bytes(header.read_bytes())
 
+    # Home-screen icon, straight from the design system. The <head> links to
+    # /apple-touch-icon.png, so skipping this copy would 404 it in production.
+    touch = HERE / "design" / "assets" / "brand" / "png" / "apple-touch-180.png"
+    if not touch.is_file():
+        raise SystemExit("!! design/assets/brand/png/apple-touch-180.png is missing")
+    (public / "apple-touch-icon.png").write_bytes(touch.read_bytes())
+
     (public / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'

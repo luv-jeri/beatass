@@ -1,3 +1,6 @@
+/* NOTE (2026-08-02): the shipped art now comes from design/assets/brand/png/og-1200x630.png
+   (the Claude Design brand kit). This generator is only the fallback if the
+   design files are ever lost. */
 /**
  * Draws og.png — the 1200x630 card that Facebook, WhatsApp, iMessage, Slack,
  * LinkedIn and Twitter show when somebody pastes a beatass.com link.

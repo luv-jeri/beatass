@@ -1,3 +1,6 @@
+/* NOTE (2026-08-02): the shipped art now comes from design/assets/brand/png/email-header-1120x180.png
+   (the Claude Design brand kit). This generator is only the fallback if the
+   design files are ever lost. */
 /**
  * Draws email-header.png — the strip across the top of every email we send.
  *
