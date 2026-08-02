@@ -26,6 +26,8 @@ const MAX_NAME = 60;
 const MAX_REPLY = 1000;
 const RATE_LIMIT = 5;              // sends
 const RATE_WINDOW = 60 * 60;       // per hour, per IP
+const RELAY_LIMIT = 20;            // relayed mail-app replies (Sanjay's ceiling, 2026-08-02)
+const RELAY_WINDOW = 60 * 60 * 24; // per writer, per day
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), {
@@ -390,6 +392,31 @@ export default {
       const blocked = await env.DB.prepare('SELECT 1 FROM blocklist WHERE email = ?')
         .bind(target).first();
       if (blocked) return;
+
+      /* 20 relayed replies per writer per day. Past the ceiling: one honest
+         notice, then silence until tomorrow - a quiet drop would read as the
+         relay being broken, and a notice per drop would itself be a firehose.
+         The key is a hash, so no raw address ever sits in KV. */
+      const fromHash = (await hmac(env.BLOCK_SECRET, 'rd:' + from)).slice(0, 24);
+      const usedToday = parseInt((await env.RATE.get('rd:' + fromHash)) || '0', 10);
+      if (usedToday >= RELAY_LIMIT) {
+        if (!(await env.RATE.get('rdn:' + fromHash))) {
+          await env.RATE.put('rdn:' + fromHash, '1', { expirationTtl: RELAY_WINDOW });
+          await sendViaResend(env, {
+            from: env.MAIL_FROM,
+            to: [from],
+            subject: "That's enough for today",
+            html: relayHtml({
+              intro: 'You have hit the daily limit of ' + RELAY_LIMIT + ' relayed replies. Anything more you send today will not be delivered. The conversation reopens tomorrow.',
+              footer: 'The limit keeps the relay from becoming a firehose. Tomorrow it resets, promise.',
+              pageUrl
+            }),
+            text: 'You have hit the daily limit of ' + RELAY_LIMIT + ' relayed replies. Anything more you send today will not be delivered. The conversation reopens tomorrow.'
+          });
+        }
+        return;
+      }
+      await env.RATE.put('rd:' + fromHash, String(usedToday + 1), { expirationTtl: RELAY_WINDOW });
 
       const parsed = await PostalMime.parse(message.raw);
       let text = (parsed.text || '').trim();
