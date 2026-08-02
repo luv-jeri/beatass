@@ -199,19 +199,19 @@ a{color:var(--red)}a:hover{color:var(--ink)}
 .confess{display:flex;flex-direction:column;gap:5px;min-height:0}
 /* Same reasoning as the name and email boxes: on ruled paper an unbordered
    textarea is invisible, and people could not tell where the message went. */
-.confess .box{flex:1 1 auto;min-height:0;background:var(--paper-2);
+.confess .box{position:relative;flex:1 1 auto;min-height:0;background:var(--paper-2);
   border:var(--bw-pen) solid var(--ink-faint);border-radius:var(--radius-pen-md);
   box-shadow:2px 2px 0 rgba(38,53,110,.09);padding:4px 6px;
   transition:border-color var(--dur-err),box-shadow var(--dur-err)}
 .confess .box:focus-within{border-color:var(--ink);box-shadow:2px 3px 0 rgba(38,53,110,.2)}
 .confess textarea{width:100%;height:100%;display:block;resize:none;font-size:var(--fs-input);
   line-height:var(--rule-h);color:var(--ink);background:transparent;border:0;outline:none;
-  padding:0 4px;border-radius:0;background-image:var(--bg-ruled-ink)}
+  padding:0 4px 16px;border-radius:0;background-image:var(--bg-ruled-ink)}
 .confess.bad .box{border-color:var(--red);box-shadow:2px 2px 0 rgba(207,58,45,.18)}
 .confess.bad textarea{background-image:var(--bg-ruled-bad)}
 .confess textarea::placeholder,.field input::placeholder{color:var(--ink-faint);opacity:.85}
-.count{flex:none;text-align:right;font-weight:600;font-size:var(--fs-caption);
-  color:var(--pencil);line-height:1}
+.count{position:absolute;right:7px;bottom:5px;font-weight:600;font-size:var(--fs-caption);
+  color:var(--pencil);line-height:1;background:var(--paper-2);padding:1px 5px;border-radius:6px;pointer-events:none}
 .count.near{color:var(--red)}
 
 /* ============================================================
@@ -285,7 +285,7 @@ a{color:var(--red)}a:hover{color:var(--ink)}
   transition:transform var(--dur-press),box-shadow var(--dur-press);
   font-size:16px;padding:12px 22px;min-height:46px;
   background:var(--red);color:var(--paper-2);border-color:var(--red);box-shadow:var(--shadow-btn-red)}
-.btn.lg{font-size:18px;padding:15px 30px;min-height:54px}
+.btn.lg{font-size:18px;padding:11px 28px;min-height:46px}
 .btn.sm{font-size:15px;padding:10px 16px;min-height:42px}
 .btn.block{width:100%;flex:1 1 auto}
 .btn:hover:not(:disabled){transform:translate(-1px,-2px) rotate(-.5deg);box-shadow:var(--shadow-btn-red-hover)}
@@ -390,7 +390,7 @@ a{color:var(--red)}a:hover{color:var(--ink)}
   /* scroll instead of clipping: a small scroll is cheaper than lost content */
   .scroller{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
     display:flex;flex-direction:column;gap:10px;padding:0 var(--pad-page) 10px}
-  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:8px;flex:none}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:2px;flex:none}
   .tagline{font-size:17px;max-width:48%}
   .who{grid-template-columns:1fr 1.35fr;gap:11px}
   /* The doll is the hero, so he gets a floor. On a short phone this pushes the
@@ -528,11 +528,11 @@ a{color:var(--red)}a:hover{color:var(--ink)}
             </div>
           </div>
           <div class="field" id="f-handle" style="margin-top:14px">
-            <label for="i-handle">their instagram <span style="color:var(--ink-faint);font-weight:400">(or reach them here instead)</span></label>
+            <label for="i-handle">their instagram</label>
             <input type="text" id="i-handle" placeholder="their_username" autocomplete="off">
             <div class="err">handle is letters, numbers, dots and underscores only</div>
           </div>
-          <div id="contact-note" style="margin-top:8px;font-size:12px;color:var(--ink-faint)">add their email or their instagram, at least one. email is the most reliable.</div>
+          <div id="contact-note" style="margin-top:4px;font-size:11px;line-height:1.3;color:var(--ink-faint);display:flex;align-items:center;gap:5px"><svg viewBox="0 0 20 20" width="13" height="13" aria-hidden="true" style="flex:none"><circle cx="10" cy="10" r="8.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="6.3" r="1.1" fill="currentColor"/><rect x="9.1" y="8.9" width="1.8" height="5.8" rx=".9" fill="currentColor"/></svg><span>email or instagram, at least one. email is the most reliable.</span></div>
 
           <div class="saybox">
             <div class="pane-label">what do you want to say?</div>
@@ -547,8 +547,8 @@ a{color:var(--red)}a:hover{color:var(--ink)}
               <div class="confess" id="f-msg">
                 <div class="box">
                   <textarea id="i-msg" maxlength="600" placeholder="I've been holding this in for two years…"></textarea>
+                  <div class="count" id="count">0 / 600</div>
                 </div>
-                <div class="count" id="count">0 / 600</div>
               </div>
             </div>
           </div>
