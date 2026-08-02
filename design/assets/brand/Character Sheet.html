@@ -1,0 +1,76 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>beatass — doll character sheet</title>
+<link rel="stylesheet" href="../../tokens/fonts.css"><link rel="stylesheet" href="../../tokens/colors.css">
+<style>
+body{margin:0;background:var(--desk);font-family:'Hand',cursive;color:var(--ink);padding:34px 0 60px}
+.page{width:1200px;margin:0 auto;background:var(--paper);box-shadow:0 14px 34px rgba(60,50,30,.22);padding:46px 54px 58px;position:relative}
+.page::before{content:"";position:absolute;inset:0 auto 0 64px;width:2px;background:var(--margin-line);opacity:.8}
+h1{font-family:'Marker',cursive;font-weight:400;font-size:44px;margin:0}
+h1 .r{color:var(--red)}
+.sub{font-family:'Scrawl',cursive;font-size:24px;color:var(--ink-soft);margin:6px 0 0}
+.lbl{font-family:'Marker',cursive;font-size:15px;color:var(--red);letter-spacing:.04em;margin:44px 0 14px;text-transform:lowercase}
+.row{display:flex;gap:18px;flex-wrap:wrap}
+.state{background:var(--paper-2);border:2.5px solid var(--ink);border-radius:14px 7px 16px 9px;padding:12px 10px 10px;width:168px;text-align:center;background-image:linear-gradient(var(--rule) 1px,transparent 1px),linear-gradient(90deg,var(--rule) 1px,transparent 1px);background-size:22px 22px;background-position:center}
+.state img{width:140px;display:block;margin:0 auto}
+.state b{font-family:'Scrawl',cursive;font-weight:700;font-size:22px;color:var(--red);display:block;margin-top:2px}
+.state i{font-style:normal;font-size:14.5px;color:var(--pencil);line-height:1.25;display:block;margin-top:2px}
+.anat{display:flex;gap:40px;align-items:center}
+.anat img{width:270px;flex:none}
+.callouts{font-size:17px;line-height:1.5;max-width:640px}
+.callouts li{margin-bottom:10px}
+.callouts em{font-style:normal;color:var(--red);font-family:'Scrawl',cursive;font-size:20px}
+code{font-family:ui-monospace,monospace;font-size:13.5px;background:var(--paper-2);border:1px solid var(--rule);padding:1px 5px;border-radius:4px}
+.sw{display:flex;gap:12px;flex-wrap:wrap}
+.chip{width:132px}
+.chip .c{height:56px;border:2.5px solid var(--ink);border-radius:10px 5px 12px 6px}
+.chip p{margin:5px 0 0;font-size:14px;line-height:1.3;color:var(--ink)}
+.chip p span{color:var(--pencil);font-family:ui-monospace,monospace;font-size:12px;display:block}
+.fav{display:flex;gap:26px;align-items:flex-end}
+.fav figure{margin:0;text-align:center}
+.fav img{display:block;image-rendering:auto}
+.fav figcaption{font-size:13px;color:var(--pencil);margin-top:6px}
+a{color:var(--red)}a:hover{color:var(--ink)}
+.note{font-family:'Scrawl',cursive;font-size:21px;color:var(--red)}
+</style></head><body>
+<div class="page">
+<h1>the doll <span class="r">— character sheet</span></h1>
+<p class="sub">a small hand-sewn plush voodoo doll, yanked out of nowhere one second ago. he suspects something is about to happen to him. he is right.</p>
+<div class="lbl">the six faces — same body, swap the face group</div>
+<div class="row">
+<div class="state"><img src="svg/doll-default.svg" alt=""><b>just arrived</b><i>wide dot eyes, uneven worried brows, one sweat drop</i></div>
+<div class="state"><img src="svg/doll-flinch.svg" alt=""><b>flinch</b><i>eyes pressed low, a tight little o</i></div>
+<div class="state"><img src="svg/doll-hurt.svg" alt=""><b>hurt</b><i>x eyes, wobbly frown — too much</i></div>
+<div class="state"><img src="svg/doll-loved.svg" alt=""><b>loved</b><i>heart eyes, a real smile</i></div>
+<div class="state"><img src="svg/doll-panic.svg" alt=""><b>panic</b><i>on fire: round mouth, arms thrown up</i></div>
+<div class="state"><img src="svg/doll-blink.svg" alt=""><b>blink</b><i>the idle frame — eyes as short lines</i></div>
+</div>
+<div class="lbl">body plan &amp; rigging</div>
+<div class="anat">
+<img src="svg/doll-default.svg" alt="">
+<div class="callouts"><ul>
+<li><em>a puppet, not a noose —</em> the string meets the <b>back of the head</b>, tied off with a red stitch; the body hangs at a 3° tilt, clearly alive.</li>
+<li>Big round head, solid dot eyes, blush at 30% <code>#e0507f</code>; bean body with a red stitched seam; the tummy is otherwise clean — bruises, pins and kisses are painted on at runtime.</li>
+<li>Limbs are separate closed shapes that connect <b>under</b> the body, each group carrying a <code>data-pivot</code> for swing: <code>string · head · blush · body · stitches · arm-left · arm-right · leg-left · leg-right · face-*</code></li>
+<li>Every state sits on the identical <code>viewBox 0 0 150 210</code> — faces swap without anything shifting. Master file with all six face groups: <code>svg/doll-master.svg</code>; one file per state beside it.</li>
+<li>Flat colour and wobbly pen line only — no gradients, no shadows, no filters. Outline 3.9px ballpoint <code>#26356e</code>, plush fill <code>#fffdf5</code>.</li>
+</ul></div>
+</div>
+<div class="lbl">inks used — nothing else</div>
+<div class="sw">
+<div class="chip"><div class="c" style="background:#26356e"></div><p>ballpoint blue<span>#26356e</span></p></div>
+<div class="chip"><div class="c" style="background:#fffdf5"></div><p>plush off-white<span>#fffdf5</span></p></div>
+<div class="chip"><div class="c" style="background:#fbf7ea"></div><p>paper cream<span>#fbf7ea</span></p></div>
+<div class="chip"><div class="c" style="background:#cf3a2d"></div><p>red pen — stitches<span>#cf3a2d</span></p></div>
+<div class="chip"><div class="c" style="background:#e0507f"></div><p>blush @ 30%<span>#e0507f</span></p></div>
+<div class="chip"><div class="c" style="background:#8d8778"></div><p>pencil — the string<span>#8d8778</span></p></div>
+</div>
+<div class="lbl">his head alone — does he survive 16px?</div>
+<div class="fav">
+<figure><img src="svg/icon-head-full.svg" width="128"><figcaption>full detail</figcaption></figure>
+<figure><img src="svg/icon-head-simple.svg" width="64"><figcaption>simplified · 64</figcaption></figure>
+<figure><img src="svg/icon-head-simple.svg" width="32"><figcaption>32</figcaption></figure>
+<figure><img src="svg/icon-head-simple.svg" width="16"><figcaption>16</figcaption></figure>
+<p class="note" style="margin:0 0 18px 8px">← still him: dot eyes, smile, string</p>
+</div>
+<p style="font-size:15px;color:var(--pencil);margin-top:34px">full identity — lockups, favicons, email, social — on the <a href="Brand Board.html">brand board</a></p>
+</div>
+</body></html>

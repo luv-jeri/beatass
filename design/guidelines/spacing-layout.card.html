@@ -1,0 +1,16 @@
+<!-- @dsCard group="Spacing" viewport="700x180" name="Layout in use" subtitle="1240px column, fluid page padding, the 30px rule as vertical rhythm" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--paper);font-family:var(--font-ui);color:var(--ink);padding:16px 18px}
+.g{display:flex;gap:10px;flex-wrap:wrap}
+.sw{flex:1 1 0;min-width:0;border:var(--bw-pen) solid var(--ink);border-radius:var(--radius-pen-sm);overflow:hidden}
+.sw i{display:block;height:52px}
+.sw b{display:block;font-family:var(--font-ui);font-weight:600;font-size:12px;padding:5px 7px 1px;line-height:1.25}
+.sw code{display:block;font-family:ui-monospace,monospace;font-size:10.5px;color:var(--pencil);padding:0 7px 6px}
+.cap{font-family:var(--font-marker);font-size:11px;color:var(--pencil)}
+a{color:var(--red)}a:hover{color:var(--ink)}</style></head><body><div style="border:var(--bw-pen) dotted var(--ink-faint);padding:10px;border-radius:var(--radius-pen-sm)">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.02fr);gap:22px">
+<div style="background:var(--paper-2);border:var(--bw-pen) solid var(--ink-faint);border-radius:var(--radius-pen-lg);height:96px;display:grid;place-items:center"><span class="cap">confession · 1fr</span></div>
+<div style="background:var(--paper-2);border:var(--bw-pen-heavy) solid var(--ink);border-radius:var(--radius-pen-lg);height:96px;display:grid;place-items:center"><span class="cap">doll · 1.02fr</span></div>
+</div></div>
+<div class="cap" style="margin-top:8px">--page-max 1240px · --pad-page clamp(14px,2.5vw,34px) · --gap-col clamp(12px,2.2vw,32px) · stacks below 820px</div></body></html>

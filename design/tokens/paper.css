@@ -1,0 +1,10 @@
+:root{
+  --bg-ruled:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--rule-h) - 1px),var(--rule) calc(var(--rule-h) - 1px),var(--rule) var(--rule-h)); /* @kind other */
+  --bg-ruled-ink:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--rule-h) - 1.5px),var(--ink-faint) calc(var(--rule-h) - 1.5px),var(--ink-faint) var(--rule-h)); /* @kind other */
+  --bg-ruled-bad:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--rule-h) - 1.5px),var(--red) calc(var(--rule-h) - 1.5px),var(--red) var(--rule-h)); /* @kind other */
+  --bg-grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E"); /* @kind other */
+  --grain-opacity:.45; /* @kind other */
+  --grid-canvas:22px; /* @kind spacing */
+}
+.paper-surface{background-color:var(--paper);background-image:var(--bg-ruled);background-position:0 var(--rule-offset)}
+.paper-grain{position:absolute;inset:0;pointer-events:none;opacity:var(--grain-opacity);background-image:var(--bg-grain)}

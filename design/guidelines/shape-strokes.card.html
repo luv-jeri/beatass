@@ -1,0 +1,19 @@
+<!-- @dsCard group="Shape" viewport="700x170" name="Pen widths" subtitle="Borders are pen strokes, never hairlines. Dotted rules go solid on focus, red on error." -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--paper);font-family:var(--font-ui);color:var(--ink);padding:16px 18px}
+.g{display:flex;gap:10px;flex-wrap:wrap}
+.sw{flex:1 1 0;min-width:0;border:var(--bw-pen) solid var(--ink);border-radius:var(--radius-pen-sm);overflow:hidden}
+.sw i{display:block;height:52px}
+.sw b{display:block;font-family:var(--font-ui);font-weight:600;font-size:12px;padding:5px 7px 1px;line-height:1.25}
+.sw code{display:block;font-family:ui-monospace,monospace;font-size:10.5px;color:var(--pencil);padding:0 7px 6px}
+.cap{font-family:var(--font-marker);font-size:11px;color:var(--pencil)}
+a{color:var(--red)}a:hover{color:var(--ink)}</style></head><body><div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;gap:20px;align-items:center">
+<div style="flex:1"><div style="border-top:1px solid var(--ink)"></div><code style="font-family:ui-monospace,monospace;font-size:10px;color:var(--pencil)">--bw-hair 1px</code></div><div style="flex:1"><div style="border-top:1.6px solid var(--ink)"></div><code style="font-family:ui-monospace,monospace;font-size:10px;color:var(--pencil)">--bw-rule 1.6px</code></div><div style="flex:1"><div style="border-top:2px solid var(--ink)"></div><code style="font-family:ui-monospace,monospace;font-size:10px;color:var(--pencil)">--bw-pen 2px</code></div><div style="flex:1"><div style="border-top:2.5px solid var(--ink)"></div><code style="font-family:ui-monospace,monospace;font-size:10px;color:var(--pencil)">--bw-pen-heavy 2.5px</code></div>
+</div>
+<div style="display:flex;gap:22px">
+<div style="flex:1"><div style="border-bottom:2px dotted var(--ink-faint);height:20px"></div><span class="cap">rest</span></div>
+<div style="flex:1"><div style="border-bottom:2px solid var(--ink);height:20px"></div><span class="cap">focus</span></div>
+<div style="flex:1"><div style="border-bottom:2px solid var(--red);height:20px"></div><span class="cap">error</span></div>
+</div></div></body></html>

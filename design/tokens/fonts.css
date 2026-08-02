@@ -1,0 +1,5 @@
+/* The three handwriting faces, embedded in the product at build time.
+   Source names in template.html are 'Hand', 'Scrawl', 'Marker' — kept verbatim. */
+@font-face{font-family:'Hand';src:url("../assets/fonts/PatrickHand.woff2") format('woff2');font-weight:400;font-display:block}
+@font-face{font-family:'Scrawl';src:url("../assets/fonts/Caveat.woff2") format('woff2');font-weight:400 700;font-display:block}
+@font-face{font-family:'Marker';src:url("../assets/fonts/Marker.woff2") format('woff2');font-weight:400;font-display:block}

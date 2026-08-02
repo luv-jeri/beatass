@@ -1,0 +1,134 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>beatass — brand board</title>
+<link rel="stylesheet" href="../../tokens/fonts.css"><link rel="stylesheet" href="../../tokens/colors.css">
+<style>
+body{margin:0;background:var(--desk);font-family:'Hand',cursive;color:var(--ink);padding:34px 0 70px}
+.page{width:1260px;margin:0 auto;background:var(--paper);box-shadow:0 14px 34px rgba(60,50,30,.22);padding:46px 54px 60px;position:relative}
+.page::before{content:"";position:absolute;inset:0 auto 0 64px;width:2px;background:var(--margin-line);opacity:.8}
+h1{font-family:'Marker',cursive;font-weight:400;font-size:44px;margin:0}
+h1 .r{color:var(--red)}
+.sub{font-family:'Scrawl',cursive;font-size:24px;color:var(--ink-soft);margin:6px 0 0}
+.lbl{font-family:'Marker',cursive;font-size:15px;color:var(--red);letter-spacing:.04em;margin:48px 0 16px}
+.lbl small{font-family:'Hand',cursive;color:var(--pencil);font-size:13.5px;letter-spacing:0;margin-left:10px}
+.row{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-end}
+figure{margin:0}
+figcaption{font-size:13.5px;color:var(--pencil);margin-top:7px}
+img{display:block}
+.card{background:var(--paper-2);border:2px solid var(--rule);border-radius:12px 6px 14px 8px;padding:16px}
+.inkbg{background:var(--ink);border-color:var(--ink)}
+.crop{border-radius:50%;overflow:hidden;width:40px;height:40px;position:relative}
+.crop img{position:absolute;inset:0;width:100%;height:100%}
+.sw{display:flex;gap:12px;flex-wrap:wrap}
+.chip{width:118px}
+.chip .c{height:50px;border:2.5px solid var(--ink);border-radius:10px 5px 12px 6px}
+.chip p{margin:5px 0 0;font-size:13.5px;line-height:1.3}
+.chip p span{color:var(--pencil);font-family:ui-monospace,monospace;font-size:11.5px;display:block}
+a{color:var(--red)}a:hover{color:var(--ink)}
+/* ---- composed social frames (snapshot targets, exact sizes) ---- */
+.frame{position:relative;overflow:hidden;flex:none;background:var(--paper)}
+.rules{background-image:repeating-linear-gradient(transparent 0 29px,var(--rule) 29px 30px)}
+.blob{border-radius:48% 52% 47% 53%/51% 49% 54% 46%}
+.tape{position:absolute;width:96px;height:26px;background:var(--tape);transform:rotate(-4deg);border-radius:3px}
+.scrawl{font-family:'Scrawl',cursive}
+.marker{font-family:'Marker',cursive}
+mark{background:linear-gradient(100deg,transparent 2%,var(--hl) 8%,var(--hl) 94%,transparent 98%);padding:0 6px 2px;border-radius:6px 10px 8px 12px}
+</style></head><body>
+<div class="page">
+<h1>beat<span class="r">ass</span> — brand board</h1>
+<p class="sub">every mark at real size · drawn in pen, never typed · character art on the <a href="Character Sheet.html">character sheet</a></p>
+
+<div class="lbl">1 · the wordmark <small>hand-lettered paths, not a font — beat in ballpoint, ass in red pen</small></div>
+<div class="row">
+<figure><img src="svg/lockup-horizontal.svg" width="556"><figcaption>horizontal lockup — app header, email header · svg</figcaption></figure>
+<figure><img src="svg/lockup-stacked.svg" width="228"><figcaption>stacked — narrow spaces · svg</figcaption></figure>
+</div>
+<div class="row" style="margin-top:26px">
+<figure><img src="svg/wordmark.svg" width="330"><figcaption>wordmark alone · final</figcaption></figure>
+<figure><img src="svg/wordmark-blue.svg" width="330"><figcaption>one colour — ballpoint only</figcaption></figure>
+<figure><div class="card inkbg"><img src="svg/wordmark-white.svg" width="300"></div><figcaption>white — for dark grounds · final</figcaption></figure>
+</div>
+
+<div class="lbl">2 · the icon — his head <small>string off the back, dot eyes, the smile survives</small></div>
+<div class="row">
+<figure><img src="svg/icon-head-full.svg" width="512"><figcaption>full detail · 512px and up</figcaption></figure>
+<div>
+<div class="row" style="align-items:flex-end">
+<figure><img src="svg/icon-head-simple.svg" width="128"><figcaption>simplified · 128</figcaption></figure>
+<figure><img src="svg/icon-head-simple.svg" width="64"><figcaption>64</figcaption></figure>
+<figure><img src="svg/icon-head-simple.svg" width="32"><figcaption>32</figcaption></figure>
+<figure><img src="svg/icon-head-simple.svg" width="16"><figcaption>16</figcaption></figure>
+<figure><img src="svg/icon-head-mono.svg" width="32"><figcaption>mono · pinned tab</figcaption></figure>
+</div>
+<div class="row" style="margin-top:24px;align-items:flex-end">
+<figure><img src="svg/icon-circle-red.svg" width="120"><figcaption>on a red-pen circle</figcaption></figure>
+<figure><img src="svg/icon-circle-red.svg" width="40"><figcaption>at 40px</figcaption></figure>
+<figure><img src="svg/favicon.svg" width="32"><figcaption>favicon.svg · 32</figcaption></figure>
+<figure><img src="svg/favicon.svg" width="16"><figcaption>16</figcaption></figure>
+<figure id="touch180"><div class="frame" style="width:180px;height:180px;display:flex;align-items:center;justify-content:center"><img src="svg/icon-head-simple.svg" width="122"></div><figcaption>apple touch · 180 full-bleed</figcaption></figure>
+</div>
+</div>
+</div>
+
+<div class="lbl">3 · email header <small>560×90 · the red margin hint carries into the email body below</small></div>
+<div class="row">
+<figure><img id="em-l" src="svg/email-header.svg" width="560" height="90"><figcaption>light · svg + png 1x/2x</figcaption></figure>
+<figure><img id="em-d" src="svg/email-header-dark.svg" width="560" height="90"><figcaption>dark mode — gmail/apple mail invert</figcaption></figure>
+</div>
+
+<div class="lbl">4 · instagram profile — final <small>1080 square · the red-pen circle, survives the 40px crop</small></div>
+<div class="row" style="align-items:center">
+<figure><div id="pfp-a" class="frame" style="width:270px;height:270px;display:flex;align-items:center;justify-content:center"><img src="svg/icon-circle-red.svg" width="246"></div><figcaption>png/ig-profile-1080.png</figcaption></figure>
+<figure><div class="crop"><img src="svg/icon-circle-red.svg"></div><figcaption>at 40px</figcaption></figure>
+</div>
+
+<div class="lbl">5 · story highlight covers</div>
+<div class="row">
+<figure><div id="cov-a" class="frame" style="width:270px;height:270px"><div class="blob" style="position:absolute;inset:38px;border:5px solid var(--red)"></div><svg viewBox="0 0 32 32" style="position:absolute;left:88px;top:74px;width:94px;color:var(--ink)"><path d="M16 2.2l3.1 5.9 5.4-3.3-1.4 6.4 6.6-.4-4.6 4.8 5.5 3.4-6.3 1.9 3 5.8-6.4-1.6-.6 6.6-4.3-5-4.4 4.8-.4-6.6-6.3 1.8 3.2-5.7L2 19.6l5.4-3.6L3 11.3l6.5.2-1.1-6.5 5.2 3.5z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg><div class="scrawl" style="position:absolute;bottom:64px;width:100%;text-align:center;font-size:27px;font-weight:700;color:var(--red)">how it works</div></div><figcaption>fist</figcaption></figure>
+<figure><div id="cov-b" class="frame" style="width:270px;height:270px"><div class="blob" style="position:absolute;inset:38px;border:5px solid var(--red);border-radius:52% 48% 53% 47%/49% 51% 46% 54%"></div><svg viewBox="0 0 32 32" style="position:absolute;left:90px;top:76px;width:90px;color:var(--ink)"><path d="M16 27C10.5 22.8 4.5 19 4.5 13.2 4.5 9.3 7.3 6.6 10.7 6.6c2.4 0 4.3 1.4 5.3 3.4 1-2 2.9-3.5 5.4-3.5 3.4 0 6.1 2.8 6.1 6.6C27.5 19 21.6 22.7 16 27z" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/></svg><div class="scrawl" style="position:absolute;bottom:64px;width:100%;text-align:center;font-size:27px;font-weight:700;color:var(--red)">the best ones</div></div><figcaption>heart</figcaption></figure>
+<figure><div id="cov-c" class="frame" style="width:270px;height:270px"><div class="blob" style="position:absolute;inset:38px;border:5px solid var(--red);border-radius:47% 53% 49% 51%/53% 47% 52% 48%"></div><svg viewBox="0 0 32 32" style="position:absolute;left:92px;top:78px;width:86px;color:var(--ink)"><circle cx="22" cy="11" r="3.6" fill="none" stroke="currentColor" stroke-width="2.1"/><path d="M19.4 13.6C15.6 17.2 11.4 21 7 25.6c-.3.3-.2.6.2.4 5-2.8 9.6-6.2 13.6-9.8" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="scrawl" style="position:absolute;bottom:64px;width:100%;text-align:center;font-size:27px;font-weight:700;color:var(--red)">is this real</div></div><figcaption>pin</figcaption></figure>
+</div>
+
+<div class="lbl">6 · post template <small>1080×1350 — drop a new message onto the taped sheet</small></div>
+<div class="row">
+<div id="post" class="frame rules" style="width:540px;height:675px;flex:none">
+<div style="position:absolute;inset:0 auto 0 44px;width:2px;background:var(--margin-line)"></div>
+<img src="svg/lockup-horizontal.svg" style="position:absolute;left:64px;top:34px;width:172px">
+<div class="scrawl" style="position:absolute;right:40px;top:40px;font-size:23px;color:var(--pencil);transform:rotate(2deg)">anonymous, obviously</div>
+<div style="position:absolute;left:70px;top:150px;width:400px;height:290px;background:var(--paper-2);border:2.5px solid var(--ink);border-radius:14px 7px 16px 9px;transform:rotate(-.8deg);padding:34px 28px;box-sizing:border-box;background-image:repeating-linear-gradient(transparent 0 35px,var(--rule) 35px 36px)">
+<div style="font-size:25px;line-height:36px;transform:translateY(-7px)">you never once said thank you. not once in three years. anyway — this doll took what you had coming.</div>
+</div>
+<div class="tape" style="left:222px;top:138px"></div>
+<div class="scrawl" style="position:absolute;left:84px;top:456px;font-size:24px;font-weight:700;color:var(--red);transform:rotate(-1.5deg)">the message goes here ↑</div>
+<img src="svg/doll-hurt.svg" style="position:absolute;right:46px;bottom:44px;width:150px">
+<div class="marker" style="position:absolute;left:64px;bottom:44px;font-size:21px">beat<span style="color:var(--red)">ass</span><span style="color:var(--pencil);font-family:'Hand',cursive;font-size:16px">.com</span></div>
+</div>
+</div>
+
+<div class="lbl">7 · open graph <small>1200×630 — what the link looks like in whatsapp / slack</small></div>
+<div id="og" class="frame rules" style="width:600px;height:315px">
+<div style="position:absolute;inset:0 auto 0 46px;width:2px;background:var(--margin-line)"></div>
+<img src="svg/wordmark.svg" style="position:absolute;left:78px;top:74px;width:300px">
+<div class="scrawl" style="position:absolute;left:82px;top:180px;font-size:33px;line-height:1.35;color:var(--ink)">say the thing you'd <mark>never say</mark></div>
+<div class="scrawl" style="position:absolute;left:82px;bottom:26px;font-size:20px;color:var(--pencil)">free · anonymous · he can take it</div>
+<div class="blob" style="position:absolute;right:44px;top:32px;width:236px;height:252px;border:3px dashed var(--red);transform:rotate(3deg)"></div>
+<img src="svg/doll-default.svg" style="position:absolute;right:74px;top:44px;width:168px">
+<div class="scrawl" style="position:absolute;right:96px;bottom:16px;font-size:26px;font-weight:700;color:var(--red);transform:rotate(-2deg)">hit him →</div>
+</div>
+
+<div class="lbl">8 · the inks <small>exact values — check them against the site</small></div>
+<div class="sw">
+<div class="chip"><div class="c" style="background:#fbf7ea"></div><p>paper<span>#fbf7ea</span></p></div>
+<div class="chip"><div class="c" style="background:#fffdf5"></div><p>paper, lighter<span>#fffdf5</span></p></div>
+<div class="chip"><div class="c" style="background:#e8e0cc"></div><p>desk<span>#e8e0cc</span></p></div>
+<div class="chip"><div class="c" style="background:#cddaea"></div><p>ruled lines<span>#cddaea</span></p></div>
+<div class="chip"><div class="c" style="background:#e3a8a2"></div><p>margin rule<span>#e3a8a2</span></p></div>
+<div class="chip"><div class="c" style="background:#26356e"></div><p>ballpoint blue<span>#26356e</span></p></div>
+<div class="chip"><div class="c" style="background:#5b6a9c"></div><p>blue, softer<span>#5b6a9c</span></p></div>
+<div class="chip"><div class="c" style="background:#cf3a2d"></div><p>red pen<span>#cf3a2d</span></p></div>
+<div class="chip"><div class="c" style="background:#ffe873"></div><p>highlighter<span>#ffe873</span></p></div>
+<div class="chip"><div class="c" style="background:#ffb9cf"></div><p>highlighter pink<span>#ffb9cf</span></p></div>
+<div class="chip"><div class="c" style="background:#e0507f"></div><p>blush @30%<span>#e0507f</span></p></div>
+<div class="chip"><div class="c" style="background:#8d8778"></div><p>pencil<span>#8d8778</span></p></div>
+</div>
+<p style="font-size:14px;color:var(--pencil);margin-top:30px">files: <code style="font-family:ui-monospace,monospace;font-size:12.5px">assets/brand/svg/</code> (vector) · <code style="font-family:ui-monospace,monospace;font-size:12.5px">assets/brand/png/</code> (email + social + favicons) · no gradients, no glass, no emoji — the only shadow anywhere is a hard sticker offset</p>
+</div>
+</body></html>

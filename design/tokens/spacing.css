@@ -1,0 +1,28 @@
+:root{
+  --sp-0:0; /* @kind spacing */
+  --sp-1:4px; /* @kind spacing */
+  --sp-2:6px; /* @kind spacing */
+  --sp-3:8px; /* @kind spacing */
+  --sp-4:10px; /* @kind spacing */
+  --sp-5:12px; /* @kind spacing */
+  --sp-6:14px; /* @kind spacing */
+  --sp-7:16px; /* @kind spacing */
+  --sp-8:18px; /* @kind spacing */
+  --sp-9:22px; /* @kind spacing */
+  --sp-10:24px; /* @kind spacing */
+  --sp-12:32px; /* @kind spacing */
+
+  /* the one vertical rhythm that matters: handwriting sits on the printed rule */
+  --rule-h:30px; /* @kind spacing */
+  --rule-offset:4px; /* @kind spacing */   /* the page background is nudged down so baselines land on the rules */
+
+  /* fluid gaps used by the one-screen layout */
+  --gap:clamp(8px,1.5vh,18px); /* @kind spacing */
+  --gap-col:clamp(12px,2.2vw,32px); /* @kind spacing */
+  --pad-page:clamp(14px,2.5vw,34px); /* @kind spacing */
+  --pad-top:clamp(8px,1.6vh,18px); /* @kind spacing */
+
+  --page-max:1240px; /* @kind spacing */
+  --card-max:540px; /* @kind spacing */
+  --measure:56ch; /* @kind other */
+}

@@ -1,0 +1,41 @@
+<!-- @dsCard group="Brand" viewport="700x300" name="The doll" subtitle="Heavy strokes, a face that acts, idle life, and damage that stays" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--paper);font-family:var(--font-ui);color:var(--ink);padding:16px 18px;display:flex;gap:20px;align-items:center}
+canvas{border:var(--bw-pen-heavy) solid var(--ink);border-radius:var(--radius-pen-lg);background:var(--paper-2);width:250px;height:250px;flex:none}
+.cap{font-family:var(--font-ui);font-weight:700;font-size:13px;color:var(--red);margin-bottom:3px}
+li{font-size:13.5px;line-height:1.45;color:var(--ink);margin-bottom:7px}
+ul{margin:0;padding-left:17px}
+a{color:var(--red)}a:hover{color:var(--ink)}</style></head>
+<body>
+<canvas id="c" width="440" height="440"></canvas>
+<div>
+<div class="cap">what makes him hittable</div>
+<ul>
+<li><b>The boil.</b> Every stroke drawn twice with a wobble re-rolled every 110ms — about nine times a second. This is the single most important animation in the product.</li>
+<li><b>A face that acts.</b> He blinks on his own schedule, his eyes track about, his brows ride up when he's worried, and he flinches before you've even touched him.</li>
+<li><b>Weight on impact.</b> Squash, recoil, screen shake, a comic-book word, and a burst of debris.</li>
+<li><b>Damage that stays.</b> Every other punch leaves a permanent mark — bruise hatching, a plaster, a scratch. They ride on him and swing with him.</li>
+<li><b>A drawn invitation.</b> A pulsing dashed ring and "hit him", gone the instant he's touched.</li>
+</ul>
+</div>
+<script src="../ui_kits/beatass-app/doll-engine.js"></script>
+<script>
+const E = window.BeatassDoll, D = E.newDoll(), ctx = document.getElementById('c').getContext('2d');
+const cs = getComputedStyle(document.documentElement), V = v => cs.getPropertyValue(v).trim();
+const css = {paper:V('--paper-2'),rule:V('--rule'),ink:V('--ink'),red:V('--red'),pencil:V('--pencil'),heart:V('--heart')};
+let boil = 0, last = performance.now();
+setInterval(()=>boil++, 110);
+/* a couple of hits so the card shows accumulated damage rather than a blank doll */
+D.touched = true;
+E.punch(D, {x:-6,y:56}); E.punch(D, {x:10,y:120}); E.addPin(D, {x:-14,y:140}); E.addPin(D, {x:18,y:96});
+D.shake = 0; D.omega = .12;
+for (let i = 0; i < 90; i++) E.step(D, 1/60);   /* let the words and sparks clear; the marks stay */
+D.pops = []; D.parts = [];
+(function loop(now){
+  const dt = Math.min(.05,(now-last)/1000); last = now;
+  E.step(D, dt); E.draw(ctx, D, boil, css);
+  requestAnimationFrame(loop);
+})(last);
+</script>
+</body></html>

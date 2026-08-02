@@ -1,0 +1,16 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Canvas glows" subtitle="Only ever painted on the doll canvas — never in the UI layer" -->
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css">
+<style>*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--paper);font-family:var(--font-ui);color:var(--ink);padding:16px 18px}
+.g{display:flex;gap:10px;flex-wrap:wrap}
+.sw{flex:1 1 0;min-width:0;border:var(--bw-pen) solid var(--ink);border-radius:var(--radius-pen-sm);overflow:hidden}
+.sw i{display:block;height:52px}
+.sw b{display:block;font-family:var(--font-ui);font-weight:600;font-size:12px;padding:5px 7px 1px;line-height:1.25}
+.sw code{display:block;font-family:ui-monospace,monospace;font-size:10.5px;color:var(--pencil);padding:0 7px 6px}
+.cap{font-family:var(--font-marker);font-size:11px;color:var(--pencil)}
+a{color:var(--red)}a:hover{color:var(--ink)}</style></head><body><div class="g">
+<div class="sw"><i style="background:#fffdf5;background-image:radial-gradient(circle at 50% 50%, rgba(255,150,40,.9), rgba(255,150,40,0) 72%)"></i><b>burn</b><code>--glow-burn · rgba(255,150,40,.22)</code></div>
+<div class="sw"><i style="background:#fffdf5;background-image:radial-gradient(circle at 50% 50%, rgba(255,120,175,.9), rgba(255,120,175,0) 72%)"></i><b>love</b><code>--glow-love · rgba(255,120,175,.18)</code></div>
+<div class="sw"><i style="background:#fffdf5;background-image:radial-gradient(circle at 50% 60%, rgba(255,225,120,1), rgba(240,120,30,.8) 45%, rgba(220,60,0,0) 100%)"></i><b>spark</b><code>--spark-hot / mid / cold</code></div>
+<div class="sw"><i style="background:var(--scrim)"></i><b>overlay scrim</b><code>--scrim · rgba(34,30,22,.66)</code></div>
+</div></body></html>
