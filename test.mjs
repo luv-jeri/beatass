@@ -1,7 +1,62 @@
 import { fileURLToPath } from 'url';
 import { chromium } from 'playwright';
+import assert from 'assert/strict';
 import http from 'http'; import fs from 'fs'; import path from 'path';
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
+
+// ---- crawl surface: prove the built page and shipped favicon files agree ----
+// These checks read the build output, not template source. That catches the
+// production failure we care about: correct-looking source that build.py did
+// not actually publish into public/.
+const builtHtml = fs.readFileSync(path.join(ROOT, 'beatass.html'), 'utf8');
+const oneMeta = (pattern, label) => {
+  const match = builtHtml.match(pattern);
+  assert.ok(match, `built homepage is missing ${label}`);
+  return match[1];
+};
+const searchTitle = oneMeta(/<title>([^<]+)<\/title>/, 'title');
+const ogTitle = oneMeta(/<meta property="og:title" content="([^"]+)">/, 'og:title');
+const twitterTitle = oneMeta(/<meta name="twitter:title" content="([^"]+)">/, 'twitter:title');
+assert.equal(ogTitle, searchTitle, 'og:title drifted from the search title');
+assert.equal(twitterTitle, searchTitle, 'twitter:title drifted from the search title');
+assert.match(searchTitle, /^BeatAss 👊/, 'search title lost the proper-cased brand and punch');
+
+const searchDescription = oneMeta(/<meta name="description" content="([^"]+)">/, 'description');
+const ogDescription = oneMeta(/<meta property="og:description" content="([^"]+)">/, 'og:description');
+const twitterDescription = oneMeta(/<meta name="twitter:description" content="([^"]+)">/, 'twitter:description');
+assert.equal(ogDescription, searchDescription, 'og:description drifted from the search description');
+assert.equal(twitterDescription, searchDescription, 'twitter:description drifted from the search description');
+assert.ok([...searchDescription].length < 155, 'search description is 155 characters or longer');
+assert.match(searchDescription, /😈/, 'search description lost its playful opening');
+
+assert.match(builtHtml, /<link rel="icon" href="\/favicon\.ico" sizes="any">/,
+  'built homepage does not declare /favicon.ico');
+assert.match(builtHtml, /<link rel="icon" type="image\/png" sizes="48x48" href="\/favicon-48\.png">/,
+  'built homepage does not declare the 48x48 PNG favicon');
+
+const png48 = fs.readFileSync(path.join(ROOT, 'public', 'favicon-48.png'));
+assert.deepEqual([...png48.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10],
+  'favicon-48.png is not a PNG');
+assert.equal(png48.readUInt32BE(16), 48, 'favicon-48.png width is not 48');
+assert.equal(png48.readUInt32BE(20), 48, 'favicon-48.png height is not 48');
+
+const ico = fs.readFileSync(path.join(ROOT, 'public', 'favicon.ico'));
+assert.equal(ico.readUInt16LE(0), 0, 'favicon.ico reserved header is invalid');
+assert.equal(ico.readUInt16LE(2), 1, 'favicon.ico is not an icon container');
+assert.equal(ico.readUInt16LE(4), 3, 'favicon.ico does not contain exactly three images');
+const icoSizes = Array.from({length: 3}, (_, index) => {
+  const offset = 6 + index * 16;
+  return [ico[offset] || 256, ico[offset + 1] || 256];
+});
+assert.deepEqual(icoSizes, [[16, 16], [32, 32], [48, 48]],
+  'favicon.ico does not contain 16, 32 and 48 pixel images');
+
+const robots = fs.readFileSync(path.join(ROOT, 'public', 'robots.txt'), 'utf8');
+assert.match(robots, /User-agent: \*\nAllow: \//, 'robots.txt does not allow the site');
+assert.doesNotMatch(robots, /Disallow: \/favicon(?:\.ico|-48\.png)/,
+  'robots.txt blocks a Google favicon path');
+console.log('search metadata + favicon package: pass');
+
 /* The API the page really talks to. Mocked at the real endpoint on purpose: the
    app posts the same multipart body it would post to the Worker, so this test
    fails the moment the two drift apart. The first call answers 429 so the

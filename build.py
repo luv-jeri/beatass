@@ -215,7 +215,12 @@ def build_pages(public: pathlib.Path, app_html: str) -> int:
     # Real favicon files: Google's favicon crawler cannot read the inline
     # data-URI icon, so search results show a grey globe without these.
     png = HERE / "design" / "assets" / "brand" / "png"
-    for src, dst in [("icon-512.png", "icon-512.png"), ("favicon-32.png", "favicon-32.png")]:
+    for src, dst in [
+        ("icon-512.png", "icon-512.png"),
+        ("favicon-32.png", "favicon-32.png"),
+        ("favicon-48.png", "favicon-48.png"),
+        ("favicon.ico", "favicon.ico"),
+    ]:
         f = png / src
         if not f.is_file():
             raise SystemExit(f"!! design/assets/brand/png/{src} is missing")
