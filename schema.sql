@@ -5,16 +5,18 @@
 -- email: one click and that address never hears from this site again.
 
 CREATE TABLE IF NOT EXISTS messages (
-  id          TEXT PRIMARY KEY,          -- also the R2 filename
-  to_email    TEXT NOT NULL,
-  to_name     TEXT NOT NULL,
-  body        TEXT NOT NULL,
-  stats       TEXT NOT NULL DEFAULT '',  -- "14 hits · 6 pins · burned"
-  has_gif     INTEGER NOT NULL DEFAULT 0,
-  has_mp4     INTEGER NOT NULL DEFAULT 0,
-  created_at  INTEGER NOT NULL,          -- unix seconds
-  sender_hash TEXT NOT NULL DEFAULT '',  -- hashed IP. Never the raw address.
-  reports     INTEGER NOT NULL DEFAULT 0
+  id           TEXT PRIMARY KEY,          -- also the R2 filename
+  to_email     TEXT NOT NULL,             -- '' when the recipient is handle-only
+  to_name      TEXT NOT NULL,
+  body         TEXT NOT NULL,
+  stats        TEXT NOT NULL DEFAULT '',  -- "14 hits · 6 pins · burned"
+  has_gif      INTEGER NOT NULL DEFAULT 0,
+  has_mp4      INTEGER NOT NULL DEFAULT 0,
+  created_at   INTEGER NOT NULL,          -- unix seconds
+  sender_hash  TEXT NOT NULL DEFAULT '',  -- hashed IP. Never the raw address.
+  reports      INTEGER NOT NULL DEFAULT 0,
+  sender_email TEXT,                       -- the sender's own address, if they want replies. Never shown.
+  to_handle    TEXT                        -- the recipient's Instagram handle, if given. Never shown.
 );
 
 CREATE INDEX IF NOT EXISTS idx_messages_created ON messages (created_at);

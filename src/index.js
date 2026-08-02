@@ -421,6 +421,26 @@ export default {
       }
       const target = from === row.sender_email ? row.to_email : row.sender_email;
 
+      /* A handle-only recipient has no inbox. If the sender writes back, there
+         is nowhere to relay by email - they are reached on Instagram, not here.
+         Say so once per message instead of silently dropping or crashing. */
+      if (!target) {
+        if (await env.RATE.get('nt:' + mid)) return;
+        await env.RATE.put('nt:' + mid, '1', { expirationTtl: 60 * 60 * 24 * 30 });
+        await sendViaResend(env, {
+          from: env.MAIL_FROM,
+          to: [from],
+          subject: "We couldn't relay that",
+          html: relayHtml({
+            intro: 'The person you wrote to left an Instagram handle, not an email, so we have no inbox to deliver your reply to. They only see messages sent to them on Instagram.',
+            footer: 'Want to send another? Start one from',
+            pageUrl
+          }),
+          text: 'The person you wrote to left an Instagram handle, not an email, so we have no inbox to deliver your reply to. They only see messages on Instagram.\n\nStart another: ' + pageUrl
+        });
+        return;
+      }
+
       // the block list is absolute, in every direction
       const blocked = await env.DB.prepare('SELECT 1 FROM blocklist WHERE email = ?')
         .bind(target).first();
@@ -508,23 +528,37 @@ async function handle(request, env) {
        a button, so the click opens a page and the button POSTs. */
     if (path === '/block') {
       const email = (url.searchParams.get('e') || '').toLowerCase().trim();
+      const handleParam = (url.searchParams.get('h') || '').toLowerCase().trim().replace(/^@+/, '');
       const t = url.searchParams.get('t') || '';
-      if (!okEmail(email) || !sameToken(t, await token(env.BLOCK_SECRET, email)))
-        return notice('That link has expired', 'Reply to the email instead and we will sort it out.');
+
+      /* Block by email OR by Instagram handle. A handle is stored in the same
+         blocklist column behind an "ig:" prefix - a real email can never look
+         like that (it has no @), so the two namespaces can never collide. The
+         token is signed over whatever we store, so a link can only ever block
+         its own value. */
+      const byHandle = !!handleParam;
+      const blockVal = byHandle ? 'ig:' + handleParam : email;
+      const shownVal = byHandle ? '@' + handleParam : email;
+      const kind = byHandle ? 'account' : 'address';
+      const idOk = byHandle ? /^[a-z0-9._]{1,30}$/.test(handleParam) : okEmail(email);
+      if (!idOk || !sameToken(t, await token(env.BLOCK_SECRET, blockVal)))
+        return notice('That link has expired', 'Reply to the message instead and we will sort it out.');
 
       if (request.method !== 'POST')
         return confirm(
-          'Block this address?',
-          `Nobody will be able to use beatass.com to send anything to ${esc(email)} again. This cannot be undone.`,
+          `Block this ${kind}?`,
+          `Nobody will be able to use beatass.com to send anything to ${esc(shownVal)} again. This cannot be undone.`,
           'Yes, block it forever',
-          `/block?e=${encodeURIComponent(email)}&t=${encodeURIComponent(t)}`
+          byHandle
+            ? `/block?h=${encodeURIComponent(handleParam)}&t=${encodeURIComponent(t)}`
+            : `/block?e=${encodeURIComponent(email)}&t=${encodeURIComponent(t)}`
         );
 
       await env.DB.prepare('INSERT OR IGNORE INTO blocklist (email, created_at) VALUES (?, ?)')
-        .bind(email, Math.floor(Date.now() / 1000))
+        .bind(blockVal, Math.floor(Date.now() / 1000))
         .run();
-      return notice('Done — you will never hear from us again.',
-        'That address is blocked permanently. Nobody can use beatass.com to contact you.');
+      return notice('Done - you will never hear from us again.',
+        `That ${kind} is blocked permanently. Nobody can use beatass.com to contact you.`);
     }
 
     /* ---------- report ---------- */
@@ -612,12 +646,17 @@ async function handle(request, env) {
       if (!/^[a-f0-9]{16}$/.test(mid) || !sameToken(t, await token(env.BLOCK_SECRET, 'view:' + mid)))
         return notice('That link has expired', 'Ask whoever sent it to share it again.');
       const row = await env.DB.prepare(
-        'SELECT to_email, to_name, body, has_gif, sender_email FROM messages WHERE id = ?'
+        'SELECT to_email, to_name, body, has_gif, sender_email, to_handle FROM messages WHERE id = ?'
       ).bind(mid).first();
       if (!row) return notice('That link has expired', 'Ask whoever sent it to share it again.');
 
       const gifUrl = row.has_gif ? `${site}/media/${mid}.gif` : '';
-      const blockUrl = `${site}/block?e=${encodeURIComponent(row.to_email)}&t=${await token(env.BLOCK_SECRET, row.to_email)}`;
+      // block by email when we have one, otherwise by the Instagram handle
+      const blockUrl = row.to_email
+        ? `${site}/block?e=${encodeURIComponent(row.to_email)}&t=${await token(env.BLOCK_SECRET, row.to_email)}`
+        : row.to_handle
+          ? `${site}/block?h=${encodeURIComponent(row.to_handle)}&t=${await token(env.BLOCK_SECRET, 'ig:' + row.to_handle)}`
+          : '';
       const reportUrl = `${site}/report?id=${mid}&t=${await token(env.BLOCK_SECRET, 'r:' + mid)}`;
       const replyUrl = row.sender_email
         ? `${site}/reply?id=${mid}&t=${await token(env.BLOCK_SECRET, 'reply:' + mid)}`
@@ -654,18 +693,24 @@ async function handle(request, env) {
       const toHandle = String(form.get('handle') || '').trim().replace(/^@+/, '').toLowerCase().slice(0, 30);
 
       if (!name || name.length > MAX_NAME) return json({ error: 'That name looks wrong.' }, 400);
-      if (!okEmail(email)) return json({ error: "That's not an email address." }, 400);
+      if (email && !okEmail(email)) return json({ error: "That's not an email address." }, 400);
       if (body.length < 3 || body.length > MAX_BODY)
         return json({ error: 'Say a little more than that.' }, 400);
       if (senderEmail && !okEmail(senderEmail))
         return json({ error: 'Your own email looks wrong. Fix it or leave it empty.' }, 400);
       if (toHandle && !/^[a-z0-9._]{1,30}$/.test(toHandle))
         return json({ error: 'That Instagram handle looks wrong. Letters, numbers, dots and underscores only.' }, 400);
+      // at least one way to reach them - an email (most reliable) or an Instagram handle
+      if (!email && !toHandle)
+        return json({ error: 'Add their email or their Instagram handle so we can deliver it.' }, 400);
 
-      // never send to somebody who has already told us to stop
-      const blocked = await env.DB.prepare('SELECT 1 FROM blocklist WHERE email = ?')
-        .bind(email)
-        .first();
+      // never send to somebody who has already told us to stop - by email or handle
+      const blockKeys = [];
+      if (email) blockKeys.push(email);
+      if (toHandle) blockKeys.push('ig:' + toHandle);
+      const blocked = await env.DB.prepare(
+        `SELECT 1 FROM blocklist WHERE email IN (${blockKeys.map(() => '?').join(',')})`
+      ).bind(...blockKeys).first();
       if (blocked)
         return json({ error: 'That person has asked never to receive these. We are honouring that.' }, 403);
 
@@ -698,39 +743,48 @@ async function handle(request, env) {
         `INSERT INTO messages (id, to_email, to_name, body, stats, has_gif, has_mp4, created_at, sender_hash, sender_email, to_handle)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
+        // to_email is NOT NULL in the schema, so a handle-only message stores it
+        // as '' (empty string). Every read treats '' as "no email" - it is falsy,
+        // like the null we use for the newer sender_email / to_handle columns.
         .bind(mid, email, name, body, stats, gif && gif.size ? 1 : 0, mp4 && mp4.size ? 1 : 0,
               Math.floor(Date.now() / 1000), ipHash, senderEmail || null, toHandle || null)
         .run();
 
-      const blockUrl = `${site}/block?e=${encodeURIComponent(email)}&t=${await token(env.BLOCK_SECRET, email)}`;
-      const reportUrl = `${site}/report?id=${mid}&t=${await token(env.BLOCK_SECRET, 'r:' + mid)}`;
       const gifUrl = gif && gif.size ? `${site}/media/${mid}.gif` : '';
       // The reply page link only exists when there is somebody to deliver to.
       const replyUrl = senderEmail
         ? `${site}/reply?id=${mid}&t=${await token(env.BLOCK_SECRET, 'reply:' + mid)}`
         : '';
 
-      const sent = await sendViaResend(env, {
-        from: env.MAIL_FROM,
-        // ALWAYS route replies through reply+<id>@ back to our email() handler,
-        // whether or not the sender left an address. With an address it relays
-        // to them; without one the handler answers the anonymity notice. If we
-        // pointed no-address replies at a plain mailbox instead, that notice
-        // branch would be dead code and a reply would vanish with no feedback -
-        // which is exactly the "I replied and nothing happened" bug.
-        reply_to: replyAddr(env, mid),
-        to: [email],
-        subject: `${name}, someone finally said it`,
-        html: emailHtml({ name, body, stats, caption, gifUrl, pageUrl: site, blockUrl, reportUrl, replyUrl }),
-        text: senderEmail
-          ? `Hi ${name}, somebody used beatass.com to say something to you. They chose to stay anonymous.\n\n"${body}"\n\nThey left a way to hear back. Reply to this email and it reaches them (they stay anonymous), or write it here:\n${replyUrl}\n\nSend one of your own - free, anonymous, no sign-up:\n${site}\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`
-          : `Hi ${name}, somebody used beatass.com to say something to you. They chose to stay anonymous.\n\n"${body}"\n\nThey stayed anonymous, so a reply can't reach them - hit reply and we'll tell you so, we won't leave you hanging. To say something back, send your own - free, anonymous, no sign-up:\n${site}\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`,
-        // one-click unsubscribe: mail providers treat this as a strong
-        // positive signal, and it keeps us out of the spam folder
-        headers: { 'List-Unsubscribe': `<${blockUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }
-      });
-      if (!sent.ok)
-        return json({ error: "We couldn't deliver that. Try again in a minute.", ref: sent.ref }, 502);
+      /* Email delivery happens only when they gave us an email address. A
+         handle-only message is stored now and delivered on Instagram by the
+         notifier (through the /m view page) - it sends no email here. */
+      if (email) {
+        const blockUrl = `${site}/block?e=${encodeURIComponent(email)}&t=${await token(env.BLOCK_SECRET, email)}`;
+        const reportUrl = `${site}/report?id=${mid}&t=${await token(env.BLOCK_SECRET, 'r:' + mid)}`;
+
+        const sent = await sendViaResend(env, {
+          from: env.MAIL_FROM,
+          // ALWAYS route replies through reply+<id>@ back to our email() handler,
+          // whether or not the sender left an address. With an address it relays
+          // to them; without one the handler answers the anonymity notice. If we
+          // pointed no-address replies at a plain mailbox instead, that notice
+          // branch would be dead code and a reply would vanish with no feedback -
+          // which is exactly the "I replied and nothing happened" bug.
+          reply_to: replyAddr(env, mid),
+          to: [email],
+          subject: `${name}, someone finally said it`,
+          html: emailHtml({ name, body, stats, caption, gifUrl, pageUrl: site, blockUrl, reportUrl, replyUrl }),
+          text: senderEmail
+            ? `Hi ${name}, somebody used beatass.com to say something to you. They chose to stay anonymous.\n\n"${body}"\n\nThey left a way to hear back. Reply to this email and it reaches them (they stay anonymous), or write it here:\n${replyUrl}\n\nSend one of your own - free, anonymous, no sign-up:\n${site}\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`
+            : `Hi ${name}, somebody used beatass.com to say something to you. They chose to stay anonymous.\n\n"${body}"\n\nThey stayed anonymous, so a reply can't reach them - hit reply and we'll tell you so, we won't leave you hanging. To say something back, send your own - free, anonymous, no sign-up:\n${site}\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`,
+          // one-click unsubscribe: mail providers treat this as a strong
+          // positive signal, and it keeps us out of the spam folder
+          headers: { 'List-Unsubscribe': `<${blockUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }
+        });
+        if (!sent.ok)
+          return json({ error: "We couldn't deliver that. Try again in a minute.", ref: sent.ref }, 502);
+      }
 
       return json({ ok: true, id: mid });
     }

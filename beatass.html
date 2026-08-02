@@ -522,16 +522,17 @@ a{color:var(--red)}a:hover{color:var(--ink)}
               <div class="err">needs a name</div>
             </div>
             <div class="field" id="f-email">
-              <label for="i-email">their email</label>
+              <label for="i-email">their email <span style="color:var(--ink-faint);font-weight:400">(most reliable)</span></label>
               <input type="email" id="i-email" placeholder="priya@example.com" autocomplete="off" inputmode="email">
               <div class="err">that's not an email</div>
             </div>
           </div>
           <div class="field" id="f-handle" style="margin-top:14px">
-            <label for="i-handle">their instagram <span style="color:var(--ink-faint);font-weight:400">(optional - so we can reach them there too)</span></label>
+            <label for="i-handle">their instagram <span style="color:var(--ink-faint);font-weight:400">(or reach them here instead)</span></label>
             <input type="text" id="i-handle" placeholder="@theirhandle" autocomplete="off">
             <div class="err">handle is letters, numbers, dots and underscores only</div>
           </div>
+          <div id="contact-note" style="margin-top:8px;font-size:12px;color:var(--ink-faint)">add their email or their instagram, at least one. email is the most reliable.</div>
 
           <div class="saybox">
             <div class="pane-label">what do you want to say?</div>
@@ -1148,21 +1149,35 @@ $('#i-msg').addEventListener('input', bump);
 /* stop shouting the moment they start fixing it */
 [['#i-name','#f-name'],['#i-email','#f-email'],['#i-handle','#f-handle'],['#i-msg','#f-msg'],['#i-sender','#f-sender']].forEach(([i,f]) =>
   $(i).addEventListener('input', () => $(f).classList.remove('bad')));
+/* the "need at least one" note calms down the moment either contact field changes */
+['#i-email','#i-handle'].forEach(s => $(s).addEventListener('input', () => {
+  $('#contact-note').style.color = 'var(--ink-faint)';
+}));
 
 function validate(){
   const name = $('#i-name').value.trim();
   const mail = $('#i-email').value.trim();
   const msg  = $('#i-msg').value.trim();
-  const okMail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail);
+  const handle = $('#i-handle').value.trim().replace(/^@+/,'').toLowerCase();
+  const mailBad   = !!mail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail);   // present but wrong
+  const handleBad = !!handle && !/^[a-z0-9._]{1,30}$/.test(handle);         // present but wrong
+  const noContact = !mail && !handle;                                       // no way to reach them
   $('#f-name').classList.toggle('bad', !name);
-  $('#f-email').classList.toggle('bad', !okMail);
+  $('#f-email').classList.toggle('bad', mailBad);
+  $('#f-handle').classList.toggle('bad', handleBad);
   $('#f-msg').classList.toggle('bad', msg.length < 3);
-  if(!name || !okMail || msg.length < 3){
+  $('#contact-note').style.color = noContact ? 'var(--red)' : 'var(--ink-faint)';
+  if(!name || mailBad || handleBad || msg.length < 3 || noContact){
     buzz('error');
-    (!name ? $('#i-name') : !okMail ? $('#i-email') : $('#i-msg')).focus();
+    const focus = !name ? '#i-name'
+      : msg.length < 3 ? '#i-msg'
+      : mailBad ? '#i-email'
+      : handleBad ? '#i-handle'
+      : '#i-email';   /* noContact: nudge the reliable channel first */
+    $(focus).focus();
     return null;
   }
-  return {name, mail, msg};
+  return {name, mail, msg, handle};
 }
 
 /* ---------- 2. tools + hitting ---------- */
@@ -1610,7 +1625,7 @@ function preview(){
 }
 
 function openPreview(v){
-  $('#p-to').textContent    = v.mail;
+  $('#p-to').textContent    = v.mail || ('@' + v.handle);
   $('#p-greet').textContent = 'Hi ' + v.name + ', somebody used beatass.com to tell you something.';
   $('#p-msg').textContent   = v.msg;
   $('#p-sub').textContent   = v.name + ', someone finally said it';
@@ -1663,14 +1678,6 @@ async function send(){
     $('#i-sender').focus();
     return;
   }
-  /* Optional Instagram handle. Strip a leading @, allow only IG-legal chars. */
-  const handle = $('#i-handle').value.trim().replace(/^@+/,'').toLowerCase();
-  if(handle && !/^[a-z0-9._]{1,30}$/.test(handle)){
-    $('#f-handle').classList.add('bad');
-    buzz('error');
-    $('#i-handle').focus();
-    return;
-  }
   const btn = $('#btn-send');
   const label = btn.textContent;
   btn.disabled = true;
@@ -1679,12 +1686,12 @@ async function send(){
 
   const fd = new FormData();
   fd.append('name', v.name);
-  fd.append('email', v.mail);
+  if(v.mail) fd.append('email', v.mail);
   fd.append('message', v.msg);
   fd.append('stats', state.stats || '');
   fd.append('caption', state.caption || '');
   if(sender) fd.append('senderEmail', sender);
-  if(handle) fd.append('handle', handle);
+  if(v.handle) fd.append('handle', v.handle);
   if(state.gifBlob)   fd.append('gif', state.gifBlob, 'beatass.gif');
   if(state.videoBlob) fd.append('mp4', state.videoBlob, 'beatass.mp4');
 
