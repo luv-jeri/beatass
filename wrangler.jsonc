@@ -13,6 +13,15 @@
   "compatibility_date": "2026-08-01",
   "compatibility_flags": ["nodejs_compat"],
 
+  // The real address. "custom_domain": true tells Cloudflare to own the DNS
+  // record for these names itself, so the site can never drift out of sync
+  // with a hand-made A record. Declared here rather than clicked in the
+  // dashboard so that a fresh deploy from CI re-asserts it every time.
+  "routes": [
+    { "pattern": "beatass.com", "custom_domain": true },
+    { "pattern": "www.beatass.com", "custom_domain": true }
+  ],
+
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",

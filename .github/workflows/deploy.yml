@@ -72,7 +72,7 @@ jobs:
       - name: Check the live site
         if: github.event_name != 'pull_request'
         run: |
-          BASE=https://beatass.unread-fyi.workers.dev
+          BASE=https://beatass.com
           sleep 5
           fail=0
           for path in "" privacy.html terms.html about.html contact.html robots.txt sitemap.xml og.png; do
