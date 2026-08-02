@@ -87,7 +87,8 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
      No background-image either; Outlook drops it, and a design that collapses to
      a white void in one client is not a design. */
   const PAPER = '#fbf7ea', PAPER2 = '#fffdf5', INK = '#26356e',
-        SOFT = '#5b6a9c', FAINT = '#93a0c2', RED = '#cf3a2d', MARGIN = '#e3a8a2';
+        SOFT = '#5b6a9c', FAINT = '#93a0c2', RED = '#cf3a2d', MARGIN = '#e3a8a2',
+        HL = '#ffe873';
   const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
 
   return `<!doctype html>
@@ -115,13 +116,17 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
 
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding:4px 26px 22px">
 
-        <p style="margin:0 0 20px;font-family:${SANS};font-size:16px;line-height:1.55;color:${SOFT}">Hi ${esc(name)}, someone used beatass.com to say something to you. They chose to stay anonymous.</p>
+        <!-- highlighter on the domain, as the site marks a word worth keeping.
+             A flat background rather than a gradient: Outlook drops gradients. -->
+        <p style="margin:0 0 22px;font-family:${SANS};font-size:16px;line-height:1.7;color:${SOFT}">Hi ${esc(name)}, someone used <a href="${pageUrl}" style="background:${HL};color:${INK};font-weight:700;text-decoration:none;padding:2px 5px;border-radius:4px 6px 3px 5px">beatass.com</a> to say something to you. They chose to stay anonymous.</p>
 
-        <!-- the message itself, on its own sheet, and the biggest thing here -->
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${PAPER2};border:2px solid ${INK};border-radius:12px 9px 14px 8px">
+        <!-- The message is the whole reason this email exists, so it gets to be
+             the loudest thing in it. Everything above and below is deliberately
+             quieter than this block. -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${PAPER2};border:3px solid ${INK};border-radius:14px 10px 16px 9px">
           <tr>
-            <td width="8" style="width:8px;background:${RED};border-radius:10px 0 0 6px">&nbsp;</td>
-            <td style="padding:20px 22px;font-family:${SANS};font-size:19px;line-height:1.6;color:${INK};white-space:pre-wrap;word-break:break-word">${esc(body)}</td>
+            <td width="11" style="width:11px;background:${RED};border-radius:11px 0 0 7px">&nbsp;</td>
+            <td style="padding:28px 26px;font-family:${SANS};font-size:22px;line-height:1.62;font-weight:700;color:${INK};white-space:pre-wrap;word-break:break-word">${esc(body)}</td>
           </tr>
         </table>
 
@@ -139,11 +144,14 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px">
           <tr><td align="center" style="padding:22px 0 0;border-top:2px dotted ${FAINT}">
             <p style="margin:0 0 4px;font-family:${SANS};font-size:15px;line-height:1.5;color:${INK};font-weight:700">Want to say something back?</p>
-            <p style="margin:0 0 16px;font-family:${SANS};font-size:14px;line-height:1.5;color:${SOFT}">Hitting reply reaches us, not them.<br>Send them one of your own instead:</p>
+            <!-- Nothing here can say "him" or "her". The whole point is that the
+                 person reading this does not know who sent it, and guessing
+                 wrong is the one thing that would break the spell. -->
+            <p style="margin:0 0 16px;font-family:${SANS};font-size:14px;line-height:1.5;color:${SOFT}">Hitting reply reaches us, not them.<br>Send one of your own instead:</p>
             <!-- a table around the button so Outlook gives it real edges -->
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr>
               <td align="center" style="background:${RED};border-radius:10px 13px 9px 12px">
-                <a href="${pageUrl}" style="display:inline-block;color:#ffffff;font-family:${SANS};font-size:18px;font-weight:700;text-decoration:none;padding:15px 34px">Hit him back</a>
+                <a href="${pageUrl}" style="display:inline-block;color:#ffffff;font-family:${SANS};font-size:18px;font-weight:700;text-decoration:none;padding:15px 34px">Send one back</a>
               </td>
             </tr></table>
             <p style="margin:12px 0 0;font-family:${SANS};font-size:12px;color:${FAINT}">Free. Anonymous. No sign-up. Ten seconds.</p>
