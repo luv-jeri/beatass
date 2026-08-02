@@ -554,9 +554,26 @@ async function handle(request, env) {
             : `/block?e=${encodeURIComponent(email)}&t=${encodeURIComponent(t)}`
         );
 
+      const now = Math.floor(Date.now() / 1000);
       await env.DB.prepare('INSERT OR IGNORE INTO blocklist (email, created_at) VALUES (?, ?)')
-        .bind(blockVal, Math.floor(Date.now() / 1000))
+        .bind(blockVal, now)
         .run();
+
+      /* "Never again" has to mean every channel, not just the clicked one. A
+         recipient reached by email AND Instagram would otherwise block their
+         inbox and keep getting DMs. So an email block also silences every
+         handle that address's messages carried. (One-directional on purpose:
+         a handle block sweeps only itself - senders type both fields, so a
+         handle token must not be able to blocklist somebody's email.) */
+      if (!byHandle) {
+        const carried = await env.DB.prepare(
+          'SELECT DISTINCT to_handle FROM messages WHERE to_email = ? AND to_handle IS NOT NULL'
+        ).bind(email).all();
+        for (const r of (carried.results || []))
+          await env.DB.prepare('INSERT OR IGNORE INTO blocklist (email, created_at) VALUES (?, ?)')
+            .bind('ig:' + r.to_handle, now)
+            .run();
+      }
       return notice('Done - you will never hear from us again.',
         `That ${kind} is blocked permanently. Nobody can use beatass.com to contact you.`);
     }

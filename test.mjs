@@ -175,6 +175,28 @@ await p.screenshot({path:ROOT+'/shots/v3-sent.png'});
 await p.click('button:has-text("Send another")'); await p.waitForTimeout(400);
 console.log('reset ok:', (await p.inputValue('#i-name'))==='' , '| overlay closed:', !(await p.isVisible('#ov-sent.on')));
 
+/* ---- handle-only: no email, an Instagram handle instead. The doll stays
+       untouched, so this also proves the words-only path posts cleanly. ---- */
+await p.fill('#i-name','Dev'); await p.fill('#i-handle','@Some.Person_99');
+await p.fill('#i-msg','no email this time, find them on instagram');
+await p.click('#go'); await p.waitForTimeout(400);
+const hOpen = await p.isVisible('#ov-preview.on');
+const hTo = hOpen ? await p.textContent('#p-to') : '';
+await p.click('button:has-text("Send it")'); await p.waitForTimeout(600);
+const hLine = await p.textContent('#sent-line').catch(()=> '');
+const hasHandle = sent.body.includes('name="handle"') && sent.body.includes('some.person_99');
+const noEmailField = !sent.body.includes('name="email"');
+console.log('handle-only send:', hOpen, '| to shows:', JSON.stringify(hTo),
+  '| handle carried:', hasHandle, '| email omitted:', noEmailField,
+  '| honest copy:', /Instagram/.test(hLine));
+if(!hOpen) errs.push('handle-only preview did not open');
+if(hOpen && hTo !== '@some.person_99') errs.push('preview "to" line did not show the handle');
+if(!hasHandle) errs.push('the handle never reached the API');
+if(!noEmailField) errs.push('an email field was posted on a handle-only send');
+if(!/Instagram/.test(hLine)) errs.push('the sent screen did not say the message goes to Instagram');
+await p.click('button:has-text("Send another")').catch(()=>{});
+await p.waitForTimeout(300);
+
 // mobile flow + overlay fit
 const m2 = await b.newPage({viewport:{width:390,height:844}, isMobile:true, hasTouch:true});
 await m2.goto('http://localhost:8894/',{waitUntil:'networkidle'}); await m2.waitForTimeout(600);
