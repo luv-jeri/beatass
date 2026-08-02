@@ -13,4 +13,9 @@ public/
 # debugging screenshots from the Instagram poster
 tools/instagram/last-failure.png
 tools/instagram/dry-run.png
+tools/instagram/dm-sent.png
+tools/instagram/dm-dry-run.png
 email-preview.html
+
+# Instagram DM notifier runtime state (which messages were DM'd) - local only
+content/instagram/.notified.json

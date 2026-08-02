@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Sends waiting Instagram DMs automatically, every 10 minutes.
+     Install:   cp this to ~/Library/LaunchAgents/ then launchctl load it.
+     Stop:      launchctl unload ~/Library/LaunchAgents/com.beatass.notify.plist -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.beatass.notify</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/sanjaykumar/Claude/Projects/banyan/ventures/beatass/tools/instagram/auto-notify.sh</string>
+  </array>
+  <key>StartInterval</key>
+  <integer>600</integer>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>600</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/sanjaykumar/.config/beatass-instagram/launchd.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/sanjaykumar/.config/beatass-instagram/launchd.log</string>
+</dict>
+</plist>
