@@ -23,6 +23,16 @@ const SITE = process.argv.includes('--live')
   ? 'https://beatass.com'
   : (process.env.PREVIEW_ORIGIN || 'http://127.0.0.1:8791');
 
+function gifDataUri() {
+  const f = path.join(ROOT, 'sample.gif');
+  if (!fs.existsSync(f)) {
+    console.log('note: no sample.gif yet, the preview will show no picture.');
+    console.log('      run `npm test` once to produce one.');
+    return '';
+  }
+  return 'data:image/gif;base64,' + fs.readFileSync(f).toString('base64');
+}
+
 // A message with the awkward bits in it: an apostrophe, a line break, and a
 // character that must come out escaped rather than as markup.
 const sample = {
@@ -32,7 +42,12 @@ const sample = {
 I smiled at you the next day anyway. I've been carrying that around for three years & you have no idea.`,
   stats: 'damage 74% / love 12%',
   caption: '...and this is what they did to you. (damage 74%)',
-  gifUrl: `${SITE}/og.png`,          // stands in for the doll gif
+  /* The real thing, animating. A live email points at /media/<id>.gif in R2,
+     which does not exist until somebody actually sends one — so the preview
+     carries the last GIF the test suite produced, inlined. It is the same
+     bytes the recipient would get, so what animates here is what animates
+     there. If it is missing, run `npm test` once to make one. */
+  gifUrl: gifDataUri(),
   pageUrl: SITE,
   blockUrl: `${SITE}/block?e=priya%40example.com&t=preview`,
   reportUrl: `${SITE}/report?id=preview&t=preview`

@@ -93,14 +93,36 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
 
   return `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Somebody wanted you to see this</title></head>
+<meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light only">
+<title>Somebody wanted you to see this</title>
+<style>
+/* Gmail strips this block, which is why every rule above is also inline. What
+   survives here is the phone case: Apple Mail, Outlook mobile and Gmail's iOS
+   app all keep media queries, and those are where most of these get opened.
+   Below 480px the padding halves and the type steps down, because 26px of
+   padding either side of a 320px screen leaves the message in a gutter. */
+@media only screen and (max-width:480px){
+  .wrap{padding:10px 6px !important}
+  .pad{padding:2px 14px 18px !important}
+  .msg{padding:20px 16px !important;font-size:19px !important}
+  .greet{font-size:15px !important}
+  .cta{font-size:17px !important;padding:14px 24px !important}
+  .doll{width:100% !important;max-width:260px !important}
+}
+/* Some clients force a dark background under us. Keep the paper cream rather
+   than letting blue ink land on near-black. */
+@media (prefers-color-scheme:dark){
+  .sheet{background:#fbf7ea !important}
+  .msg{background:#fffdf5 !important;color:#26356e !important}
+}
+</style></head>
 <body style="margin:0;padding:0;background:#e8e0cc;">
 <!-- what shows in the inbox list before anything is opened -->
 <div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(body).slice(0, 90)}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#e8e0cc;padding:22px 10px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="wrap" style="background:#e8e0cc;padding:22px 10px">
 <tr><td align="center">
 
-<table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;background:${PAPER};border:2px solid ${INK};border-radius:14px 10px 16px 9px">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" class="sheet" style="width:100%;max-width:560px;background:${PAPER};border:2px solid ${INK};border-radius:14px 10px 16px 9px">
 
   <!-- the red margin rule, the way it runs down the page on the site -->
   <tr><td style="padding:0">
@@ -114,11 +136,11 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
              tools/make-email-header.mjs from the same doll the site uses. -->
         <a href="${pageUrl}" style="text-decoration:none"><img src="${pageUrl}/email-header.png" alt="beatass — say the thing you'd never say" width="536" style="display:block;width:100%;max-width:536px;height:auto;border:0"></a>
 
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding:4px 26px 22px">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="pad" style="padding:4px 26px 22px">
 
         <!-- highlighter on the domain, as the site marks a word worth keeping.
              A flat background rather than a gradient: Outlook drops gradients. -->
-        <p style="margin:0 0 22px;font-family:${SANS};font-size:16px;line-height:1.7;color:${SOFT}">Hi ${esc(name)}, someone used <a href="${pageUrl}" style="background:${HL};color:${INK};font-weight:700;text-decoration:none;padding:2px 5px;border-radius:4px 6px 3px 5px">beatass.com</a> to say something to you. They chose to stay anonymous.</p>
+        <p class="greet" style="margin:0 0 22px;font-family:${SANS};font-size:16px;line-height:1.7;color:${SOFT}">Hi ${esc(name)}, someone used <a href="${pageUrl}" style="background:${HL};color:${INK};font-weight:700;text-decoration:underline;padding:2px 5px;border-radius:4px 6px 3px 5px">beatass.com</a> to say something to you. They chose to stay anonymous.</p>
 
         <!-- The message is the whole reason this email exists, so it gets to be
              the loudest thing in it. Everything above and below is deliberately
@@ -126,14 +148,14 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${PAPER2};border:3px solid ${INK};border-radius:14px 10px 16px 9px">
           <tr>
             <td width="11" style="width:11px;background:${RED};border-radius:11px 0 0 7px">&nbsp;</td>
-            <td style="padding:28px 26px;font-family:${SANS};font-size:22px;line-height:1.62;font-weight:700;color:${INK};white-space:pre-wrap;word-break:break-word">${esc(body)}</td>
+            <td class="msg" style="padding:28px 26px;font-family:${SANS};font-size:22px;line-height:1.62;font-weight:700;color:${INK};white-space:pre-wrap;word-break:break-word">${esc(body)}</td>
           </tr>
         </table>
 
         ${gifUrl ? `
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px">
           <tr><td align="center" style="padding:0">
-            <a href="${pageUrl}" style="text-decoration:none"><img src="${gifUrl}" alt="What they did to the doll" width="300" style="display:block;max-width:100%;border:2px solid ${INK};border-radius:9px 12px 8px 11px"></a>
+            <a href="${pageUrl}" style="text-decoration:none"><img src="${gifUrl}" alt="What they did to the doll" width="300" class="doll" style="display:block;max-width:100%;border:2px solid ${INK};border-radius:9px 12px 8px 11px"></a>
           </td></tr>
           ${line ? `<tr><td align="center" style="padding:11px 0 0;font-family:${SANS};font-size:14px;color:${RED}">${line}</td></tr>` : ''}
         </table>` : (line ? `<p style="margin:18px 0 0;text-align:center;font-family:${SANS};font-size:14px;color:${RED}">${line}</p>` : '')}
@@ -151,7 +173,7 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
             <!-- a table around the button so Outlook gives it real edges -->
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr>
               <td align="center" style="background:${RED};border-radius:10px 13px 9px 12px">
-                <a href="${pageUrl}" style="display:inline-block;color:#ffffff;font-family:${SANS};font-size:18px;font-weight:700;text-decoration:none;padding:15px 34px">Send one back</a>
+                <a href="${pageUrl}" class="cta" style="display:inline-block;color:#ffffff;font-family:${SANS};font-size:18px;font-weight:700;text-decoration:none;padding:15px 34px">Send one back</a>
               </td>
             </tr></table>
             <p style="margin:12px 0 0;font-family:${SANS};font-size:12px;color:${FAINT}">Free. Anonymous. No sign-up. Ten seconds.</p>
