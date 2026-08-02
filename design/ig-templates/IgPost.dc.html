@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- handoff reference copy · @source-template name="IG post — confession" description="1080×1350 feed post · five tones, the message + the recording share the canvas, the doll reacts" -->
+<helmet><script src="./ds-base.js"></script></helmet>
+<div id="canvas" class="tone-{{tone}}" style="position:relative;width:1080px;height:1350px;overflow:hidden;background:#fbf7ea;background-image:repeating-linear-gradient(transparent 0 52px,#cddaea 52px 54px);font-family:'Hand',cursive;color:#26356e">
+<sc-if value="{{isCrush}}" hint-placeholder-val="{{ true }}"><div style="position:absolute;inset:0;background:rgba(255,185,207,.14)"></div></sc-if>
+<sc-if value="{{isGrudge}}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;background:rgba(38,53,110,.05)"></div></sc-if>
+<sc-if value="{{isApology}}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;background:rgba(255,253,245,.55)"></div></sc-if>
+<sc-if value="{{isRoast}}" hint-placeholder-val="{{ false }}"><div style="position:absolute;inset:0;background:rgba(255,232,115,.12)"></div></sc-if>
+<div style="position:absolute;top:0;bottom:0;left:88px;width:3px;background:#e3a8a2"></div>
+<img src="../../assets/brand/svg/wordmark.svg" alt="beatass" style="position:absolute;left:122px;top:84px;width:225px">
+<sc-if value="{{isCrush}}" hint-placeholder-val="{{ true }}"><img src="../../assets/brand/svg/doll-loved.svg" alt="" style="position:absolute;left:592px;top:118px;width:280px;z-index:1"><img src="../../assets/brand/svg/sticker-hearts.svg" alt="" style="position:absolute;left:145px;top:168px;width:150px;transform:rotate(-6deg);z-index:1"></sc-if>
+<div style="position:absolute;left:95px;top:268px;width:820px;height:502px;background:#fffdf5;border:3.5px solid #26356e;border-radius:22px 9px 26px 12px;transform:rotate(-1deg);z-index:2;display:flex;align-items:center;padding:54px 64px;box-sizing:border-box">
+<div id="message" style="width:100%;font-size:{{msgSize}}px;line-height:1.28;text-wrap:pretty">{{message}}</div>
+</div>
+<div style="position:absolute;left:430px;top:248px;width:200px;height:44px;background:rgba(255,232,115,.75);transform:rotate(-3deg);border-radius:4px;z-index:3"></div><div style="position:absolute;right:72px;top:788px;width:471px;background:#fffdf5;border:3.5px solid #26356e;border-radius:14px 7px 18px 9px;transform:rotate(1.6deg);z-index:2;padding:12px 12px 0;box-sizing:border-box"><div id="media" style="position:relative;width:440px;height:440px;background:#fbf7ea;overflow:hidden"><div style="position:absolute;inset:10px;border:2.5px dashed #8d8778;border-radius:12px 6px 14px 8px"></div><img src="../../assets/brand/svg/doll-blink.svg" alt="" style="position:absolute;left:158px;top:92px;width:124px"><div style="position:absolute;left:0;right:0;bottom:24px;text-align:center;font-size:24px;color:#8d8778">the recording drops in here · 440×440</div></div><div style="height:54px;display:flex;align-items:center;justify-content:center;font-family:'Scrawl',cursive;font-size:30px;font-weight:700;color:#cf3a2d;transform:rotate(-.6deg)">10 seconds, looped forever</div></div><div style="position:absolute;right:248px;top:764px;width:150px;height:38px;background:rgba(255,232,115,.8);transform:rotate(-4deg);border-radius:4px;z-index:3"></div>
+<sc-if value="{{isGrudge}}" hint-placeholder-val="{{ false }}"><img src="../../assets/brand/svg/sticker-pins.svg" alt="" style="position:absolute;left:128px;top:258px;width:150px;z-index:3"><img src="../../assets/brand/svg/sticker-scratch.svg" alt="" style="position:absolute;right:70px;top:254px;width:250px;z-index:3"><img src="../../assets/brand/svg/doll-hurt.svg" alt="" style="position:absolute;left:110px;top:870px;width:250px;transform:rotate(-11deg);z-index:3"></sc-if>
+<sc-if value="{{isApology}}" hint-placeholder-val="{{ false }}"><img src="../../assets/brand/svg/doll-flinch.svg" alt="" style="position:absolute;left:150px;top:930px;width:190px;z-index:3"></sc-if>
+<sc-if value="{{isRoast}}" hint-placeholder-val="{{ false }}"><img src="../../assets/brand/svg/sticker-flames.svg" alt="" style="position:absolute;left:330px;top:872px;width:170px;z-index:3"><img src="../../assets/brand/svg/doll-panic.svg" alt="" style="position:absolute;left:80px;top:842px;width:280px;z-index:3"></sc-if>
+<sc-if value="{{isThanks}}" hint-placeholder-val="{{ false }}"><img src="../../assets/brand/svg/sticker-stars.svg" alt="" style="position:absolute;left:355px;top:872px;width:140px;z-index:3"><img src="../../assets/brand/svg/doll-default.svg" alt="" style="position:absolute;left:130px;top:900px;width:230px;z-index:3"></sc-if>
+<div id="annotation" style="position:absolute;right:78px;top:204px;font-family:'Scrawl',cursive;font-size:46px;font-weight:700;color:#cf3a2d;transform:rotate(2deg);z-index:4">{{annText}}</div>
+<div style="position:absolute;left:122px;bottom:54px;font-family:'Marker',cursive;font-size:36px;z-index:4">beat<span style="color:#cf3a2d">ass</span><span style="color:#8d8778;font-family:'Hand',cursive;font-size:27px">.com</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1080,&quot;height&quot;:1350},&quot;tone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;crush&quot;,&quot;options&quot;:[&quot;crush&quot;,&quot;grudge&quot;,&quot;apology&quot;,&quot;roast&quot;,&quot;thanks&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;message&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;you never once said thank you. not once in three years.&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;annotation&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const tone = this.props.tone ?? 'crush';
+    const msg = this.props.message ?? 'you never once said thank you. not once in three years.';
+    const ANN = { crush: "don't make it weird", grudge: 'you know what you did', apology: 'i mean every word', roast: 'anonymous, obviously', thanks: 'for real. thank you.' };
+    const len = msg.length;
+    const base = len <= 24 ? 108 : len <= 48 ? 88 : len <= 90 ? 70 : len <= 140 ? 52 : len <= 200 ? 44 : 36;
+    const f = tone === 'roast' && len <= 48 ? 1.15 : tone === 'apology' ? .85 : 1;
+    return {
+      tone, message: msg,
+      annText: this.props.annotation || ANN[tone] || ANN.roast,
+      msgSize: Math.round(base * f),
+      isCrush: tone === 'crush', isGrudge: tone === 'grudge', isApology: tone === 'apology', isRoast: tone === 'roast', isThanks: tone === 'thanks'
+    };
+  }
+}
+</script>
+</body>
+</html>

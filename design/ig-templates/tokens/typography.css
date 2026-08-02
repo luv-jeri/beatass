@@ -1,0 +1,51 @@
+:root{
+  /* ---------- families ---------- */
+  --font-hand:'Hand',ui-rounded,'Comic Sans MS',cursive;      /* Patrick Hand — handwritten body */
+  --font-script:'Scrawl',cursive;                              /* Caveat — the excitable voice */
+  --font-marker:'Marker',cursive;                              /* Permanent Marker — shouting */
+  --font-sans:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;
+  --font-ui:var(--font-sans);   /* everything you HAVE to read */
+
+  /* ---------- size ladder (every value is one the product actually uses) ---------- */
+  --fs-micro:11px;
+  --fs-tiny:12px;
+  --fs-caption:13px;
+  --fs-small:14px;
+  --fs-note:15px;
+  --fs-ui:16px;      /* functional-text floor. Nothing readable goes below this. */
+  --fs-body:17px;
+  --fs-input:18px;
+  --fs-label:19px;
+  --fs-lead:22px;
+  --fs-impact:26px;  /* POW / OW burned onto the canvas */
+  --fs-logo:29px;
+  --fs-display:44px;
+
+  /* ---------- fluid pairs used at the top of the page ---------- */
+  --fs-logo-fluid:clamp(21px,3.4vh,29px); /* @kind font */
+  --fs-tagline-fluid:clamp(16px,2.5vh,25px); /* @kind font */
+  --fs-display-fluid:clamp(34px,7dvh,44px); /* @kind font */
+  --fs-btn-fluid:clamp(15px,2.1vh,19px); /* @kind font */
+
+  /* ---------- line height ---------- */
+  --lh-tight:1.05; /* @kind other */
+  --lh-snug:1.15; /* @kind other */
+  --lh-ui:1.3; /* @kind other */
+  --lh-body:1.45; /* @kind other */
+  --lh-mail:1.5; /* @kind other */
+  --lh-rule:30px; /* @kind other */    /* handwriting sits ON the printed rule — same as --rule-h */
+
+  /* ---------- roles ---------- */
+  --type-logo:400 var(--fs-logo-fluid)/1 var(--font-marker); /* @kind font */
+  --type-tagline:700 var(--fs-tagline-fluid)/var(--lh-tight) var(--font-script); /* @kind font */
+  --type-pane-label:700 var(--fs-small)/1 var(--font-ui); /* @kind font */
+  --type-field-label:700 var(--fs-label)/var(--lh-snug) var(--font-script); /* @kind font */
+  --type-handwriting:400 var(--fs-input)/var(--lh-rule) var(--font-ui); /* @kind font */
+  --type-body:400 var(--fs-body)/var(--lh-body) var(--font-hand); /* @kind font */
+  --type-chip:600 var(--fs-ui)/1.1 var(--font-ui); /* @kind font */
+  --type-button:400 var(--fs-btn-fluid)/1 var(--font-marker); /* @kind font */
+  --type-ui:400 var(--fs-ui)/var(--lh-ui) var(--font-ui); /* @kind font */
+  --type-ui-small:400 var(--fs-small)/var(--lh-ui) var(--font-ui); /* @kind font */
+  --type-mail:400 13.5px/var(--lh-mail) var(--font-sans); /* @kind font */
+  --type-display:700 var(--fs-display-fluid)/1 var(--font-script); /* @kind font */
+}

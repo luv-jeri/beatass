@@ -1,0 +1,19 @@
+:root{
+  /* Buttons cast a HARD offset shadow — the flat drop-shadow of a doodle,
+     never a soft blur. Blur is reserved for things physically on the desk. */
+  --shadow-btn-red:3px 4px 0 rgba(207,58,45,.3);
+  --shadow-btn-red-hover:5px 7px 0 rgba(207,58,45,.26);
+  --shadow-btn-red-active:1px 1px 0 rgba(207,58,45,.3);
+  --shadow-btn-ink:3px 4px 0 rgba(38,53,110,.28);
+  --shadow-btn-ghost:2px 3px 0 rgba(38,53,110,.18);
+
+  /* real objects lying on the paper */
+  --shadow-chip:1px 2px 5px rgba(60,50,20,.16);
+  --shadow-taped:1px 6px 20px rgba(40,36,26,.34);
+
+  --blur-scrim:blur(3px); /* @kind other */
+
+  --z-paper:0; /* @kind other */
+  --z-app:1; /* @kind other */
+  --z-overlay:20; /* @kind other */
+}

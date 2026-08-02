@@ -1,0 +1,31 @@
+:root{
+  /* NOTHING IS A PERFECT RECTANGLE.
+     Every box uses four different corner radii with different x/y values, so
+     no two corners match and the edge reads as drawn round a ruler by hand. */
+  --radius-pen-lg:210px 16px 230px 14px/14px 240px 16px 225px;   /* frames, sheets, big cards */
+  --radius-pen-md:220px 16px 230px 14px/14px 235px 16px 225px;   /* tool buttons, tiles */
+  --radius-pen-btn:225px 18px 235px 16px/16px 245px 14px 230px;  /* buttons */
+  --radius-pen-sm:9px 4px 8px 5px/5px 8px 4px 9px;               /* gauges, progress */
+
+  /* strokes — pen widths, not hairlines */
+  --bw-hair:1px; /* @kind spacing */
+  --bw-rule:1.6px; /* @kind spacing */
+  --bw-pen:2px; /* @kind spacing */
+  --bw-pen-heavy:2.5px; /* @kind spacing */
+
+  /* canvas ink weights (the doll is drawn, not styled) */
+  --stroke-body:3.4; /* @kind other */
+  --stroke-limb:2.8; /* @kind other */
+  --stroke-icon:2.2; /* @kind other */
+  --stroke-hatch:1.8; /* @kind other */
+
+  /* nothing sits perfectly straight either */
+  --tilt-logo:-1.4deg; /* @kind other */
+  --tilt-tagline:.6deg; /* @kind other */
+  --tilt-card:.5deg; /* @kind other */
+  --tilt-chip-a:1.2deg; /* @kind other */
+  --tilt-chip-b:-1.6deg; /* @kind other */
+  --tilt-chip-on:-2deg; /* @kind other */
+  --tilt-tape-l:-32deg; /* @kind other */
+  --tilt-tape-r:32deg; /* @kind other */
+}

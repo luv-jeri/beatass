@@ -1,0 +1,21 @@
+:root{
+  --dur-press:.12s; /* @kind other */
+  --dur-tool:.14s; /* @kind other */
+  --dur-err:.15s; /* @kind other */
+  --dur-fill:.2s; /* @kind other */
+  --dur-fade:.3s; /* @kind other */
+
+  --ease-pop:cubic-bezier(.2,.9,.3,1); /* @kind other */   /* overlays arriving */
+  --ease-default:ease; /* @kind other */
+
+  /* the drawing engine's own clocks — these are what make it look hand-made */
+  --boil-ms:110ms; /* @kind other */        /* the stroke wobble is re-rolled ~9x a second */
+  --rec-frame-ms:150ms; /* @kind other */   /* GIF capture interval */
+  --rec-frames:32; /* @kind other */        /* ~4.8s of recording */
+
+  --press-shift:translate(1px,2px); /* @kind other */
+  --hover-lift:translate(-1px,-2px) rotate(-.5deg); /* @kind other */
+}
+@media (prefers-reduced-motion:reduce){
+  :root{--dur-press:0s; /* @kind other */ --dur-tool:0s; /* @kind other */ --dur-err:0s; /* @kind other */ --dur-fill:0s; /* @kind other */ --dur-fade:0s /* @kind other */}
+}

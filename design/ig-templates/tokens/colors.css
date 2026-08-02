@@ -1,0 +1,61 @@
+:root{
+  /* ---------- paper ---------- */
+  --desk:#e8e0cc;             /* the surface the page lies on — only visible past the page edge */
+  --paper:#fbf7ea;            /* the page itself */
+  --paper-2:#fffdf5;          /* a fresh sheet laid on top — frames, cards, canvas */
+  --rule:#cddaea;             /* printed feint rule */
+  --margin-line:#e3a8a2;      /* the red margin rule down the left */
+
+  /* ---------- three inks, three jobs ---------- */
+  --ink:#26356e;              /* ballpoint blue — ALL body text */
+  --ink-soft:#5b6a9c;
+  --ink-faint:#93a0c2;        /* dotted underlines, empty gauge tracks, placeholders */
+  --red:#cf3a2d;              /* red pen — labels, annotations, errors, the send button */
+  --hl:#ffe873;               /* highlighter yellow — emphasis only */
+
+  /* ---------- supporting marks ---------- */
+  --pencil:#8d8778;           /* soft pencil — counts, captions, the string */
+  --hl-pink:#ffb9cf;          /* the love ink; only ever appears when Love is on */
+  --sticky:#ffe9a3;           /* sticky-note chip */
+  --tape:rgba(226,214,178,.72);
+  --heart:#e0507f;            /* stroke of a drawn heart */
+  --char:#2b2118;             /* what --ink burns down to at full flame */
+
+  /* ---------- the mock inbox (deliberately NOT hand-drawn) ---------- */
+  --mail-bg:#ffffff;
+  --mail-text:#1c2333;
+  --mail-muted:#77809a;
+  --mail-faint:#98a0b3;
+  --mail-hair:#ececec;
+  --mail-quote-bg:#faf9f6;
+
+  /* ---------- overlays & glows ---------- */
+  --scrim:rgba(34,30,22,.66);
+  --glow-burn:rgba(255,150,40,.22);
+  --glow-love:rgba(255,120,175,.18);
+  --spark-hot:rgba(255,225,120,.8);
+  --spark-mid:rgba(240,120,30,.55);
+  --spark-cold:rgba(220,60,0,0);
+
+  /* ---------- semantic aliases ---------- */
+  --text-body:var(--ink);
+  --text-muted:var(--pencil);
+  --text-faint:var(--ink-faint);
+  --text-annotation:var(--red);
+  --text-on-red:var(--paper-2);
+  --text-on-ink:var(--paper-2);
+
+  --surface-desk:var(--desk);
+  --surface-page:var(--paper);
+  --surface-card:var(--paper-2);
+  --surface-inbox:var(--mail-bg);
+  --surface-note:var(--sticky);
+
+  --border-ink:var(--ink);
+  --border-faint:var(--ink-faint);
+  --border-danger:var(--red);
+
+  --accent-emphasis:var(--hl);
+  --accent-affection:var(--hl-pink);
+  --state-danger:var(--red);
+}
