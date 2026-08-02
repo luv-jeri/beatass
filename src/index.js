@@ -85,7 +85,7 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
   <div style="border-left:3px solid #cf3a2d;background:#faf9f6;padding:12px 14px;margin:0 0 16px;font-size:15px;line-height:1.55;white-space:pre-wrap;word-break:break-word">${esc(body)}</div>
   ${gifUrl ? `<div style="text-align:center;margin:0 0 6px"><a href="${pageUrl}"><img src="${gifUrl}" alt="What they did to the doll" width="260" style="max-width:100%;border:1px solid #ececec;border-radius:6px"></a></div>` : ''}
   ${line ? `<p style="margin:0 0 16px;text-align:center;font-size:12px;color:#77809a">${line}</p>` : ''}
-  <p style="margin:0 0 4px;font-size:12px;color:#98a0b3;border-top:1px solid #ececec;padding-top:12px">You're getting this because someone entered your address on beatass.com. We never share who sent it, and we never will.</p>
+  <p style="margin:0 0 4px;font-size:12px;color:#98a0b3;border-top:1px solid #ececec;padding-top:12px">You're getting this because someone entered your address on beatass.com. We never share who sent it, and we never will. If you reply, your reply comes to us, not to them.</p>
   <p style="margin:0;font-size:12px;color:#98a0b3"><a href="${reportUrl}" style="color:#77809a">Report this</a> &middot; <a href="${blockUrl}" style="color:#77809a">Block my address forever</a></p>
 </div></body></html>`;
 }
@@ -270,10 +270,14 @@ export default {
         },
         body: JSON.stringify({
           from: env.MAIL_FROM,
+          // A reply must reach a human. It reaches us, not the sender — the
+          // footer says so, because a reply that quietly vanishes into an
+          // anonymous void is the moment somebody stops trusting this.
+          reply_to: env.MAIL_REPLY_TO,
           to: [email],
           subject: `${name}, someone finally said it`,
           html: emailHtml({ name, body, stats, caption, gifUrl, pageUrl: site, blockUrl, reportUrl }),
-          text: `Hi ${name}, somebody used beatass.com to tell you something anonymously.\n\n"${body}"\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`,
+          text: `Hi ${name}, somebody used beatass.com to tell you something anonymously.\n\n"${body}"\n\nIf you reply, your reply comes to us, not to them.\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`,
           // one-click unsubscribe: mail providers treat this as a strong
           // positive signal, and it keeps us out of the spam folder
           headers: { 'List-Unsubscribe': `<${blockUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }

@@ -59,9 +59,17 @@
 
   "vars": {
     // Until beatass.com is verified inside Resend, mail can only go to the
-    // address that owns the Resend account. Swap this for
-    // "someone@beatass.com" once the domain is verified.
+    // address that owns the Resend account, and only from a resend.dev
+    // address. The moment Resend shows the domain verified, this becomes
+    // "Someone <someone@beatass.com>" — the name is what the recipient reads
+    // first, so it carries the weight, not the letters before the @.
     "MAIL_FROM": "beatass <onboarding@resend.dev>",
+
+    // Where a reply lands. Unlike the from address this needs no Resend
+    // verification, so it can be the real address today. Cloudflare Email
+    // Routing forwards it to Sanjay's inbox.
+    "MAIL_REPLY_TO": "someone@beatass.com",
+
     "SITE_URL": "https://beatass.com"
   },
 
