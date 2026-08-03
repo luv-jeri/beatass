@@ -120,9 +120,30 @@ function record(handle, patch) {
   return log;
 }
 
+/* ---------- the follow button, named in exactly one place ---------- */
+
+/* Instagram labels the same button "Follow Back" when the person already
+   follows us. It is the same action. Reading the profile accepted both labels
+   while the click only looked for "Follow", so on 2026-08-03 three follows
+   failed with a timeout against a button that was right there. One list now,
+   used by the reader AND the clicker, so they cannot drift apart again. */
+export const FOLLOW_LABELS = ['Follow', 'Follow Back'];
+export const FOLLOWED_LABELS = ['Following', 'Requested'];
+
+/* Anchored on purpose. A loose /follow/i would also match "Following", and
+   clicking THAT unfollows somebody we just followed. */
+export const followButtonRx = () => new RegExp(`^(${FOLLOW_LABELS.join('|')})$`);
+
 /* ---------- the browser walk ---------- */
 
 const wait = (page, a, b) => page.waitForTimeout(a + Math.floor(Math.random() * (b - a)));
+
+/** What every button in the profile header actually says, right now. */
+const headerLabels = (page) => page.evaluate(() => {
+  const header = document.querySelector('header');
+  return header ? [...header.querySelectorAll('button, div[role="button"]')]
+    .filter((e) => e.offsetParent).map((e) => (e.innerText || '').trim()).filter(Boolean) : [];
+});
 
 async function dismissPopups(page) {
   for (const label of ['Not now', 'Not Now', 'Cancel', 'Dismiss']) {
@@ -139,7 +160,7 @@ async function readProfile(page, handle) {
   await page.goto(`${IG}/${handle}/`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(4000);
   await dismissPopups(page);
-  return page.evaluate((h) => {
+  return page.evaluate(({ h, followLabels, doneLabels }) => {
     const header = document.querySelector('header');
     const text = document.body.innerText || '';
     const labels = header
@@ -156,12 +177,12 @@ async function readProfile(page, handle) {
     return {
       exists: !!header && !/sorry, this page isn't available/i.test(text),
       private: /this account is private/i.test(text),
-      already: labels.some((t) => t === 'Following' || t === 'Requested'),
-      canFollow: labels.some((t) => t === 'Follow' || t === 'Follow Back'),
+      already: labels.some((t) => doneLabels.includes(t)),
+      canFollow: labels.some((t) => followLabels.includes(t)),
       tiles: tiles.slice(0, 3),
       labels
     };
-  }, handle.toLowerCase());
+  }, { h: handle.toLowerCase(), followLabels: FOLLOW_LABELS, doneLabels: FOLLOWED_LABELS });
 }
 
 /**
@@ -170,17 +191,19 @@ async function readProfile(page, handle) {
  * back) must not be logged as a follow.
  */
 async function pressFollow(page, handle) {
-  const btn = page.locator('header').getByRole('button', { name: 'Follow', exact: true }).first();
-  await btn.waitFor({ state: 'visible', timeout: 15000 });
-  await btn.click();
+  const btn = page.locator('header').locator('button, div[role="button"]')
+    .filter({ hasText: followButtonRx() }).first();
+  if (!await btn.count()) {
+    /* Say what was actually on the page. "Timeout exceeded" told us nothing
+       for three failures in a row; the button labels told us everything. */
+    const seen = await headerLabels(page);
+    throw new Error(`no follow button on @${handle}. The buttons there say: ${seen.join(' / ') || '(none)'}`);
+  }
+  await btn.click({ timeout: 15000 });
   await page.waitForTimeout(4000);
-  const now = await page.evaluate(() => {
-    const header = document.querySelector('header');
-    return header ? [...header.querySelectorAll('button, div[role="button"]')]
-      .filter((e) => e.offsetParent).map((e) => (e.innerText || '').trim()) : [];
-  });
-  const stuck = now.some((t) => t === 'Following' || t === 'Requested');
-  if (!stuck) throw new Error(`the Follow button on @${handle} did not change to Following - Instagram may be limiting us`);
+  const now = await headerLabels(page);
+  const stuck = now.some((t) => FOLLOWED_LABELS.includes(t));
+  if (!stuck) throw new Error(`the button on @${handle} still says "${now.join(' / ')}" - Instagram may be limiting us`);
   return now.includes('Requested') ? 'requested' : 'following';
 }
 
@@ -365,6 +388,21 @@ if (IS_MAIN && args.includes('--selftest')) {
     eq(`comment line has no AI-tell glyphs: "${line.slice(0, 25)}"`, AI_TELLS.test(line), false);
     eq(`comment line is one line: "${line.slice(0, 25)}"`, line.includes('\n'), false);
   }
+
+  /* the follow button. Three real follows failed on 2026-08-03 because the
+     profile reader accepted "Follow Back" and the click did not. */
+  const rx = followButtonRx();
+  eq('the plain Follow button is a follow button', rx.test('Follow'), true);
+  eq('"Follow Back" is a follow button too (they already follow us)', rx.test('Follow Back'), true);
+  eq('the reader accepts every label the clicker does',
+    FOLLOW_LABELS.every((l) => rx.test(l)), true);
+  /* The dangerous direction: "Following" contains the word Follow, and
+     clicking it UNFOLLOWS somebody we just followed. */
+  eq('"Following" is NOT a follow button', rx.test('Following'), false);
+  eq('"Requested" is NOT a follow button', rx.test('Requested'), false);
+  eq('no label counts as both follow and followed',
+    FOLLOW_LABELS.some((l) => FOLLOWED_LABELS.includes(l)), false);
+  eq('a followed state is what proves a follow worked', FOLLOWED_LABELS.includes('Following'), true);
 
   /* the bio */
   const bio = bioText();
