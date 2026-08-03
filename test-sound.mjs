@@ -63,7 +63,23 @@ await page.addInitScript(() => {
 
 const count = () => page.evaluate(() => ({ ...window.__sfx }));
 
+/* Wait for the little web server to actually be listening. Locally it is up
+   before the browser finishes launching, so this looked unnecessary; on CI the
+   machine is slower and the first navigation was refused. A test that depends
+   on who wins a race is not a test. */
+async function waitForServer() {
+  for (let i = 0; i < 60; i++) {
+    try {
+      const r = await fetch(`http://127.0.0.1:${PORT}/beatass.html`, { method: 'HEAD' });
+      if (r.ok) return;
+    } catch {}
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  throw new Error(`the test web server never came up on port ${PORT}`);
+}
+
 try {
+  await waitForServer();
   await page.goto(`http://127.0.0.1:${PORT}/beatass.html`, { waitUntil: 'networkidle' });
 
   /* reach the doll the same way a person does */
