@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Checks once a day that the Instagram automation still works, and puts a
+     notification on screen when it does not. It reads pages and presses
+     nothing: no DM, no follow, no comment, no setting changed.
+
+     Once a day is deliberate. Instagram redesigns take days to roll out, and a
+     browser session opening every hour is itself a thing Instagram notices.
+
+     Install:  cp this to ~/Library/LaunchAgents/ then launchctl load it.
+     Stop:     launchctl unload ~/Library/LaunchAgents/com.beatass.health.plist
+     Run now:  node tools/instagram/health.mjs -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.beatass.health</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/sanjaykumar/Claude/Projects/banyan/ventures/beatass/tools/instagram/auto-health.sh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>9</integer>
+    <key>Minute</key>
+    <integer>30</integer>
+  </dict>
+  <key>RunAtLoad</key>
+  <false/>
+  <key>StandardOutPath</key>
+  <string>/Users/sanjaykumar/.config/beatass-instagram/health-launchd.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/sanjaykumar/.config/beatass-instagram/health-launchd.log</string>
+</dict>
+</plist>

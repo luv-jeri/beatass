@@ -38,6 +38,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { ensureAccount } from './ig-dm.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.dirname(path.dirname(HERE));
@@ -48,6 +49,13 @@ const OUT = CONFIG.outreach || {};
    message id: following is about a person, and two confessions to the same
    person must not produce two comments on their post. */
 const LOG_FILE = path.join(ROOT, CONFIG.contentDir, '.outreach.json');
+
+/* Where the pause lives inside that same file. A handle can never be "#state",
+   so this key cannot collide with a real person. */
+export const STATE_KEY = '#state';
+/* How long everything stops after Instagram refuses something. Long enough
+   that a limit expires, short enough that a bad afternoon is not a lost day. */
+export const COOL_OFF_HOURS = 6;
 
 const IG = 'https://www.instagram.com';
 const today = () => new Date().toISOString().slice(0, 10);
@@ -76,19 +84,31 @@ export const bioText = (cfg) => String((cfg || OUT).bio || '').trim();
 
 export function countToday(log, key, day) {
   const d = day || today();
-  return Object.values(log || {}).filter((r) => r && typeof r[key] === 'string' && r[key].slice(0, 10) === d).length;
+  return Object.entries(log || {})
+    .filter(([h, r]) => h !== STATE_KEY && r && typeof r[key] === 'string' && r[key].slice(0, 10) === d)
+    .length;
 }
 
 /**
  * Decides, before any browser is touched, whether this person gets a follow
  * and a comment - and says why not, in words, when they do not.
  */
-export function outreachPlan({ handle, log = {}, cfg = OUT, counts = null, day = null }) {
+export function outreachPlan({ handle, log = {}, cfg = OUT, counts = null, day = null, now = null }) {
   const rec = log[handle] || {};
   const n = counts || { follows: countToday(log, 'followed', day), comments: countToday(log, 'commented', day) };
   const followCap = Number.isFinite(cfg.followPerDay) ? cfg.followPerDay : 25;
   const commentCap = Number.isFinite(cfg.commentPerDay) ? cfg.commentPerDay : 15;
   const why = {};
+
+  /* The brakes. When Instagram silently swallowed something, everything stops
+     for a while - for everybody, not just the person it happened to. Carrying
+     on regardless is how a temporary limit turns into a dead account, and a
+     dead account cannot deliver a single message. */
+  const until = log[STATE_KEY] && log[STATE_KEY].coolOffUntil;
+  if (until && new Date(until) > new Date(now || Date.now())) {
+    const w = `paused until ${until.slice(11, 16)} UTC - Instagram looked like it was limiting us`;
+    return { follow: false, comment: false, why: { follow: w, comment: w }, coolingOff: true };
+  }
 
   let follow = true;
   if (cfg.follow === false) { follow = false; why.follow = 'following is turned off in config.json'; }
@@ -121,6 +141,20 @@ function record(handle, patch) {
   log[handle] = { ...(log[handle] || {}), ...patch };
   saveLog(log);
   return log;
+}
+
+/** Everything stops for a while. Called the moment Instagram refuses us. */
+export function tripCoolOff(reason, hours) {
+  const until = new Date(Date.now() + (hours || COOL_OFF_HOURS) * 3600e3).toISOString();
+  record(STATE_KEY, { coolOffUntil: until, coolOffReason: String(reason).slice(0, 200), coolOffAt: new Date().toISOString() });
+  return until;
+}
+
+/** Does this failure mean Instagram is pushing back, or is it just this page?
+ *  Only the first kind stops everything - a profile with no Follow button is
+ *  one odd account, not a limit, and pausing on it would stop the whole tool. */
+export function looksLikeLimiting(message) {
+  return /did not appear|did not change|still says|action blocked|try again later|rate.?limit/i.test(String(message || ''));
 }
 
 /* ---------- the follow button, named in exactly one place ---------- */
@@ -315,7 +349,11 @@ export async function runOutreach(page, handle, { dry = false, say = console.log
     say(`    outreach: already following @${h}.`);
     result.followed = true;
   } else if (!profile.canFollow) {
-    say(`    outreach: no Follow button on @${h} - skipping.`);
+    /* Seen for real on @i.sanjay.gautam: a profile that renders no action
+       button at all. Not a limit, just one odd account - write down what its
+       buttons DID say, so a pattern is visible if it happens again. */
+    note({ followSkipped: `no follow button. buttons said: ${(profile.labels || []).filter(Boolean).join(' / ') || '(none)'}`.slice(0, 200) });
+    say(`    outreach: @${h} shows no follow button (they may have restricted us) - skipping.`);
   } else if (dry) {
     await page.screenshot({ path: path.join(HERE, 'outreach-dry-follow.png') });
     say(`    outreach (dry): would follow @${h}. Screenshot: tools/instagram/outreach-dry-follow.png`);
@@ -326,7 +364,13 @@ export async function runOutreach(page, handle, { dry = false, say = console.log
       result.followed = true;
       say(`    outreach: ${state === 'requested' ? 'follow requested' : 'followed'} @${h}.`);
     } catch (e) {
-      say(`    outreach: follow failed for @${h}: ${e.message.split('\n')[0]}`);
+      const msg = e.message.split('\n')[0];
+      say(`    outreach: follow failed for @${h}: ${msg}`);
+      if (!dry && looksLikeLimiting(msg)) {
+        const until = tripCoolOff('follow refused for @' + h + ': ' + msg);
+        say(`    outreach: STOPPING all outreach until ${until.slice(11, 16)} UTC - that reads like Instagram limiting us.`);
+        result.coolOff = until;
+      }
       await page.screenshot({ path: path.join(HERE, 'outreach-failure.png') }).catch(() => {});
     }
   }
@@ -363,7 +407,13 @@ export async function runOutreach(page, handle, { dry = false, say = console.log
       say(`    outreach: commented on @${h}'s ${which}.`);
     }
   } catch (e) {
-    say(`    outreach: comment failed for @${h}: ${e.message.split('\n')[0]}`);
+    const msg = e.message.split('\n')[0];
+    say(`    outreach: comment failed for @${h}: ${msg}`);
+    if (!dry && looksLikeLimiting(msg)) {
+      const until = tripCoolOff('comment refused for @' + h + ': ' + msg);
+      say(`    outreach: STOPPING all outreach until ${until.slice(11, 16)} UTC - that reads like Instagram limiting us.`);
+      result.coolOff = until;
+    }
     await page.screenshot({ path: path.join(HERE, 'outreach-failure.png') }).catch(() => {});
   }
   return result;
@@ -483,6 +533,26 @@ if (IS_MAIN && args.includes('--selftest')) {
   eq('today does count', countToday({ a: { followed: stamp } }, 'followed', day), 1);
   eq('a cap of 0 turns it off', outreachPlan({ handle: 'n', log: {}, cfg: { ...OUT, followPerDay: 0 }, day }).follow, false);
 
+  /* the brake. Instagram refusing us once means stop, for everybody. */
+  const soon = '2026-08-03T23:00:00.000Z';
+  const nowIs = '2026-08-03T20:00:00.000Z';
+  const paused = { [STATE_KEY]: { coolOffUntil: soon, coolOffReason: 'comment refused' } };
+  eq('a refusal stops every follow', outreachPlan({ handle: 'anyone', log: paused, now: nowIs, day }).follow, false);
+  eq('a refusal stops every comment', outreachPlan({ handle: 'anyone', log: paused, now: nowIs, day }).comment, false);
+  eq('it stops people it never even touched', outreachPlan({ handle: 'brand-new', log: paused, now: nowIs, day }).comment, false);
+  eq('the pause says when it lifts', /paused until/.test(outreachPlan({ handle: 'x', log: paused, now: nowIs, day }).why.follow), true);
+  eq('the pause lifts by itself once it expires',
+    outreachPlan({ handle: 'anyone', log: paused, now: '2026-08-04T00:00:00.000Z', day: '2026-08-04' }).follow, true);
+  eq('the pause entry is not counted as a person we followed',
+    countToday({ ...paused, real: { followed: stamp } }, 'followed', day), 1);
+
+  /* which failures are worth stopping for */
+  eq('a swallowed comment is treated as limiting', looksLikeLimiting('the comment did not appear on post 1'), true);
+  eq('a follow that bounced back is treated as limiting', looksLikeLimiting('the button on @x still says "Follow"'), true);
+  eq('an explicit block is treated as limiting', looksLikeLimiting('Action Blocked, try again later'), true);
+  eq('a profile with no follow button is NOT a limit', looksLikeLimiting('no follow button on @x. The buttons there say: Highlights'), false);
+  eq('locked comments are NOT a limit', looksLikeLimiting('comments are turned off on all 12 of their posts'), false);
+
   /* the switches */
   eq('follow can be switched off', outreachPlan({ handle: 'n', log: {}, cfg: { ...OUT, follow: false }, day }).follow, false);
   eq('comment can be switched off', outreachPlan({ handle: 'n', log: {}, cfg: { ...OUT, comment: false }, day }).comment, false);
@@ -496,6 +566,7 @@ if (IS_MAIN && args.includes('--selftest')) {
 
 if (IS_MAIN && !args.includes('--selftest')) {
   const { chromium } = await import('playwright');
+  const { spawnSync } = await import('child_process');
   const os = await import('os');
   const SESSION = path.join(os.homedir(), '.config', 'beatass-instagram');
   const flagVal = (f) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : null; };
@@ -503,29 +574,98 @@ if (IS_MAIN && !args.includes('--selftest')) {
   const RUN = flagVal('--run');
   const BIO = args.includes('--bio');
   const APPLY = args.includes('--apply');
+  const BACKFILL = args.includes('--backfill');
+  const STATUS = args.includes('--status');
+  const RESUME = args.includes('--resume');
 
-  if (!RUN && !BIO) {
+  /* Who is on the books, and whether the brake is on. No browser, instant. */
+  if (STATUS) {
+    const log = loadLog();
+    const st = log[STATE_KEY];
+    const rows = Object.entries(log).filter(([h]) => h !== STATE_KEY);
+    if (st && st.coolOffUntil && new Date(st.coolOffUntil) > new Date())
+      console.log(`\n!! PAUSED until ${st.coolOffUntil} - ${st.coolOffReason}\n   clear it with --resume once you are sure the account is healthy\n`);
+    else console.log('\nnot paused.\n');
+    console.log(`${rows.length} people on the books. today: ${countToday(log, 'followed')} follows, ${countToday(log, 'commented')} comments.\n`);
+    for (const [h, r] of rows)
+      console.log(`  @${h.padEnd(20)} follow: ${(r.followed ? r.followed.slice(0, 16).replace('T', ' ') : (r.followSkipped ? 'skipped' : 'no')).padEnd(17)} comment: ${r.commented ? r.commented.slice(0, 16).replace('T', ' ') : (r.commentSkipped || 'no')}`);
+    console.log('');
+    process.exit(0);
+  }
+
+  if (RESUME) {
+    const log = loadLog();
+    delete log[STATE_KEY];
+    fs.writeFileSync(LOG_FILE, JSON.stringify(log, null, 2));
+    console.log('pause cleared. Outreach will run again on the next DM.');
+    process.exit(0);
+  }
+
+  if (!RUN && !BIO && !BACKFILL) {
     console.log(`
 what this does: after a DM goes out, follow the person and comment on their
-latest post, so the message sitting in their requests folder gets noticed.
+newest post that will take a comment, so the message sitting in their requests
+folder actually gets noticed. It runs by itself after every DM notify.mjs sends.
 
+  node tools/instagram/outreach.mjs --status            who is done, is it paused
   node tools/instagram/outreach.mjs --bio               show the bio it would set
   node tools/instagram/outreach.mjs --bio --apply       change our bio for real
   node tools/instagram/outreach.mjs --run <handle> --dry   walk it, change nothing
   node tools/instagram/outreach.mjs --run <handle>      follow + comment for real
+  node tools/instagram/outreach.mjs --backfill --dry    everyone already DM'd, rehearsed
+  node tools/instagram/outreach.mjs --backfill          everyone already DM'd, for real
+  node tools/instagram/outreach.mjs --resume            lift the pause after a refusal
 
-It also runs by itself after every DM sent by notify.mjs.
+Is it still working at all? That is a different question:
+  node tools/instagram/health.mjs
 `);
     process.exit(0);
   }
 
+  /* Everyone we have already DM'd. Built from the notifier's own log (message
+     ids) joined to the database (handles), so it can never invent a target -
+     if we never messaged them, they are not in here. */
+  function alreadyMessaged() {
+    const notified = path.join(ROOT, CONFIG.contentDir, '.notified.json');
+    let ids = [];
+    try { ids = Object.keys(JSON.parse(fs.readFileSync(notified, 'utf8'))); } catch { ids = []; }
+    if (!ids.length) return [];
+    const list = ids.filter((i) => /^[a-f0-9]{16}$/.test(i)).map((i) => `'${i}'`).join(',');
+    if (!list) return [];
+    const r = spawnSync('npx', ['wrangler', 'd1', 'execute', 'beatass-db', '--remote', '--json',
+      '--command', `SELECT DISTINCT to_handle FROM messages WHERE id IN (${list}) AND to_handle IS NOT NULL AND to_handle != ''`],
+      { encoding: 'utf8', maxBuffer: 8e6 });
+    if (r.status !== 0) throw new Error('could not read the database: ' + (r.stderr || '').slice(-300));
+    const rows = JSON.parse(r.stdout)[0].results || [];
+    return [...new Set(rows.map((x) => String(x.to_handle).replace(/^@+/, '').toLowerCase()))];
+  }
+
   const browser = await chromium.launchPersistentContext(SESSION, {
-    headless: CONFIG.headless === true, viewport: { width: 1280, height: 900 },
+    headless: BACKFILL ? true : CONFIG.headless === true,
+    viewport: { width: 1280, height: 900 },
     args: ['--disable-blink-features=AutomationControlled']
   });
   const page = browser.pages()[0] || await browser.newPage();
+
+  /* Never act from the wrong account. This used to live in a throwaway script
+     I retyped each time; acting as somebody else is not a mistake you can undo. */
+  const assertAccount = () => ensureAccount(page, CONFIG.handle);
+
   try {
-    if (BIO) {
+    if (BACKFILL) {
+      console.log('signed in as @' + await assertAccount() + '\n');
+      const handles = alreadyMessaged();
+      console.log(`${handles.length} people have been DM'd. Working through them${DRY ? ' (rehearsal, nothing changes)' : ''}.\n`);
+      let stopped = null;
+      for (const h of handles) {
+        console.log('@' + h);
+        const r = await runOutreach(page, h, { dry: DRY, say: console.log });
+        if (r.coolOff) { stopped = r.coolOff; break; }
+        await page.waitForTimeout(20000 + Math.floor(Math.random() * 25000));
+      }
+      if (stopped) { console.log(`\nstopped early: paused until ${stopped}. Run --status to see why.`); process.exitCode = 1; }
+      else console.log('\ndone. `--status` shows where everybody stands.');
+    } else if (BIO) {
       const bio = bioText();
       if (bio.length > BIO_MAX) throw new Error(`the bio in config.json is ${bio.length} characters, Instagram allows ${BIO_MAX}.`);
       const r = await applyBio(page, bio, APPLY);
@@ -535,6 +675,7 @@ It also runs by itself after every DM sent by notify.mjs.
       else if (r.changed) console.log('\n✓ bio changed, and read back from a fresh page load to prove it.');
       else { console.log('\n✗ Submit was pressed but the bio did not change. Left as it was.'); process.exitCode = 1; }
     } else {
+      await assertAccount();
       await runOutreach(page, RUN, { dry: DRY, say: console.log });
       if (DRY) console.log('\ndry run: nothing was followed and nothing was posted.');
     }

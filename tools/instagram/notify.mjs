@@ -44,6 +44,7 @@ import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import { runOutreach } from './outreach.mjs';
+import { dismissPopups, openThread, typeDm, clearBox, ensureAccount } from './ig-dm.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.dirname(path.dirname(HERE));
@@ -246,84 +247,16 @@ function launch(headless) {
   });
 }
 
-async function dismissPopups(page) {
-  for (const label of ['Not now', 'Not Now', 'Cancel', 'Dismiss']) {
-    const b = page.getByRole('button', { name: label, exact: true });
-    if (await b.count() && await b.first().isVisible().catch(() => false)) {
-      await b.first().click().catch(() => {});
-      await page.waitForTimeout(600);
-    }
-  }
+
+export async function ensureRightAccount(page) {
+  /* One implementation, in ig-dm.mjs, shared with the outreach tool and the
+     health check. It now REFUSES when it cannot tell who we are, where this
+     used to carry on regardless. */
+  try { return await ensureAccount(page, CONFIG.handle); }
+  catch (e) { die(e.message); }
 }
 
-/** Same identity check as post.mjs: refuse to act as the wrong account. */
-async function ensureRightAccount(page) {
-  await page.goto('https://www.instagram.com/', { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(2500);
-  await dismissPopups(page);
-  const loggedIn = (await page.context().cookies('https://www.instagram.com'))
-    .some((c) => c.name === 'ds_user_id');
-  if (!loggedIn) die('Not logged in. Run: node tools/instagram/post.mjs --login');
-  const who = await page.evaluate(() => {
-    const img = document.querySelector('a[href^="/"] img[alt*="profile picture" i]');
-    const a = img && img.closest('a');
-    const m = a && (a.getAttribute('href') || '').match(/^\/([A-Za-z0-9._]+)\/?$/);
-    return m ? m[1] : '';
-  }).catch(() => '');
-  if (who && who.toLowerCase() !== String(CONFIG.handle).toLowerCase().replace(/^@/, ''))
-    die(`Signed in as "${who}" but config.json says "${CONFIG.handle}". Not sending from the wrong account.`);
-}
 
-async function openThread(page, handle) {
-  await page.goto('https://www.instagram.com/direct/new/', { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(4000);
-  await dismissPopups(page);
-
-  const q = page.locator('input[name="searchInput"]').first();
-  await q.waitFor({ state: 'visible', timeout: 20000 });
-  await q.click();
-  await q.type(handle, { delay: 60 });
-  await page.waitForTimeout(3500);
-
-  // Result rows are role=button whose text is "Display name\nusername\nbio".
-  // Only an EXACT username line may match - a near-miss must never open
-  // somebody else's thread.
-  const hit = await page.evaluate((h) => {
-    const rows = [...document.querySelectorAll('[role="button"]')]
-      .filter((e) => e.offsetParent &&
-        (e.innerText || '').split('\n').some((line) => line.trim().toLowerCase() === h));
-    if (!rows.length) return false;
-    rows[0].click();
-    return true;
-  }, handle.toLowerCase());
-  if (!hit) throw new Error(`no Instagram account named exactly "@${handle}"`);
-
-  await page.waitForURL(/\/direct\/t\/\d+/, { timeout: 20000 });
-  await page.waitForTimeout(2500);
-}
-
-async function typeDm(page, text) {
-  const box = page.locator('div[role="textbox"][contenteditable="true"]').first();
-  await box.waitFor({ state: 'visible', timeout: 20000 });
-  await box.click();
-  /* Enter SENDS in Instagram's composer. A raw newline fed to type() is an
-     Enter press - which is how the first dry run of this tool accidentally
-     sent two half-messages (unsent, 2026-08-03). So the text goes in line by
-     line, with Shift+Enter between lines, and never a bare newline. */
-  const lines = text.split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    if (i) await page.keyboard.press('Shift+Enter');
-    if (lines[i]) await box.type(lines[i], { delay: 12 });
-  }
-  await page.waitForTimeout(1000);
-  return box;
-}
-
-/** Empty the composer without sending. Used by every dry run. */
-async function clearBox(page) {
-  await page.keyboard.press(process.platform === 'darwin' ? 'Meta+a' : 'Control+a');
-  await page.keyboard.press('Backspace');
-}
 
 /**
  * Open the thread and deliver the DM as separate bubbles.
