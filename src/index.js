@@ -582,6 +582,31 @@ async function adminData(env, query) {
     // keyset (WHERE created_at < last) only if an admin ever pages that deep.
   ).bind(...params, PAGE, (page - 1) * PAGE).all();
 
+  /* The sharing queue. share_ok = 1 is not a filter here, it is the wall: a
+     confession whose sender never ticked the box is not in this list, cannot
+     be counted in it, and has no route to a post. */
+  const queueCounts = await env.DB.prepare(
+    `SELECT
+       SUM(CASE WHEN share_ok = 1 THEN 1 ELSE 0 END) shared,
+       SUM(CASE WHEN share_ok = 1 AND scored_at IS NULL THEN 1 ELSE 0 END) unjudged,
+       SUM(CASE WHEN share_ok = 1 AND post_state = 'ready'   THEN 1 ELSE 0 END) ready,
+       SUM(CASE WHEN share_ok = 1 AND post_state = 'blocked' THEN 1 ELSE 0 END) refused,
+       SUM(CASE WHEN share_ok = 1 AND post_state = 'queued'  THEN 1 ELSE 0 END) queued,
+       SUM(CASE WHEN share_ok = 1 AND post_state = 'posted'  THEN 1 ELSE 0 END) posted,
+       SUM(CASE WHEN share_ok = 1 AND post_state = 'skipped' THEN 1 ELSE 0 END) skipped
+     FROM messages`
+  ).first();
+
+  // best first, but anything already queued sits at the top so it is obvious
+  // what is waiting to go out.
+  const queueRows = await env.DB.prepare(
+    `SELECT id, to_name, body, score, score_reason, post_state, has_gif, created_at
+     FROM messages
+     WHERE share_ok = 1 AND post_state IN ('ready','queued')
+     ORDER BY CASE post_state WHEN 'queued' THEN 0 ELSE 1 END, score DESC, created_at DESC
+     LIMIT 24`
+  ).all();
+
   const vToday = await env.DB.prepare("SELECT COALESCE(SUM(n),0) n FROM visits WHERE day = date('now')").first();
   const vWeek  = await env.DB.prepare("SELECT COALESCE(SUM(n),0) n FROM visits WHERE day >= date('now','-6 days')").first();
   const vPaths = await env.DB.prepare("SELECT path, SUM(n) n FROM visits WHERE day >= date('now','-6 days') GROUP BY path ORDER BY n DESC LIMIT 5").all();
@@ -592,6 +617,7 @@ async function adminData(env, query) {
     chart: chart.results || [],
     blocks: (blocks && blocks.c) || 0,
     table: { rows: rows.results || [], total, page, pageSize: PAGE, query },
+    queue: { rows: queueRows.results || [], counts: queueCounts || {} },
     visits: {
       today: (vToday && vToday.n) || 0,
       week: (vWeek && vWeek.n) || 0,
@@ -727,6 +753,61 @@ function adminPage(data) {
     ${hasFilters ? `<a href="/admin" style="font-size:14px;color:${RED};font-weight:700">clear</a>` : ''}
   </form>`;
 
+  /* ---------- the sharing queue ----------
+     Everything here is a confession whose sender ticked the share box AND
+     which the safety check cleared. Pressing Post does not post: it marks the
+     message for the Instagram tool that runs on Sanjay's laptop, because a
+     Cloudflare Worker cannot log in to Instagram. That lag is said out loud
+     below rather than implied away. */
+  const q = data.queue || { rows: [], counts: {} };
+  const qc = q.counts || {};
+  const qbtn = (id, action, label, colour, filled) =>
+    `<form method="POST" action="/admin/queue" style="display:inline">
+      <input type="hidden" name="id" value="${esc(id)}">
+      <input type="hidden" name="action" value="${esc(action)}">
+      <button type="submit" style="font:inherit;font-size:13px;font-weight:700;color:${filled ? '#fff' : colour};background:${filled ? colour : 'transparent'};border:2px solid ${colour};border-radius:10px 8px 11px 7px;padding:8px 14px;cursor:pointer">${esc(label)}</button>
+    </form>`;
+
+  const queueCards = (q.rows || []).map((r) => {
+    const queued = r.post_state === 'queued';
+    const when = new Date(r.created_at * 1000).toISOString().slice(0, 10);
+    const band = r.score >= 75 ? RED : r.score >= 40 ? INK : FAINT;
+    return `<div style="display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-top:1px solid #e3d9bd">
+      ${r.has_gif ? `<img class="qgif" src="/media/${esc(r.id)}.gif" alt="" width="104" height="104" loading="lazy" style="flex:none;object-fit:cover;border:2px solid ${INK};border-radius:12px 9px 13px 8px;background:${PAPER2}">` : ''}
+      <div style="min-width:0;flex:1">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 6px">
+          <span style="font-size:22px;font-weight:800;color:${band};line-height:1">${n(r.score)}</span>
+          <span style="font-size:12px;color:${FAINT}">out of 100</span>
+          ${queued ? `<span style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:${INK};border-radius:999px;padding:3px 9px">queued to post</span>` : ''}
+          <span style="font-size:12px;color:${FAINT};margin-left:auto">${esc(when)} &middot; for ${esc(r.to_name)}</span>
+        </div>
+        <div style="font-size:15px;color:${INK};margin:0 0 6px;overflow-wrap:anywhere">${esc(r.body)}</div>
+        <div style="font-size:13px;color:${SOFT};margin:0 0 10px">${esc(r.score_reason || '')}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${queued
+            ? qbtn(r.id, 'unqueue', 'take it back off the list', INK, false)
+            : qbtn(r.id, 'queue', 'Post this', RED, true) + qbtn(r.id, 'skip', 'never post it', FAINT, false)}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const queueEmpty = qc.shared
+    ? 'Nothing is waiting for you right now.'
+    : 'Nobody has ticked the share box yet. It only appeared on the send screen today, and it only counts from now on - everyone who wrote before that was never asked, so their words can never be posted.';
+
+  const queueSection = card('ready to post (you decide)',
+    `<div style="display:flex;flex-wrap:wrap;gap:16px;margin:0 0 6px;font-size:13px;color:${SOFT}">
+       <span><b style="color:${INK}">${n(qc.ready)}</b> waiting for your yes</span>
+       <span><b style="color:${INK}">${n(qc.queued)}</b> queued</span>
+       <span><b style="color:${INK}">${n(qc.posted)}</b> posted</span>
+       <span><b style="color:${RED}">${n(qc.refused)}</b> refused by the safety check</span>
+       <span><b style="color:${INK}">${n(qc.unjudged)}</b> not checked yet</span>
+       <span><b style="color:${INK}">${n(qc.shared)}</b> said yes to sharing</span>
+     </div>
+     <p style="margin:0 0 2px;font-size:12px;color:${FAINT}">Only confessions whose sender ticked the share box reach this list, and only after the safety check clears them. Pressing Post puts it on the list your Instagram tool picks up from your laptop - it does not go out this second.</p>
+     ${queueCards || `<div style="border-top:1px solid #e3d9bd;padding:14px 0 2px;font-size:13px;color:${FAINT}">${esc(queueEmpty)}</div>`}`);
+
   const pager = `<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin:14px 2px 0;font-size:13px;color:${SOFT}">
     <span>${t.total ? `Showing ${n(showFrom)}-${n(showTo)} of ${n(t.total)}` : 'No matches'}</span>
     <span style="display:flex;gap:14px;align-items:center">
@@ -751,6 +832,8 @@ function adminPage(data) {
   @media (max-width:820px){.g4{grid-template-columns:repeat(2,1fr)}.g3,.g2{grid-template-columns:1fr}}
   table{width:100%;border-collapse:collapse;font-size:14px}
   th{text-align:left;padding:8px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:${FAINT};font-weight:700}
+  .qgif{width:104px;height:104px}
+  @media (max-width:520px){.qgif{width:74px;height:74px}}
 </style></head>
 <body>
 <div class="wrap">
@@ -789,6 +872,8 @@ function adminPage(data) {
     ${stat('visits, last 7 days', n(data.visits.week), 'server-logged, no cookies')}
     ${card('top countries (7d)', rows((data.visits.countries || []).map((r) => ({ k: r.country || '??', n: r.n })), 'no visits logged yet'))}
   </div>
+
+  <div id="queue" style="margin:14px 0">${queueSection}</div>
 
   ${card('all confessions',
     filterBar +
@@ -1019,6 +1104,35 @@ async function handle(request, env, ctx) {
       } });
     }
 
+    /* ---------- the sharing queue: one message changes state ----------
+       The three moves below are the ONLY way a confession's post_state ever
+       changes by hand, and each names the state it is allowed to move FROM.
+       That, plus `share_ok = 1`, is why a crafted request naming a private or
+       refused message does nothing at all: the UPDATE simply matches no row.
+       No CSRF token is needed because the admin cookie is SameSite=Lax, so a
+       POST from anyone else's page arrives with no cookie and gets bounced to
+       the login. */
+    if (path === '/admin/queue' && request.method === 'POST') {
+      if (!(await requireAdmin(request, env)))
+        return new Response(null, { status: 302, headers: { location: '/admin/login', 'x-robots-tag': 'noindex' } });
+
+      const MOVES = {
+        queue:   { from: 'ready',  to: 'queued'  },   // Sanjay says yes
+        skip:    { from: 'ready',  to: 'skipped' },   // Sanjay says never
+        unqueue: { from: 'queued', to: 'ready'   }    // Sanjay changes his mind
+      };
+      let form;
+      try { form = await request.formData(); } catch { form = null; }
+      const mid = String((form && form.get('id')) || '');
+      const move = MOVES[String((form && form.get('action')) || '')];
+      if (move && /^[a-f0-9]{16}$/.test(mid)) {
+        await env.DB.prepare(
+          'UPDATE messages SET post_state = ? WHERE id = ? AND share_ok = 1 AND post_state = ?'
+        ).bind(move.to, mid, move.from).run();
+      }
+      return new Response(null, { status: 303, headers: { location: '/admin#queue', 'x-robots-tag': 'noindex' } });
+    }
+
     /* ---------- media out of R2 ---------- */
     if (path.startsWith('/media/')) {
       const key = path.slice('/media/'.length);
@@ -1110,7 +1224,7 @@ async function handle(request, env, ctx) {
       if (request.method !== 'POST')
         return confirm(
           'Report this message?',
-          'A person will read it and decide what to do. Reporting does not stop future messages on its own — use the block link for that.',
+          'A person will read it and decide what to do. Reporting does not stop future messages on its own - use the block link for that.',
           'Yes, report it',
           `/report?id=${encodeURIComponent(mid)}&t=${encodeURIComponent(t)}`
         );
