@@ -1,0 +1,404 @@
+source: https://www.youtube.com/watch?v=YwbuBNhzIqs
+title: Create FREE & UNLIMITED VOX-Style Videos on AUTOPILOT With Claude ( Free plan )
+duration: 13:55
+---
+[00:02] Now, there's this crazy paper-cut animation trend suddenly blowing up
+[00:03] animation trend suddenly blowing up everywhere. Creators are pulling in
+[00:05] everywhere. Creators are pulling in millions of views with videos that look
+[00:07] millions of views with videos that look like they're made entirely from layered
+[00:09] like they're made entirely from layered paper. And the animations are pretty,
+[00:11] paper. And the animations are pretty, colorful, and so satisfying that people
+[00:14] colorful, and so satisfying that people just can't stop watching them. So, in
+[00:15] just can't stop watching them. So, in this video, I'll show you the complete
+[00:17] this video, I'll show you the complete step-by-step workflow to create stunning
+[00:20] step-by-step workflow to create stunning paper-cut animation videos from scratch
+[00:22] paper-cut animation videos from scratch using free AI tools. So, you can start
+[00:24] using free AI tools. So, you can start making videos in bulk today. All right,
+[00:26] making videos in bulk today. All right, so the very first thing you're going to
+[00:28] so the very first thing you're going to need is access to the master prompt
+[00:30] need is access to the master prompt we're using to automate this entire
+[00:32] we're using to automate this entire workflow. You should find that either in
+[00:35] workflow. You should find that either in the description or inside my completely
+[00:38] the description or inside my completely free school community. Once you've got
+[00:40] free school community. Once you've got the master prompt, the next thing you
+[00:41] the master prompt, the next thing you need is a reasoning model. Now, we've
+[00:43] need is a reasoning model. Now, we've got a couple of options here. The first
+[00:44] got a couple of options here. The first one is Deep Seek AI. Deep Seek is
+[00:47] one is Deep Seek AI. Deep Seek is completely free, it's open source,
+[00:48] completely free, it's open source, anyone can use it without a paywall, and
+[00:50] anyone can use it without a paywall, and it has no limits. So, Deep Seek is your
+[00:52] it has no limits. So, Deep Seek is your go-to if you don't even want to link a
+[00:54] go-to if you don't even want to link a credit card. The next option, and a
+[00:56] credit card. The next option, and a really popular one, is ChatGPT. I'm sure
+[01:00] really popular one, is ChatGPT. I'm sure you've come across it. Also a very nice
+[01:02] you've come across it. Also a very nice option. But, my personal favorite is
+[01:04] option. But, my personal favorite is Claude by Anthropic. Honestly, any of
+[01:07] Claude by Anthropic. Honestly, any of these three would work just fine. Deep
+[01:09] these three would work just fine. Deep Seek, ChatGPT, or Claude. Any of them
+[01:11] Seek, ChatGPT, or Claude. Any of them work excellently [music] well.
+[01:13] work excellently [music] well. For this course, I'm going with Claude.
+[01:16] For this course, I'm going with Claude. And just so you know, whatever steps we
+[01:17] And just so you know, whatever steps we follow here still work across Deep Seek
+[01:19] follow here still work across Deep Seek [music] and ChatGPT. Once you've got
+[01:21] [music] and ChatGPT. Once you've got your chatbot, head over to the master
+[01:23] your chatbot, head over to the master prompt, hit command plus A to highlight
+[01:25] prompt, hit command plus A to highlight everything, then command plus C to copy
+[01:27] everything, then command plus C to copy the whole thing. Then, head over to your
+[01:29] the whole thing. Then, head over to your chatbot, for me, that's Claude, paste it
+[01:32] chatbot, for me, that's Claude, paste it in, and send it. Once you do that,
+[01:34] in, and send it. Once you do that, Claude comes back and asks what topic
+[01:36] Claude comes back and asks what topic you'd like to explore for this
+[01:37] you'd like to explore for this storyboard paper-cut style video. And
+[01:40] storyboard paper-cut style video. And you can pick across any niche, history,
+[01:42] you can pick across any niche, history, football, sports, technology,
+[01:44] football, sports, technology, motivation, whatever you want. For me,
+[01:47] motivation, whatever you want. For me, I'm just going to pick one of the
+[01:48] I'm just going to pick one of the defaults here, which is history,
+[01:50] defaults here, which is history, and go with the one about how the
+[01:53] and go with the one about how the pyramids were built. I think that's
+[01:54] pyramids were built. I think that's going to have a much more satisfying
+[01:56] going to have a much more satisfying visual flow. So, I'm just going to send
+[01:58] visual flow. So, I'm just going to send that back to Claude and let it know I
+[01:59] that back to Claude and let it know I like that idea. Once I send that, Claude
+[02:01] like that idea. Once I send that, Claude asks how long I want the video script to
+[02:04] asks how long I want the video script to be. Now, for this, you can make anywhere
+[02:06] be. Now, for this, you can make anywhere from a 1-minute video all the way up to
+[02:08] from a 1-minute video all the way up to 20 minutes because these animations are
+[02:10] 20 minutes because these animations are really, really good for storytelling and
+[02:12] really, really good for storytelling and they're completely monetizable. For me,
+[02:15] they're completely monetizable. For me, I'm making a very short animation, so
+[02:17] I'm making a very short animation, so I'm going to go with just 45 seconds.
+[02:19] I'm going to go with just 45 seconds. I'll send that to Claude, but you can
+[02:21] I'll send that to Claude, but you can pick whatever length you want. Once I
+[02:23] pick whatever length you want. Once I pick the length, Claude gives me a full
+[02:25] pick the length, Claude gives me a full 45-second script. And it does it in a
+[02:28] 45-second script. And it does it in a way where it numbers every single
+[02:30] way where it numbers every single sentence. Now, the reason it's doing
+[02:31] sentence. Now, the reason it's doing that is because it's giving us a script
+[02:34] that is because it's giving us a script and also creating a visual beat at the
+[02:36] and also creating a visual beat at the same time, which is going to make it way
+[02:38] same time, which is going to make it way easier to create the visuals for this
+[02:40] easier to create the visuals for this script later on. Real quick, before we
+[02:42] script later on. Real quick, before we move on, let me copy this and head over
+[02:44] move on, let me copy this and head over to a Google Doc so I can paste it in and
+[02:46] to a Google Doc so I can paste it in and keep everything looking neat. Now that
+[02:48] keep everything looking neat. Now that our script looks good on the document,
+[02:50] our script looks good on the document, we need to create the voice-over.
+[02:52] we need to create the voice-over. Basically, we're turning the script into
+[02:53] Basically, we're turning the script into a high-quality sounding voice because if
+[02:56] a high-quality sounding voice because if you want to monetize content like this,
+[02:57] you want to monetize content like this, your voice cannot sound robotic. For the
+[03:00] your voice cannot sound robotic. For the voice-over, we've got a couple of
+[03:01] voice-over, we've got a couple of options. If you want unlimited and free
+[03:04] options. If you want unlimited and free usage, your go-to should be Microsoft
+[03:06] usage, your go-to should be Microsoft Clipchamp. [music] Clipchamp is an
+[03:08] Clipchamp. [music] Clipchamp is an editing software that gives you access
+[03:09] editing software that gives you access to some really high-quality AI voices
+[03:12] to some really high-quality AI voices with unlimited usage. So, you can
+[03:14] with unlimited usage. So, you can generate 30, 40, 50, maybe even 100
+[03:18] generate 30, 40, 50, maybe even 100 hours of AI voice-overs, and they sound
+[03:21] hours of AI voice-overs, and they sound pretty passable. Another good option is
+[03:23] pretty passable. Another good option is CapCut's text to speech tool. If you've
+[03:25] CapCut's text to speech tool. If you've got CapCut on your mobile or desktop,
+[03:28] got CapCut on your mobile or desktop, they've also got a really nice
+[03:29] they've also got a really nice text-to-speech option. Although, you
+[03:31] text-to-speech option. Although, you might have to generate a couple of times
+[03:33] might have to generate a couple of times before you land on a good-sounding
+[03:34] before you land on a good-sounding voice. But, CapCut is definitely a
+[03:36] voice. But, CapCut is definitely a worthy mention when it comes to
+[03:38] worthy mention when it comes to unlimited usage. Now, if you want
+[03:40] unlimited usage. Now, if you want something more web-based, your go-to
+[03:42] something more web-based, your go-to should be Noise AI. Noise AI gives you
+[03:45] should be Noise AI. Noise AI gives you access to a wide range of voices and
+[03:47] access to a wide range of voices and about 2,000 free credits every single
+[03:49] about 2,000 free credits every single day, which works out to around 60,000
+[03:52] day, which works out to around 60,000 monthly credits to generate voiceovers
+[03:54] monthly credits to generate voiceovers completely free on the platform. But my
+[03:57] completely free on the platform. But my personal favorite is 11 Labs. 11 Labs
+[04:00] personal favorite is 11 Labs. 11 Labs gives you about 10,000 free credits each
+[04:02] gives you about 10,000 free credits each month. And the reason they're my go-to
+[04:04] month. And the reason they're my go-to is that 11 Labs gives you the best
+[04:06] is that 11 Labs gives you the best sounding voices when it comes to
+[04:08] sounding voices when it comes to realism. Their voices can have emotions.
+[04:10] realism. Their voices can have emotions. You can prompt tags to give your voice a
+[04:12] You can prompt tags to give your voice a specific tone and cadence. Honestly,
+[04:14] specific tone and cadence. Honestly, it's just the best [music] when it comes
+[04:15] it's just the best [music] when it comes to AI voices. The only trade-off is you
+[04:18] to AI voices. The only trade-off is you only get those 10,000 free credits. So
+[04:20] only get those 10,000 free credits. So you've got to know how to use the
+[04:21] you've got to know how to use the platform in a way that conserves
+[04:23] platform in a way that conserves credits. So once you've signed up on 11
+[04:25] credits. So once you've signed up on 11 Labs and clicked on the text-to-speech
+[04:27] Labs and clicked on the text-to-speech option, the first thing you do is pick a
+[04:29] option, the first thing you do is pick a voice you want to use. Then head back to
+[04:31] voice you want to use. Then head back to the script we just pasted and copy the
+[04:33] the script we just pasted and copy the first block of text. We're copying it in
+[04:35] first block of text. We're copying it in chunks because if you paste too much
+[04:37] chunks because if you paste too much text into 11 Labs at once, the voice
+[04:40] text into 11 Labs at once, the voice starts to sound glitchy and distorted.
+[04:42] starts to sound glitchy and distorted. So copy that first chunk, head over to
+[04:44] So copy that first chunk, head over to 11 Labs, paste it in, and hit generate
+[04:47] 11 Labs, paste it in, and hit generate to hear how the voice sounds. One thing
+[04:49] to hear how the voice sounds. One thing you need to know, if you want the best
+[04:51] you need to know, if you want the best quality sounding voices, make sure
+[04:53] quality sounding voices, make sure you've switched over to the V3 model.
+[04:55] you've switched over to the V3 model. That's what gives you the best output.
+[04:58] That's what gives you the best output. So switch to that model and pick the
+[04:59] So switch to that model and pick the voice you want for your video. From
+[05:01] voice you want for your video. From there, just preview each batch you
+[05:03] there, just preview each batch you generate. 4 and 1/2 thousand years ago,
+[05:05] generate. 4 and 1/2 thousand years ago, the desert of Giza If it sounds good,
+[05:07] the desert of Giza If it sounds good, download it. Head back to your document,
+[05:09] download it. Head back to your document, copy the next block of text, paste it
+[05:11] copy the next block of text, paste it into 11 Labs, and generate that batch.
+[05:14] into 11 Labs, and generate that batch. Just keep doing that over and over until
+[05:15] Just keep doing that over and over until you've turned your entire script into a
+[05:17] you've turned your entire script into a high-quality voiceover. All right, so
+[05:19] high-quality voiceover. All right, so once you finish generating your voices,
+[05:20] once you finish generating your voices, head back to your chatbot and type next.
+[05:23] head back to your chatbot and type next. Once you do that, the chatbot starts
+[05:25] Once you do that, the chatbot starts creating a really detailed TXT file that
+[05:28] creating a really detailed TXT file that we're going to use to create every
+[05:29] we're going to use to create every single start frame image for this paper
+[05:31] single start frame image for this paper cut animation. Now these start frame
+[05:33] cut animation. Now these start frame images are going to be a lot. If you
+[05:34] images are going to be a lot. If you look at the script, we've got 18
+[05:36] look at the script, we've got 18 different beats. I built the prompt in a
+[05:38] different beats. I built the prompt in a way where every single line in your
+[05:40] way where every single line in your story gets turned into a beat. So in my
+[05:42] story gets turned into a beat. So in my 45-second story, I've got 18 beats.
+[05:45] 45-second story, I've got 18 beats. Copying those 18 beats manually and
+[05:47] Copying those 18 beats manually and pasting them into an image platform
+[05:48] pasting them into an image platform would work just fine.
+[05:50] would work just fine. A couple of platforms you could check
+[05:51] A couple of platforms you could check out for that. Google Gemini has a really
+[05:54] out for that. Google Gemini has a really great text-to-image tool. Just sign up
+[05:56] great text-to-image tool. Just sign up on Gemini,
+[05:57] on Gemini, click the plus icon,
+[05:59] click the plus icon, click create image, and you've got
+[06:01] click create image, and you've got access to their image creation platform.
+[06:03] access to their image creation platform. But that's for people who want to
+[06:04] But that's for people who want to generate their images manually. If you
+[06:06] generate their images manually. If you want this automated, where you just drop
+[06:08] want this automated, where you just drop in your TXT file and the tool generates
+[06:10] in your TXT file and the tool generates the images for you, we're going to use
+[06:11] the images for you, we're going to use Google Flow. Head over to Google Flow.
+[06:14] Google Flow. Head over to Google Flow. It gives you access to a lot of very
+[06:17] It gives you access to a lot of very advanced AI models for free. Create an
+[06:20] advanced AI models for free. Create an account, then create a brand new
+[06:22] account, then create a brand new project. Once you're in, select the
+[06:24] project. Once you're in, select the toggle at the bottom of the prompt box
+[06:26] toggle at the bottom of the prompt box and make sure you've selected the image
+[06:27] and make sure you've selected the image models. Pick your aspect ratio. For
+[06:30] models. Pick your aspect ratio. For this, I'm going with 16 by 9.
+[06:32] this, I'm going with 16 by 9. For the number of images, I'm going to
+[06:34] For the number of images, I'm going to choose four.
+[06:35] choose four. And for the model, Nano Banana 2. So,
+[06:38] And for the model, Nano Banana 2. So, this is what we're using to generate our
+[06:39] this is what we're using to generate our images, but we want Flow to generate
+[06:41] images, but we want Flow to generate them automatically. Because think about
+[06:43] them automatically. Because think about it. If you're making a 20-minute video,
+[06:45] it. If you're making a 20-minute video, your script might bring up something
+[06:47] your script might bring up something like 300 beats. My script is only 45
+[06:50] like 300 beats. My script is only 45 seconds long and it gave me around 18
+[06:52] seconds long and it gave me around 18 beats. So, if we do the math, a much
+[06:54] beats. So, if we do the math, a much longer video would be maybe 10 times
+[06:57] longer video would be maybe 10 times that, like 450 beats.
+[07:00] that, like 450 beats. That's a lot to generate manually. So,
+[07:03] That's a lot to generate manually. So, to automate this whole flow, what you
+[07:04] to automate this whole flow, what you need to do is search for a Chrome
+[07:05] need to do is search for a Chrome extension called out to him.
+[07:12] Click on the extension and you'll see add to Chrome. Click that and this
+[07:14] add to Chrome. Click that and this pop-up should appear. Once the pop-up
+[07:16] pop-up should appear. Once the pop-up shows, head back to Google Flow and make
+[07:18] shows, head back to Google Flow and make sure it says connected to the Flow
+[07:20] sure it says connected to the Flow project. You can tweak a couple of
+[07:22] project. You can tweak a couple of things, but the defaults work just fine.
+[07:24] things, but the defaults work just fine. Once you've installed and set the system
+[07:26] Once you've installed and set the system up to look like this, head back to
+[07:28] up to look like this, head back to Claude. Claude should have your TXT file
+[07:30] Claude. Claude should have your TXT file ready by now. Download that TXT file to
+[07:33] ready by now. Download that TXT file to your computer, then head back to Google
+[07:35] your computer, then head back to Google Flow. Drag the TXT file into the Flow
+[07:38] Flow. Drag the TXT file into the Flow extension or just click upload TXT file
+[07:41] extension or just click upload TXT file from the Zappy Flow extension. Select
+[07:43] from the Zappy Flow extension. Select the file and click open. Now, what
+[07:45] the file and click open. Now, what happens next is you can see all 18 beats
+[07:47] happens next is you can see all 18 beats our chatbot created have been logged in
+[07:49] our chatbot created have been logged in here. And all you've got to do is click
+[07:52] here. And all you've got to do is click start generating. Zappy Flow now starts
+[07:54] start generating. Zappy Flow now starts creating all the images for us without
+[07:56] creating all the images for us without us needing to do anything. Just leave
+[07:58] us needing to do anything. Just leave the extension on and every single beat
+[08:00] the extension on and every single beat for your video gets created
+[08:01] for your video gets created automatically. And the cool thing about
+[08:03] automatically. And the cool thing about Zappy Flow is that when it creates the
+[08:05] Zappy Flow is that when it creates the images, it also saves them to your
+[08:07] images, it also saves them to your computer. So, it's not just generating
+[08:09] computer. So, it's not just generating them, it's storing them for you, too.
+[08:12] them, it's storing them for you, too. You don't have to manually do anything
+[08:13] You don't have to manually do anything yourself. It just handles everything.
+[08:15] yourself. It just handles everything. All right, so as you can see, Zappy Flow
+[08:17] All right, so as you can see, Zappy Flow has pretty much generated every single
+[08:19] has pretty much generated every single image we need for this project. You can
+[08:21] image we need for this project. You can go through them manually to see how they
+[08:23] go through them manually to see how they turned out, but honestly, this looks
+[08:25] turned out, but honestly, this looks pretty good. Now that we've got our
+[08:27] pretty good. Now that we've got our images as our start frames, all we need
+[08:29] images as our start frames, all we need to do is head back to Claude and type
+[08:31] to do is head back to Claude and type next.
+[08:33] next. Once you type next, Claude gives you an
+[08:35] Once you type next, Claude gives you an image-to-video animation prompt you can
+[08:37] image-to-video animation prompt you can use with video models to create really
+[08:39] use with video models to create really high-quality papercraft videos. Just
+[08:41] high-quality papercraft videos. Just copy the prompt it gives you and head
+[08:43] copy the prompt it gives you and head over to Flow again. This time, select
+[08:45] over to Flow again. This time, select the Nano Banana option you see there and
+[08:48] the Nano Banana option you see there and switch it over to the video model.
+[08:50] switch it over to the video model. Flow gives you really good video models
+[08:52] Flow gives you really good video models as well as image models. So, select the
+[08:55] as well as image models. So, select the video model, pick your aspect ratio, and
+[08:57] video model, pick your aspect ratio, and choose the number of videos you want per
+[08:58] choose the number of videos you want per batch. I'm going with just one video
+[09:00] batch. I'm going with just one video output per batch. Then, pick the model
+[09:02] output per batch. Then, pick the model you'd like to use. I'm using the Omni
+[09:04] you'd like to use. I'm using the Omni Flash model and I'll set the duration to
+[09:06] Flash model and I'll set the duration to 10 seconds. Once that's done, I'll paste
+[09:09] 10 seconds. Once that's done, I'll paste in the prompt I just got from my
+[09:10] in the prompt I just got from my chatbot, attach one of the images it
+[09:12] chatbot, attach one of the images it created for me, and send it.
+[09:14] created for me, and send it. Now, while that's processing, I'm going
+[09:16] Now, while that's processing, I'm going to add another image to the prompt box.
+[09:18] to add another image to the prompt box. Paste in the exact same prompt and send
+[09:20] Paste in the exact same prompt and send that, too. And I'll just keep doing that
+[09:22] that, too. And I'll just keep doing that a couple of times to get a few videos
+[09:23] a couple of times to get a few videos rolling.
+[09:24] rolling. Since we selected four outputs per
+[09:26] Since we selected four outputs per prompt, you've got a lot of options to
+[09:28] prompt, you've got a lot of options to pick from. So, just repeat the process
+[09:30] pick from. So, just repeat the process until you've turned all 18 beats into
+[09:32] until you've turned all 18 beats into high-quality videos for this niche. All
+[09:35] high-quality videos for this niche. All right, so after a couple of seconds,
+[09:36] right, so after a couple of seconds, we've got our output. Let's preview them
+[09:39] we've got our output. Let's preview them and see how they look.
+[09:47] Honestly, this looks pretty good. The animation looks neat. Everything is
+[09:49] animation looks neat. Everything is coming together really nicely. All
+[09:50] coming together really nicely. All right, so once you've created every
+[09:52] right, so once you've created every single clip you need, the next thing is
+[09:55] single clip you need, the next thing is finding the perfect fitting background
+[09:57] finding the perfect fitting background track. Head over to the master prompt
+[09:59] track. Head over to the master prompt we're working with and scroll all the
+[10:01] we're working with and scroll all the way to the bottom. You'll see two
+[10:02] way to the bottom. You'll see two different music generation prompts we
+[10:04] different music generation prompts we can use for this project. We need to use
+[10:06] can use for this project. We need to use these with a music generative AI tool to
+[10:08] these with a music generative AI tool to create a monetizable background track
+[10:10] create a monetizable background track because a lot of the tracks you find
+[10:11] because a lot of the tracks you find online aren't actually monetizable. So,
+[10:14] online aren't actually monetizable. So, if you want to monetize your content,
+[10:16] if you want to monetize your content, you need to create one from scratch. And
+[10:18] you need to create one from scratch. And thankfully, AI helps with this. There
+[10:20] thankfully, AI helps with this. There are a couple platforms you can use, but
+[10:22] are a couple platforms you can use, but my personal favorite is Suno AI. So,
+[10:25] my personal favorite is Suno AI. So, head over to Suno AI and sign in with
+[10:27] head over to Suno AI and sign in with your Google account. Once you're in,
+[10:29] your Google account. Once you're in, head over to the create section. Toggle
+[10:32] head over to the create section. Toggle on the instrumental button because I
+[10:33] on the instrumental button because I don't want my track to have lyrics. Then
+[10:35] don't want my track to have lyrics. Then I'm going to copy one of the prompt
+[10:36] I'm going to copy one of the prompt variants from the Google document, paste
+[10:39] variants from the Google document, paste it into Suno, and generate my track.
+[10:41] it into Suno, and generate my track. While that's generating in the
+[10:42] While that's generating in the background, I'm going to copy the next
+[10:43] background, I'm going to copy the next one and paste that in, too. So, I've got
+[10:45] one and paste that in, too. So, I've got two audios to compare and see which one
+[10:47] two audios to compare and see which one sounds best. Now, after a couple of
+[10:49] sounds best. Now, after a couple of seconds, our tracks are ready. So, let's
+[10:51] seconds, our tracks are ready. So, let's preview them and hear how they sound.
+[11:00] Yeah, these sound pretty good. I'm just going to click on the one I like best.
+[11:01] going to click on the one I like best. Click the three dots at the edge of the
+[11:03] Click the three dots at the edge of the track. Click download, select download
+[11:06] track. Click download, select download as MP3, and then click download anyway,
+[11:09] as MP3, and then click download anyway, so it saves straight to my device. So,
+[11:11] so it saves straight to my device. So, now we've got everything we need. Let's
+[11:13] now we've got everything we need. Let's move on to compiling it all into a
+[11:15] move on to compiling it all into a full-blown video.
+[11:17] full-blown video. All right, so once you've collected
+[11:18] All right, so once you've collected every single asset you need, I always
+[11:20] every single asset you need, I always recommend storing them in a single
+[11:21] recommend storing them in a single folder. That way, when you open an
+[11:23] folder. That way, when you open an editing software like CapCut, you can
+[11:25] editing software like CapCut, you can just import that one folder into your
+[11:27] just import that one folder into your editing interface. Everything sits
+[11:29] editing interface. Everything sits perfectly and it saves you the stress of
+[11:31] perfectly and it saves you the stress of hunting for things. Once you're in your
+[11:33] hunting for things. Once you're in your editing canvas, the first thing I like
+[11:34] editing canvas, the first thing I like to do is drag my background track onto
+[11:36] to do is drag my background track onto the timeline, reduce its volume to about
+[11:38] the timeline, reduce its volume to about minus 20 or minus 25 decibels, and crop
+[11:42] minus 20 or minus 25 decibels, and crop it so it's nice and short.
+[11:44] it so it's nice and short. Then, I start dragging my AI
+[11:45] Then, I start dragging my AI voice-overs, the ones I generated in
+[11:47] voice-overs, the ones I generated in batches, onto the timeline. I hit
+[11:50] batches, onto the timeline. I hit command plus E to highlight just the AI
+[11:52] command plus E to highlight just the AI voices and increase the volume to around
+[11:55] voices and increase the volume to around 10 decibels, so it's nice and loud.
+[11:57] 10 decibels, so it's nice and loud. Then, I use the magnifying feature to
+[11:59] Then, I use the magnifying feature to stretch out my timeline so I can
+[12:00] stretch out my timeline so I can properly see what I'm doing. From there,
+[12:03] properly see what I'm doing. From there, I just start dragging all my generated
+[12:04] I just start dragging all my generated clips onto the timeline in the exact
+[12:06] clips onto the timeline in the exact order they were generated. You might
+[12:08] order they were generated. You might need to crop and adjust specific clips
+[12:10] need to crop and adjust specific clips to make sure everything syncs perfectly
+[12:12] to make sure everything syncs perfectly and sits right. For me, I generated some
+[12:14] and sits right. For me, I generated some clips multiple times just so I'd have
+[12:16] clips multiple times just so I'd have options to pick from. So, just make sure
+[12:18] options to pick from. So, just make sure you get all your clips onto the timeline
+[12:21] you get all your clips onto the timeline and everything's properly highlighted
+[12:22] and everything's properly highlighted and synced. You can also add a
+[12:24] and synced. You can also add a transition. If you click on the
+[12:25] transition. If you click on the transition tab in CapCut, it takes you
+[12:27] transition tab in CapCut, it takes you to a bunch of pre-built templates. Find
+[12:29] to a bunch of pre-built templates. Find a transition you want and just drag it
+[12:31] a transition you want and just drag it onto the editing interface. Now,
+[12:33] onto the editing interface. Now, transitions do have specific clips they
+[12:35] transitions do have specific clips they fit best. For this project, I felt like
+[12:38] fit best. For this project, I felt like the blink transition would work
+[12:39] the blink transition would work perfectly. Once you've added a few
+[12:41] perfectly. Once you've added a few transitions here and there, one thing I
+[12:42] transitions here and there, one thing I like to recommend is adding an effect.
+[12:45] like to recommend is adding an effect. I'm going to add the vignette effect,
+[12:46] I'm going to add the vignette effect, which gives the edges of my video that
+[12:48] which gives the edges of my video that dark, shadowy look. I like adding that,
+[12:51] dark, shadowy look. I like adding that, and then I reduce the vignette texture
+[12:52] and then I reduce the vignette texture by about 40%, so it sits around 60. That
+[12:55] by about 40%, so it sits around 60. That way, it's subtle and not too intense.
+[12:57] way, it's subtle and not too intense. Once everything is lined up the way I
+[12:59] Once everything is lined up the way I want it, all I've got to do is export my
+[13:01] want it, all I've got to do is export my video.
+[13:01] video. &gt;&gt; [music]
+[13:02] &gt;&gt; [music] &gt;&gt; And that's pretty much it.
+[13:03] &gt;&gt; And that's pretty much it. &gt;&gt; 4 and 1/2 thousand years ago, the desert
+[13:06] &gt;&gt; 4 and 1/2 thousand years ago, the desert of Giza was empty.
+[13:08] of Giza was empty. Then, a pharaoh dreamed of a tomb that
+[13:11] Then, a pharaoh dreamed of a tomb that would touch the sky.
+[13:13] would touch the sky. So, priests studied the stars to align
+[13:15] So, priests studied the stars to align the base perfectly north.
+[13:18] the base perfectly north. Before any construction began, workers
+[13:21] Before any construction began, workers cleared the ground and leveled it
+[13:22] cleared the ground and leveled it &gt;&gt; [music]
+[13:22] &gt;&gt; [music] &gt;&gt; using water-filled trenches.
+[13:25] &gt;&gt; using water-filled trenches. Then came the stone,
+[13:27] Then came the stone, More than 2 million blocks.
+[13:30] More than 2 million blocks. Each block was cut from quarries with
+[13:32] Each block was cut from quarries with copper tools and wooden wedges.
+[13:35] copper tools and wooden wedges. Meanwhile, the heaviest granite traveled
+[13:37] Meanwhile, the heaviest granite traveled hundreds of miles down the Nile on
+[13:39] hundreds of miles down the Nile on wooden barges.
+[13:41] wooden barges. Once on land, teams dragged the stones
+[13:43] Once on land, teams dragged the stones across sand made slick with water.
+[13:46] across sand made slick with water. Throughout the project, thousands of
+[13:48] Throughout the project, thousands of skilled laborers worked together. Not
+[13:50] skilled laborers worked together. Not slaves, but paid crews.
+[13:53] slaves, but paid crews. &gt;&gt; Mhm.

@@ -1,0 +1,8 @@
+{
+  "accent": "#e0483e",
+  "stroke_offset": [10, 12],
+  "halftone_dot": 5,
+  "halftone_spacing": 9,
+  "duotone": ["#1a1714", "#f4ead8"],
+  "margin": 24
+}

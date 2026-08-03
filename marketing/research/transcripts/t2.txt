@@ -1,0 +1,495 @@
+source: https://www.youtube.com/watch?v=9C4TRbucmhQ
+title: This 1 Claude Skill fully replaces your Higgsfield Subscription
+duration: 15:41
+---
+[00:02] I just replaced Higsfield with one clawed skill because Higsfield, even
+[00:04] clawed skill because Higsfield, even though they're good at marketing their
+[00:05] though they're good at marketing their service, is quite expensive and has
+[00:07] service, is quite expensive and has unfortunately and repeatedly [music]
+[00:09] unfortunately and repeatedly [music] frustrated a lot of their users with the
+[00:11] frustrated a lot of their users with the most recent one being a planned update
+[00:13] most recent one being a planned update to their terms that supposedly let them
+[00:15] to their terms that supposedly let them own the content that you generate. So
+[00:17] own the content that you generate. So today, I'll show you an alternative
+[00:18] today, I'll show you an alternative where instead of paying $100 a month or
+[00:20] where instead of paying $100 a month or more, you can just use this Claw skill
+[00:22] more, you can just use this Claw skill to create whatever you want using any
+[00:24] to create whatever you want using any model and only pay for what you
+[00:26] model and only pay for what you generate. And by the end, I'll also show
+[00:28] generate. And by the end, I'll also show you how you can create this skill
+[00:29] you how you can create this skill yourself so that it's hyper customized
+[00:31] yourself so that it's hyper customized to the work that you do. Let's dive into
+[00:32] to the work that you do. Let's dive into it. All right. So, I'm in the cloud
+[00:34] it. All right. So, I'm in the cloud desktop app right now. And what I'm
+[00:35] desktop app right now. And what I'm going to do is to just invoke this skill
+[00:37] going to do is to just invoke this skill called /generate. And I'm going to paste
+[00:39] called /generate. And I'm going to paste in this prompt where essentially what
+[00:41] in this prompt where essentially what I'm going to do is to have it create a
+[00:43] I'm going to do is to have it create a variety of image ads for this product
+[00:46] variety of image ads for this product that's called the ketone IQ energy shot,
+[00:48] that's called the ketone IQ energy shot, which is this real product. And at least
+[00:49] which is this real product. And at least for this exercise, we're creating some
+[00:51] for this exercise, we're creating some image ads to launch this green apple
+[00:53] image ads to launch this green apple flavor. And you can see what I also did
+[00:54] flavor. And you can see what I also did in the prompt here is to give it some
+[00:56] in the prompt here is to give it some reference images just so that Claude
+[00:58] reference images just so that Claude understands what are the different
+[01:00] understands what are the different design systems that this brand has used
+[01:02] design systems that this brand has used in the past. And apart from that, what
+[01:04] in the past. And apart from that, what we're also going to do are a few nice
+[01:06] we're also going to do are a few nice techniques that you can't really do in
+[01:07] techniques that you can't really do in something like Higsfield. So you can see
+[01:09] something like Higsfield. So you can see in the rules here, I've set a total
+[01:11] in the rules here, I've set a total budget for it for these generations,
+[01:13] budget for it for these generations, which I've set to be $3. I also asked it
+[01:15] which I've set to be $3. I also asked it to use a variety of image models because
+[01:17] to use a variety of image models because I want to see GBD image 2 versus Nano
+[01:20] I want to see GBD image 2 versus Nano Banana 2 versus Nano Banana Pro and so
+[01:22] Banana 2 versus Nano Banana Pro and so on just so that we can compare the
+[01:24] on just so that we can compare the results of those. And we also gave it
+[01:26] results of those. And we also gave it instructions to use the cheapest model
+[01:28] instructions to use the cheapest model provider from the sources that we have
+[01:29] provider from the sources that we have it connected to which is all part of
+[01:31] it connected to which is all part of this generate skill. So we're going to
+[01:33] this generate skill. So we're going to send that over and from here Claude will
+[01:36] send that over and from here Claude will do all of the work in order to craft the
+[01:38] do all of the work in order to craft the prompts as per our direction and even
+[01:40] prompts as per our direction and even send it to the model providers that we
+[01:42] send it to the model providers that we have linked it to. All right. So now
+[01:43] have linked it to. All right. So now that it's done, you can see it created
+[01:45] that it's done, you can see it created three image ads each for each of these
+[01:47] three image ads each for each of these models which I've also open on my side
+[01:49] models which I've also open on my side here. And you can see these images were
+[01:51] here. And you can see these images were created with GPD image 2. These ones
+[01:53] created with GPD image 2. These ones were using Nano Banana 2 light. And they
+[01:56] were using Nano Banana 2 light. And they are all different because I asked Claude
+[01:58] are all different because I asked Claude to make them all different. And this in
+[02:00] to make them all different. And this in general is just a useful way for you to
+[02:02] general is just a useful way for you to get a variety of designs in order for
+[02:04] get a variety of designs in order for you to pin down the style that you want.
+[02:06] you to pin down the style that you want. And uh if you want to explore models as
+[02:07] And uh if you want to explore models as well to see which one works the best for
+[02:09] well to see which one works the best for you then that is something that you can
+[02:11] you then that is something that you can do with this skill also. Now the other
+[02:13] do with this skill also. Now the other benefit of generating images and videos
+[02:16] benefit of generating images and videos in claude rather than Higsfield is that
+[02:18] in claude rather than Higsfield is that if let's say you are actually partial to
+[02:20] if let's say you are actually partial to this design and you want to create a
+[02:22] this design and you want to create a website inspired by this design then
+[02:25] website inspired by this design then what we can do is to just copy the path
+[02:27] what we can do is to just copy the path of that file and if we send a prompt
+[02:29] of that file and if we send a prompt like this to cloud code in that same
+[02:30] like this to cloud code in that same session where you can see I'm giving it
+[02:32] session where you can see I'm giving it the path to that photo that we like and
+[02:34] the path to that photo that we like and just ask it to build us a website for
+[02:36] just ask it to build us a website for this drink and give it a few commands
+[02:37] this drink and give it a few commands here like for example we want to animate
+[02:39] here like for example we want to animate that image to video using cling and we
+[02:41] that image to video using cling and we want the colors to be aligned to that
+[02:43] want the colors to be aligned to that image that we gave and also for Claude
+[02:46] image that we gave and also for Claude to generate a few more images using that
+[02:48] to generate a few more images using that style. Then apart from just generating
+[02:49] style. Then apart from just generating images and videos, you can see that
+[02:51] images and videos, you can see that Claude also built us a website that also
+[02:53] Claude also built us a website that also incorporates those creative media that
+[02:55] incorporates those creative media that we generated with it. And if I open that
+[02:57] we generated with it. And if I open that website on my side, you can see that it
+[02:59] website on my side, you can see that it already did the hard work of number one
+[03:01] already did the hard work of number one passing that image to become a video
+[03:03] passing that image to become a video which it put in the background in here.
+[03:04] which it put in the background in here. And if we scroll down, it also gave us a
+[03:06] And if we scroll down, it also gave us a few more images in that same style. But
+[03:09] few more images in that same style. But obviously this is just a oneshot prompt.
+[03:10] obviously this is just a oneshot prompt. But you can see just how far it takes
+[03:12] But you can see just how far it takes you with just a single command. But the
+[03:15] you with just a single command. But the great thing about it is it probably
+[03:16] great thing about it is it probably takes you like 70% to 80% there in terms
+[03:19] takes you like 70% to 80% there in terms of just creating this website in just a
+[03:21] of just creating this website in just a few minutes. And all of that's made
+[03:22] few minutes. And all of that's made possible because of this /generate
+[03:25] possible because of this /generate skill. And for you to understand how it
+[03:26] skill. And for you to understand how it works is actually quite useful for you
+[03:28] works is actually quite useful for you to also get how Higsfield works under
+[03:30] to also get how Higsfield works under the hood. Because Higsfield in essence,
+[03:32] the hood. Because Higsfield in essence, if you strip it down to sort of its core
+[03:35] if you strip it down to sort of its core functionality, what it really is is it's
+[03:37] functionality, what it really is is it's a wrapper against these creative AI
+[03:39] a wrapper against these creative AI models. So for example, these Google
+[03:41] models. So for example, these Google ones like Nano Banana or VO, you can
+[03:43] ones like Nano Banana or VO, you can actually use these models directly
+[03:45] actually use these models directly without paying or subscribing to
+[03:47] without paying or subscribing to Higsfield's plans. In fact, if you just
+[03:49] Higsfield's plans. In fact, if you just do a quick Google search, you can
+[03:50] do a quick Google search, you can probably find the official documentation
+[03:52] probably find the official documentation on how Higsfield connects to these
+[03:53] on how Higsfield connects to these different models. Like for example, for
+[03:55] different models. Like for example, for V3.1, it used to be that you needed to
+[03:57] V3.1, it used to be that you needed to understand a lot of these coding and
+[03:59] understand a lot of these coding and technical jargon for you to wire up to
+[04:01] technical jargon for you to wire up to these models. But most likely, if you
+[04:03] these models. But most likely, if you were Higsfield, what you would probably
+[04:04] were Higsfield, what you would probably do in this case is point your AI model
+[04:06] do in this case is point your AI model or your AI agent in this case to this
+[04:08] or your AI agent in this case to this whole documentation in order to learn
+[04:10] whole documentation in order to learn how to connect your application, in this
+[04:12] how to connect your application, in this case Higsfield, to these different
+[04:14] case Higsfield, to these different models. And so that's basically what
+[04:16] models. And so that's basically what they do. And once they aggregate those
+[04:17] they do. And once they aggregate those models and those connections, that is
+[04:19] models and those connections, that is essentially their business model. and
+[04:21] essentially their business model. and they charge you something like $79 a
+[04:23] they charge you something like $79 a month I think it is for the max plan now
+[04:25] month I think it is for the max plan now which you as the user pays in exchange
+[04:27] which you as the user pays in exchange for credits to access these models. Now
+[04:30] for credits to access these models. Now there's obviously nothing inherently
+[04:31] there's obviously nothing inherently wrong with this because there is value
+[04:33] wrong with this because there is value in aggregation but I think a big part of
+[04:34] in aggregation but I think a big part of the reason why a lot of users are
+[04:36] the reason why a lot of users are looking for alternatives now is because
+[04:38] looking for alternatives now is because of some of the shady business practices
+[04:41] of some of the shady business practices that Higsfield has pretty much
+[04:43] that Higsfield has pretty much demonstrated over the past few months.
+[04:44] demonstrated over the past few months. One of the big ones which you probably
+[04:46] One of the big ones which you probably heard about in the last week is its
+[04:48] heard about in the last week is its upcoming update to its terms of use
+[04:50] upcoming update to its terms of use where they mentioned there that
+[04:52] where they mentioned there that everything that you generate will be
+[04:54] everything that you generate will be usable by them and that they would have
+[04:55] usable by them and that they would have the rights to it. I think they have
+[04:57] the rights to it. I think they have since withdrawn that statement and they
+[04:59] since withdrawn that statement and they issued this sort of clarifying piece of
+[05:01] issued this sort of clarifying piece of article around the update to their
+[05:02] article around the update to their terms. And you can see here that they're
+[05:04] terms. And you can see here that they're saying that you own what you make
+[05:05] saying that you own what you make obviously but you do have to agree to
+[05:07] obviously but you do have to agree to the fact that the content that you
+[05:09] the fact that the content that you generate will be used to run the service
+[05:11] generate will be used to run the service and also even improve some of their
+[05:13] and also even improve some of their models. So, if that's something that you
+[05:15] models. So, if that's something that you don't mind, then Higsfield may be for
+[05:17] don't mind, then Higsfield may be for you. The other thing that I think a lot
+[05:18] you. The other thing that I think a lot of people have complained about is this
+[05:20] of people have complained about is this deletion window. So, to prevent you from
+[05:22] deletion window. So, to prevent you from cancelling, if you remove your account
+[05:24] cancelling, if you remove your account or unsubscribe, you have a limited
+[05:26] or unsubscribe, you have a limited number of time before you can download
+[05:28] number of time before you can download those images for yourself before they
+[05:30] those images for yourself before they fully delete it and it'll be gone
+[05:32] fully delete it and it'll be gone forever. Which in contrast, if you use
+[05:34] forever. Which in contrast, if you use Claude in that skill that I showcased,
+[05:36] Claude in that skill that I showcased, you can see that I have every single
+[05:37] you can see that I have every single image that we generated along with its
+[05:39] image that we generated along with its prompts. So these are all the prompts
+[05:41] prompts. So these are all the prompts that we used or rather cloud use in
+[05:43] that we used or rather cloud use in order to generate these images that are
+[05:44] order to generate these images that are all available locally on my device. So I
+[05:47] all available locally on my device. So I own it. It doesn't have to be used for
+[05:48] own it. It doesn't have to be used for training Higsfield's models and I also
+[05:50] training Higsfield's models and I also control which ones get deleted and which
+[05:52] control which ones get deleted and which ones I want to keep for the long term.
+[05:54] ones I want to keep for the long term. And lastly, if you just go to
+[05:55] And lastly, if you just go to Higsfield.ai and go to their pricing
+[05:58] Higsfield.ai and go to their pricing page, I feel that every time that I go
+[06:00] page, I feel that every time that I go to Higsfield's website, they always have
+[06:02] to Higsfield's website, they always have this unlimited access trial going on.
+[06:04] this unlimited access trial going on. So, at this point, I'm not even sure if
+[06:06] So, at this point, I'm not even sure if it's really unlimited because I've heard
+[06:07] it's really unlimited because I've heard it's unlimited with like a lot of
+[06:09] it's unlimited with like a lot of caveats and a lot of limits on which
+[06:10] caveats and a lot of limits on which models that you want to use. And uh at
+[06:13] models that you want to use. And uh at least in my view, this pricing page
+[06:14] least in my view, this pricing page might just be one of the most complex
+[06:16] might just be one of the most complex ones that I've ever seen. But right now,
+[06:18] ones that I've ever seen. But right now, in terms of pricing, at least here in
+[06:20] in terms of pricing, at least here in Australia where I'm at, it is at $49 per
+[06:23] Australia where I'm at, it is at $49 per month for the plus plan and $79 per
+[06:26] month for the plus plan and $79 per month for the max plan. And so the
+[06:28] month for the max plan. And so the drawback of this subscription-based
+[06:30] drawback of this subscription-based usage is that on a given month, if you
+[06:32] usage is that on a given month, if you only use just images and some videos and
+[06:35] only use just images and some videos and you don't fully utilize this $79 a
+[06:37] you don't fully utilize this $79 a month, then you still pay that same $79.
+[06:40] month, then you still pay that same $79. But the good news is there's actually
+[06:41] But the good news is there's actually some real alternatives to Higsfield
+[06:43] some real alternatives to Higsfield which we've utilized for this skill. And
+[06:45] which we've utilized for this skill. And essentially these providers they do the
+[06:47] essentially these providers they do the same thing where they aggregate these
+[06:48] same thing where they aggregate these models through that method that I showed
+[06:50] models through that method that I showed earlier where they probably crawl
+[06:52] earlier where they probably crawl through the websites of Google of
+[06:53] through the websites of Google of Dreamina and OpenAI in order to
+[06:55] Dreamina and OpenAI in order to understand how to connect to these
+[06:57] understand how to connect to these models directly and they serve them
+[06:58] models directly and they serve them through their websites. And there's a
+[07:00] through their websites. And there's a lot of these model aggregators, but at
+[07:02] lot of these model aggregators, but at least the tree that we have used
+[07:03] least the tree that we have used consistently in our platform and in our
+[07:05] consistently in our platform and in our work would be file AI, wave speed as
+[07:08] work would be file AI, wave speed as well as key. And the model that they
+[07:10] well as key. And the model that they have as a business is different from
+[07:12] have as a business is different from Higsfield because they actually don't
+[07:14] Higsfield because they actually don't charge you on a monthly basis. They only
+[07:16] charge you on a monthly basis. They only charge you on a pay as you go basis.
+[07:19] charge you on a pay as you go basis. Meaning if you only generate like five
+[07:21] Meaning if you only generate like five images this month, then you'll only be
+[07:23] images this month, then you'll only be charged by the cost of those five
+[07:25] charged by the cost of those five images. And so now if we go to file.ai
+[07:27] images. And so now if we go to file.ai AI in their explore tab. You can see
+[07:29] AI in their explore tab. You can see that essentially what they do is the
+[07:31] that essentially what they do is the same as Higfield where they aggregate
+[07:32] same as Higfield where they aggregate all of these models and let you access
+[07:34] all of these models and let you access them through just one account and one
+[07:36] them through just one account and one API key. In fact, one of the benefits
+[07:38] API key. In fact, one of the benefits when it comes to Falloutai as well as
+[07:39] when it comes to Falloutai as well as Wavespeed. Both of these services
+[07:41] Wavespeed. Both of these services probably have the most models available
+[07:43] probably have the most models available to you through just one account. And you
+[07:45] to you through just one account. And you can see there's like almost at this
+[07:47] can see there's like almost at this point 500 models that are available for
+[07:50] point 500 models that are available for you to use. So it spans text to image,
+[07:52] you to use. So it spans text to image, text to 3D, text to audio, speech to
+[07:55] text to 3D, text to audio, speech to text, and so on. Now, obviously, one of
+[07:56] text, and so on. Now, obviously, one of the big questions with services like
+[07:58] the big questions with services like file or wave speed or key is are they
+[08:00] file or wave speed or key is are they actually cheaper versus something like
+[08:02] actually cheaper versus something like Higsfield? And the answer to that is
+[08:04] Higsfield? And the answer to that is actually quite complex because it is
+[08:06] actually quite complex because it is dependent on the model that you're
+[08:07] dependent on the model that you're using. But just to give you one clear
+[08:09] using. But just to give you one clear benefit of knowing how to use these
+[08:11] benefit of knowing how to use these tools, if you were to map GPD image 2,
+[08:14] tools, if you were to map GPD image 2, which in my opinion is probably the best
+[08:16] which in my opinion is probably the best image editing model that is out there
+[08:18] image editing model that is out there right now, if you go and generate an
+[08:19] right now, if you go and generate an image that is 2K resolution and a 1:1
+[08:22] image that is 2K resolution and a 1:1 aspect ratio, the resulting cost for
+[08:24] aspect ratio, the resulting cost for Higsfield is around 31 to 34 cents
+[08:26] Higsfield is around 31 to 34 cents depending on the plan that you have. And
+[08:28] depending on the plan that you have. And that is a bit cheaper versus something
+[08:30] that is a bit cheaper versus something like fall or wave speed. But remember,
+[08:32] like fall or wave speed. But remember, the benefit of fall and wave speed is
+[08:33] the benefit of fall and wave speed is that you can pay as you go. So even
+[08:35] that you can pay as you go. So even without you shelling out $79 or $49, you
+[08:38] without you shelling out $79 or $49, you can actually programmatically use this
+[08:40] can actually programmatically use this GPD image 2 model using tools like cloud
+[08:42] GPD image 2 model using tools like cloud like what we showed earlier. Now there
+[08:44] like what we showed earlier. Now there is an outlier which is key.ai. Now
+[08:47] is an outlier which is key.ai. Now key.ai we have used this multiple times
+[08:49] key.ai we have used this multiple times in our platform in our channel and we're
+[08:51] in our platform in our channel and we're probably one of the first ones who
+[08:53] probably one of the first ones who mentioned their existence but they are
+[08:55] mentioned their existence but they are quite popular because of how cheap they
+[08:57] quite popular because of how cheap they can offer these models. And I double
+[08:59] can offer these models. And I double checked this myself, but it is the case
+[09:01] checked this myself, but it is the case that to generate an image with GPD image
+[09:03] that to generate an image with GPD image 2 using key, it is only 5 cents per
+[09:06] 2 using key, it is only 5 cents per image. And if you go to key.ai in the
+[09:08] image. And if you go to key.ai in the page for GPD image 2, you can see that
+[09:10] page for GPD image 2, you can see that as well where their pricing for GPT2
+[09:12] as well where their pricing for GPT2 image is only 3 cents for a 1K image, 5
+[09:15] image is only 3 cents for a 1K image, 5 cents for a 2K image, and 8 cents for
+[09:17] cents for a 2K image, and 8 cents for 4K. Now, the question is obviously how
+[09:19] 4K. Now, the question is obviously how are they able to offer this model at
+[09:21] are they able to offer this model at such cheap prices. And obviously only
+[09:22] such cheap prices. And obviously only the KI team would know for sure. But if
+[09:24] the KI team would know for sure. But if I were to hazard a guess, because they
+[09:26] I were to hazard a guess, because they did this with Sora as well before,
+[09:28] did this with Sora as well before, they're probably using the OpenAI
+[09:30] they're probably using the OpenAI subscription, which is something like
+[09:31] subscription, which is something like $20 a month, which remember if you go to
+[09:33] $20 a month, which remember if you go to chat GBT, you can actually use GBD image
+[09:35] chat GBT, you can actually use GBD image to right from the chat window there. And
+[09:38] to right from the chat window there. And so most likely, and again, I can't
+[09:39] so most likely, and again, I can't confirm this, they probably found a way
+[09:41] confirm this, they probably found a way for those subscription accounts, which
+[09:42] for those subscription accounts, which are highly subsidized and offer them to
+[09:44] are highly subsidized and offer them to us programmatically through their API
+[09:47] us programmatically through their API services here. So it's really up to you
+[09:49] services here. So it's really up to you how you're going to use that
+[09:50] how you're going to use that information. But just know that if you
+[09:51] information. But just know that if you are wanting to use GPT image 2
+[09:53] are wanting to use GPT image 2 programmatically through a tool like
+[09:55] programmatically through a tool like Claude, then KI is probably the cheapest
+[09:57] Claude, then KI is probably the cheapest that you can get it at the moment. Now
+[09:59] that you can get it at the moment. Now again, this varies, right? Because if
+[10:00] again, this varies, right? Because if you're after video and for this one, I
+[10:02] you're after video and for this one, I just summarized the ones for C dance to
+[10:04] just summarized the ones for C dance to fast. And this is for like a 720p
+[10:07] fast. And this is for like a 720p 8second generation. The cost per video
+[10:09] 8second generation. The cost per video is not really that far across the board.
+[10:11] is not really that far across the board. Again, Higsfield as well as Kir the
+[10:14] Again, Higsfield as well as Kir the cheapest. But the drawback with
+[10:15] cheapest. But the drawback with Higsfield is the monthly subscription
+[10:17] Higsfield is the monthly subscription cost that you need to pay as well as all
+[10:19] cost that you need to pay as well as all of those terms that you need to agree
+[10:21] of those terms that you need to agree to, like having the stuff you generate
+[10:23] to, like having the stuff you generate be used for training whatever models
+[10:25] be used for training whatever models they want. So really, it's up to you
+[10:26] they want. So really, it's up to you whether you want to continue using
+[10:28] whether you want to continue using Higsfield. But at least what I'm showing
+[10:29] Higsfield. But at least what I'm showing you now is that there's actually a lot
+[10:31] you now is that there's actually a lot of optionality when it comes to these
+[10:33] of optionality when it comes to these model aggregators. And if you have
+[10:35] model aggregators. And if you have awareness of at least these three
+[10:36] awareness of at least these three aggregators which are probably leaders
+[10:38] aggregators which are probably leaders in the space in my view then that will
+[10:40] in the space in my view then that will just give you flexibility especially if
+[10:42] just give you flexibility especially if you're not a big fan of Higsfield's
+[10:44] you're not a big fan of Higsfield's model. And also just to mention this
+[10:45] model. And also just to mention this because in our community there's always
+[10:47] because in our community there's always a question on the difference between
+[10:48] a question on the difference between these three and what I use personally. I
+[10:50] these three and what I use personally. I think broadly as a guiding principle if
+[10:52] think broadly as a guiding principle if in case cost is an important factor for
+[10:54] in case cost is an important factor for you I would go with key AI. The only
+[10:56] you I would go with key AI. The only problem with keys is sometimes they
+[10:58] problem with keys is sometimes they would have some reliability issues
+[11:00] would have some reliability issues supposedly because of how much demand
+[11:01] supposedly because of how much demand they're getting because they do offer
+[11:03] they're getting because they do offer the cheapest models. And so for most
+[11:05] the cheapest models. And so for most projects, I actually default to F AI
+[11:07] projects, I actually default to F AI because it's much more reliable and the
+[11:09] because it's much more reliable and the difference in cost is usually just a few
+[11:10] difference in cost is usually just a few cents anyway. And whenever I'm looking
+[11:12] cents anyway. And whenever I'm looking for other more niche models that may not
+[11:15] for other more niche models that may not be available in fall, then wave speed
+[11:17] be available in fall, then wave speed would be my go-to because they also have
+[11:19] would be my go-to because they also have a huge library of generative AI models
+[11:21] a huge library of generative AI models that you can choose from. And by the
+[11:23] that you can choose from. And by the way, if you want to learn how to build
+[11:24] way, if you want to learn how to build and sell AI systems that businesses
+[11:26] and sell AI systems that businesses actually pay for, then that's pretty
+[11:28] actually pay for, then that's pretty much all we do over at the Robbo Nuggets
+[11:30] much all we do over at the Robbo Nuggets community, where not only do you get
+[11:31] community, where not only do you get access to the Claude Living Master
+[11:33] access to the Claude Living Master Class, which we update every week and
+[11:34] Class, which we update every week and takes you from zero to mastery with the
+[11:36] takes you from zero to mastery with the latest on AI, but you also get access to
+[11:38] latest on AI, but you also get access to our agents as a service course, which
+[11:40] our agents as a service course, which walks you through how to actually get
+[11:42] walks you through how to actually get paid for all these AI skills that you
+[11:44] paid for all these AI skills that you are learning. You also get to be part of
+[11:45] are learning. You also get to be part of a genuinely great community of AI
+[11:47] a genuinely great community of AI builders. In fact, you can see just some
+[11:49] builders. In fact, you can see just some of the recent wins our members are
+[11:50] of the recent wins our members are getting from the program right here. So
+[11:52] getting from the program right here. So if you want to start earning from AI
+[11:53] if you want to start earning from AI then check that just in the pin comment
+[11:55] then check that just in the pin comment below. Now back to the video. So now
+[11:56] below. Now back to the video. So now with that context, let's now go back to
+[11:58] with that context, let's now go back to the /generate skill and how you can
+[12:00] the /generate skill and how you can start using a skill like this as well.
+[12:02] start using a skill like this as well. And a skill and its essence, if I just
+[12:03] And a skill and its essence, if I just open it here, it's just all a written
+[12:05] open it here, it's just all a written document that provides instructions to
+[12:07] document that provides instructions to claude on how to access these different
+[12:09] claude on how to access these different models. And so it's highly customizable
+[12:11] models. And so it's highly customizable depending on the type of work that you
+[12:12] depending on the type of work that you do. And you can also add in any hard
+[12:14] do. And you can also add in any hard rules that you would like to have. Like
+[12:15] rules that you would like to have. Like for example, if you want the cost to be
+[12:17] for example, if you want the cost to be coded always before submitting,
+[12:20] coded always before submitting, especially with tools like Claude where
+[12:21] especially with tools like Claude where if you ask it to generate a 100 images,
+[12:24] if you ask it to generate a 100 images, it will actually go into it and drain
+[12:25] it will actually go into it and drain your credits. These sort of hard rules
+[12:27] your credits. These sort of hard rules are actually quite important as you
+[12:29] are actually quite important as you continuously refine this skill to your
+[12:31] continuously refine this skill to your liking. But if we were to summarize it
+[12:33] liking. But if we were to summarize it and I just included it in this flows tab
+[12:35] and I just included it in this flows tab for how this /generate skill works and
+[12:38] for how this /generate skill works and if I just shift that so you can see. And
+[12:39] if I just shift that so you can see. And so how this skill works whenever I
+[12:41] so how this skill works whenever I invoke it is first it routes the model
+[12:43] invoke it is first it routes the model and by default I have it look for the
+[12:45] and by default I have it look for the cheapest option available as per its
+[12:47] cheapest option available as per its sources. And so if it's cheapest in KI
+[12:49] sources. And so if it's cheapest in KI it tries that first and let's say if KI
+[12:51] it tries that first and let's say if KI is unavailable then it routes to file
+[12:53] is unavailable then it routes to file then wave speed and so on. It then loads
+[12:55] then wave speed and so on. It then loads all of the references and also crafts
+[12:57] all of the references and also crafts the prompts which obviously with cloud
+[12:59] the prompts which obviously with cloud is very flexible. So if you want to
+[13:00] is very flexible. So if you want to inspect those prompts first before it
+[13:02] inspect those prompts first before it actually generates the images or videos
+[13:04] actually generates the images or videos for you then you can do that too. And
+[13:05] for you then you can do that too. And then the third step is the actual
+[13:07] then the third step is the actual generation of the media. So it calls on
+[13:09] generation of the media. So it calls on the model itself in order to generate
+[13:11] the model itself in order to generate those images or those videos similar to
+[13:13] those images or those videos similar to what we did earlier. Now the final step
+[13:15] what we did earlier. Now the final step that I haven't shown yet is that it
+[13:17] that I haven't shown yet is that it actually has a logging mechanism. So it
+[13:19] actually has a logging mechanism. So it allows you to just store all of the
+[13:21] allows you to just store all of the prompts that Cloud has passed on to
+[13:22] prompts that Cloud has passed on to those models so that if you need to go
+[13:24] those models so that if you need to go back to it, then you can actually do
+[13:26] back to it, then you can actually do that. And lastly, it autoloads all of
+[13:28] that. And lastly, it autoloads all of those images or videos that you generate
+[13:30] those images or videos that you generate in this generations tab, which if I go
+[13:33] in this generations tab, which if I go to that tab, you can see this is quite
+[13:35] to that tab, you can see this is quite similar to Higsfield's sort of masonry
+[13:37] similar to Higsfield's sort of masonry grid where you just see all of the
+[13:39] grid where you just see all of the images as well as the videos that you
+[13:41] images as well as the videos that you generate in just one infinite canvas
+[13:43] generate in just one infinite canvas because with matters of design and
+[13:45] because with matters of design and visuals. This is actually really
+[13:46] visuals. This is actually really important versus you just having to live
+[13:48] important versus you just having to live in Claude codes terminal or chat window,
+[13:51] in Claude codes terminal or chat window, right? You need to be able to see what
+[13:52] right? You need to be able to see what Claude and these models are actually
+[13:54] Claude and these models are actually generating for you to be able to
+[13:56] generating for you to be able to properly assess if they're good or not.
+[13:58] properly assess if they're good or not. And a great part about having your own
+[14:00] And a great part about having your own sort of micro application like this
+[14:02] sort of micro application like this where you can store all of your
+[14:03] where you can store all of your generated assets is that you can also
+[14:05] generated assets is that you can also add in features that you would like.
+[14:06] add in features that you would like. Like for example, if I open up this
+[14:08] Like for example, if I open up this styles area, then you can actually see
+[14:10] styles area, then you can actually see some of the styles that I use myself. So
+[14:12] some of the styles that I use myself. So that let's say if I want a cinematic
+[14:14] that let's say if I want a cinematic liquid glass look, I can just click on
+[14:16] liquid glass look, I can just click on this. that will copy the prompt as well
+[14:18] this. that will copy the prompt as well as the file path to some references of
+[14:21] as the file path to some references of this style and I can then send that to
+[14:22] this style and I can then send that to Claude so that we can generate this
+[14:24] Claude so that we can generate this style whenever we want. And so to make
+[14:26] style whenever we want. And so to make it really easy for you to build your own
+[14:28] it really easy for you to build your own slashgenerate skill as well as walking
+[14:30] slashgenerate skill as well as walking you through how to set up your API keys
+[14:32] you through how to set up your API keys through KAI as well as file AI. I just
+[14:34] through KAI as well as file AI. I just made this comprehensive eight-page PDF
+[14:36] made this comprehensive eight-page PDF guide which you can either read through
+[14:38] guide which you can either read through or just pass it along to your cloud code
+[14:40] or just pass it along to your cloud code and that should get you set up with
+[14:41] and that should get you set up with creating your own/generate skill. And
+[14:43] creating your own/generate skill. And the good thing about it is that this is
+[14:45] the good thing about it is that this is entirely flexible. So for example, if
+[14:46] entirely flexible. So for example, if you have a need for another model, so
+[14:48] you have a need for another model, so let's say you want to add Google's new
+[14:50] let's say you want to add Google's new omni flash model into that /generate
+[14:52] omni flash model into that /generate skill, then you can actually head to
+[14:54] skill, then you can actually head to something like file AI, copy the content
+[14:56] something like file AI, copy the content for LLMs here at the top right, then you
+[14:58] for LLMs here at the top right, then you can just tell Claude to add this to the
+[15:00] can just tell Claude to add this to the slashgenerate skill and then go ahead
+[15:02] slashgenerate skill and then go ahead and paste that whole piece of text that
+[15:04] and paste that whole piece of text that will be copied from file.ai. And so
+[15:06] will be copied from file.ai. And so continuously as you tailor this
+[15:08] continuously as you tailor this /generate skill for yourself, what
+[15:10] /generate skill for yourself, what you'll end up with is a really strong
+[15:11] you'll end up with is a really strong Higsfield alternative so that you don't
+[15:13] Higsfield alternative so that you don't need to be locked into the monthly
+[15:15] need to be locked into the monthly subscription cost. And of course, if you
+[15:16] subscription cost. And of course, if you want that version of the gallery wall as
+[15:18] want that version of the gallery wall as well, then I included this simple prompt
+[15:20] well, then I included this simple prompt that you can use to get started there.
+[15:22] that you can use to get started there. So if you want to grab this whole PDF,
+[15:24] So if you want to grab this whole PDF, then that's just available down in the
+[15:26] then that's just available down in the link in the pin comment below. But there
+[15:27] link in the pin comment below. But there you go. I hope that was useful and as
+[15:29] you go. I hope that was useful and as always, thanks for watching until the
+[15:30] always, thanks for watching until the end and I'll see you all next time.
+[15:32] end and I'll see you all next time. Thank you.
+[15:34] Thank you. &gt;&gt; [music]
