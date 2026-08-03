@@ -473,7 +473,28 @@ async function logVisit(env, path, country) {
    (not an ISO string), so every window compares against strftime('%s', ...)
    cast to an integer - a text/date compare here would silently return nothing
    and every number would read as zero. */
-async function adminData(env) {
+/* Turns the search box + filter dropdowns into a safe parametrised WHERE. The
+   search term is bound (never concatenated) and its LIKE wildcards are escaped,
+   so a confession containing % or _ can't break the query. */
+function adminWhere(query) {
+  const where = [];
+  const params = [];
+  if (query.q) {
+    const like = '%' + query.q.replace(/[%_\\]/g, '\\$&') + '%';
+    where.push("(to_name LIKE ? ESCAPE '\\' OR to_email LIKE ? ESCAPE '\\' OR to_handle LIKE ? ESCAPE '\\' OR body LIKE ? ESCAPE '\\' OR sender_email LIKE ? ESCAPE '\\')");
+    params.push(like, like, like, like, like);
+  }
+  if (query.channel === 'email') where.push("to_email <> ''");
+  else if (query.channel === 'ig') where.push("(to_handle IS NOT NULL AND to_handle <> '')");
+  else if (query.channel === 'both') where.push("(to_email <> '' AND to_handle IS NOT NULL AND to_handle <> '')");
+  if (query.media === 'gif') where.push('has_gif = 1');
+  else if (query.media === 'mp4') where.push('has_mp4 = 1');
+  if (query.reported) where.push('reports > 0');
+  return { clause: where.length ? 'WHERE ' + where.join(' AND ') : '', params };
+}
+
+async function adminData(env, query) {
+  query = query || {};
   // the visits table may not exist yet (no visit logged since deploy)
   await env.DB.prepare(
     'CREATE TABLE IF NOT EXISTS visits (day TEXT, path TEXT, country TEXT, n INTEGER, PRIMARY KEY (day, path, country))'
@@ -502,10 +523,19 @@ async function adminData(env) {
 
   const blocks = await env.DB.prepare('SELECT COUNT(*) c FROM blocklist').first();
 
-  const recent = await env.DB.prepare(
-    `SELECT id, to_name, to_email, to_handle, body, has_gif, has_mp4, reports, sender_email, created_at
-     FROM messages ORDER BY created_at DESC LIMIT 50`
-  ).all();
+  // the searchable, filterable, paged log. Stats above stay global; only this
+  // table narrows to the query, so thousands of rows never load at once.
+  const PAGE = 50;
+  const page = Math.max(1, parseInt(query.page || '1', 10) || 1);
+  const { clause, params } = adminWhere(query);
+  const totalRow = await env.DB.prepare(`SELECT COUNT(*) c FROM messages ${clause}`).bind(...params).first();
+  const total = (totalRow && totalRow.c) || 0;
+  const rows = await env.DB.prepare(
+    `SELECT id, to_name, to_email, to_handle, body, has_gif, has_mp4, reports, sender_email, sender_hash, created_at
+     FROM messages ${clause} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+    // ponytail: OFFSET paging is fine into the tens of thousands here; switch to
+    // keyset (WHERE created_at < last) only if an admin ever pages that deep.
+  ).bind(...params, PAGE, (page - 1) * PAGE).all();
 
   const vToday = await env.DB.prepare("SELECT COALESCE(SUM(n),0) n FROM visits WHERE day = date('now')").first();
   const vWeek  = await env.DB.prepare("SELECT COALESCE(SUM(n),0) n FROM visits WHERE day >= date('now','-6 days')").first();
@@ -516,7 +546,7 @@ async function adminData(env) {
     stats: stats || {},
     chart: chart.results || [],
     blocks: (blocks && blocks.c) || 0,
-    recent: recent.results || [],
+    table: { rows: rows.results || [], total, page, pageSize: PAGE, query },
     visits: {
       today: (vToday && vToday.n) || 0,
       week: (vWeek && vWeek.n) || 0,
@@ -595,15 +625,37 @@ function adminPage(data) {
       ? list.map((r) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:14px;color:${INK}"><span style="color:${SOFT};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.k)}</span><span style="font-weight:700">${n(r.n)}</span></div>`).join('')
       : `<div style="font-size:13px;color:${FAINT}">${esc(empty)}</div>`;
 
-  const recentRows = (data.recent || []).map((r) => {
+  const t = data.table || { rows: [], total: 0, page: 1, pageSize: 50, query: {} };
+  const tq = t.query || {};
+  // build an /admin link that keeps the current search + filters, overriding
+  // only what's passed (used by prev/next). '&' is escaped for a valid href.
+  const qlink = (over) => {
+    const p = new URLSearchParams();
+    const m = Object.assign({ q: tq.q, channel: tq.channel, media: tq.media, reported: tq.reported, page: String(t.page) }, over);
+    for (const k of ['q', 'channel', 'media', 'reported', 'page']) if (m[k]) p.set(k, m[k]);
+    const str = p.toString();
+    return '/admin' + (str ? '?' + esc(str) : '');
+  };
+  const sel = (name, val) => (tq[name] === val ? ' selected' : '');
+  const totalPages = Math.max(1, Math.ceil((t.total || 0) / (t.pageSize || 50)));
+  const offset = (t.page - 1) * t.pageSize;
+  const showFrom = t.total ? offset + 1 : 0;
+  const showTo = Math.min(offset + t.pageSize, t.total);
+  const hasFilters = tq.q || tq.channel || tq.media || tq.reported;
+  const inputCss = `font:inherit;font-size:14px;color:${INK};background:${PAPER2};border:2px solid ${INK};border-radius:9px 7px 10px 6px;padding:9px 10px`;
+
+  const recentRows = (t.rows || []).map((r) => {
     const when = new Date(r.created_at * 1000).toISOString().slice(0, 16).replace('T', ' ');
     const chan = (r.to_email && r.to_handle) ? 'email + ig'
       : r.to_email ? 'email'
       : r.to_handle ? '@' + r.to_handle : '-';
     const dest = r.to_email ? r.to_email : (r.to_handle ? '@' + r.to_handle : '');
     const media = [r.has_gif ? 'GIF' : '', r.has_mp4 ? 'MP4' : ''].filter(Boolean).join(' ') || '-';
+    const sender = r.sender_email ? esc(r.sender_email) : 'anonymous';
+    const fp = r.sender_hash ? esc(String(r.sender_hash).slice(0, 8)) : '';
     return `<tr style="border-top:1px solid #e3d9bd">
       <td style="padding:8px 8px;color:${FAINT};white-space:nowrap;font-size:12px">${esc(when)}</td>
+      <td style="padding:8px 8px;color:${INK}">${sender}${fp ? `<div style="font-size:11px;color:${FAINT}" title="same sender fingerprint">${fp}</div>` : ''}</td>
       <td style="padding:8px 8px;color:${INK}">${esc(r.to_name)}<div style="font-size:11px;color:${FAINT}">${esc(dest)}</div></td>
       <td style="padding:8px 8px;color:${SOFT};white-space:nowrap">${esc(chan)}</td>
       <td style="padding:8px 8px;color:${SOFT};white-space:nowrap">${esc(media)}</td>
@@ -611,6 +663,33 @@ function adminPage(data) {
       <td style="padding:8px 8px;color:${INK};max-width:340px">${esc(r.body)}</td>
     </tr>`;
   }).join('');
+
+  const filterBar = `<form method="GET" action="/admin" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px">
+    <input name="q" value="${esc(tq.q || '')}" placeholder="search from, to, handle, message..." style="${inputCss};flex:1;min-width:190px">
+    <select name="channel" style="${inputCss}">
+      <option value=""${sel('channel', '')}>any channel</option>
+      <option value="email"${sel('channel', 'email')}>email</option>
+      <option value="ig"${sel('channel', 'ig')}>instagram</option>
+      <option value="both"${sel('channel', 'both')}>email + ig</option>
+    </select>
+    <select name="media" style="${inputCss}">
+      <option value=""${sel('media', '')}>any media</option>
+      <option value="gif"${sel('media', 'gif')}>has GIF</option>
+      <option value="mp4"${sel('media', 'mp4')}>has MP4</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:${SOFT};white-space:nowrap"><input type="checkbox" name="reported" value="1"${tq.reported ? ' checked' : ''}>reported only</label>
+    <button type="submit" style="font:inherit;font-size:14px;font-weight:700;color:#fff;background:${INK};border:0;border-radius:10px 8px 11px 7px;padding:10px 18px;cursor:pointer">Search</button>
+    ${hasFilters ? `<a href="/admin" style="font-size:14px;color:${RED};font-weight:700">clear</a>` : ''}
+  </form>`;
+
+  const pager = `<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin:14px 2px 0;font-size:13px;color:${SOFT}">
+    <span>${t.total ? `Showing ${n(showFrom)}-${n(showTo)} of ${n(t.total)}` : 'No matches'}</span>
+    <span style="display:flex;gap:14px;align-items:center">
+      ${t.page > 1 ? `<a href="${qlink({ page: String(t.page - 1) })}" style="color:${INK};font-weight:700">&larr; prev</a>` : `<span style="color:${FAINT}">&larr; prev</span>`}
+      <span>page ${n(t.page)} / ${n(totalPages)}</span>
+      ${t.page < totalPages ? `<a href="${qlink({ page: String(t.page + 1) })}" style="color:${INK};font-weight:700">next &rarr;</a>` : `<span style="color:${FAINT}">next &rarr;</span>`}
+    </span>
+  </div>`;
 
   return `<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -666,11 +745,13 @@ function adminPage(data) {
     ${card('top countries (7d)', rows((data.visits.countries || []).map((r) => ({ k: r.country || '??', n: r.n })), 'no visits logged yet'))}
   </div>
 
-  ${card('recent confessions (latest 50)',
+  ${card('all confessions',
+    filterBar +
     `<div style="overflow-x:auto"><table>
-      <thead><tr><th>when (UTC)</th><th>to</th><th>channel</th><th>media</th><th>reports</th><th>message</th></tr></thead>
-      <tbody>${recentRows || `<tr><td colspan="6" style="padding:14px 8px;color:${FAINT}">Nothing sent yet.</td></tr>`}</tbody>
-    </table></div>`)}
+      <thead><tr><th>when (UTC)</th><th>from</th><th>to</th><th>channel</th><th>media</th><th>reports</th><th>message</th></tr></thead>
+      <tbody>${recentRows || `<tr><td colspan="7" style="padding:14px 8px;color:${FAINT}">${hasFilters ? 'No confessions match those filters.' : 'Nothing sent yet.'}</td></tr>`}</tbody>
+    </table></div>` +
+    pager)}
 
   <p style="margin:22px 0 0;font-size:12px;color:${FAINT}">Email opens and delivery, and live Instagram numbers, are not here yet - they live outside this database. Coming in a later pass; nothing above is estimated.</p>
 </div>
@@ -876,7 +957,15 @@ async function handle(request, env, ctx) {
     if (path === '/admin') {
       if (!(await requireAdmin(request, env)))
         return new Response(null, { status: 302, headers: { location: '/admin/login', 'x-robots-tag': 'noindex' } });
-      const data = await adminData(env);
+      const sp = url.searchParams;
+      const query = {
+        q: (sp.get('q') || '').trim().slice(0, 100),
+        channel: sp.get('channel') || '',
+        media: sp.get('media') || '',
+        reported: sp.get('reported') ? '1' : '',
+        page: sp.get('page') || '1'
+      };
+      const data = await adminData(env, query);
       return new Response(adminPage(data), { headers: {
         'content-type': 'text/html; charset=utf-8',
         'x-robots-tag': 'noindex',
