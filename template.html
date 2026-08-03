@@ -656,7 +656,7 @@ a{color:var(--red)}a:hover{color:var(--ink)}
       </div>
     </div>
     <div>
-      <div class="ovnote">Once it's sent it can't be taken back, and they'll never know it was you.</div>
+      <div class="ovnote">They'll get your exact words and the doll clip. Once it's sent it can't be taken back, and they'll never know it was you. Keep it funny, not cruel - no threats or private facts.</div>
       <div class="ovnote bad" id="send-err" hidden></div>
       <div class="ovbtns" style="margin-top:12px">
         <button class="btn ghost sm" id="dl" type="button">Save GIF</button>
@@ -679,6 +679,7 @@ a{color:var(--red)}a:hover{color:var(--ink)}
       <div class="row" id="share-row" hidden>
         <button class="btn" id="btn-share" type="button">Share</button>
         <button class="btn ghost" id="btn-save" type="button">Save video</button>
+        <button class="btn ghost" id="btn-copy" type="button">Copy caption</button>
       </div>
       <div style="margin-top:16px"><button class="btn ink block" id="btn-restart" type="button">Send another</button></div>
     </div>
@@ -1784,7 +1785,7 @@ $('#btn-share').onclick = async () => {
   const type = state.videoBlob ? 'video/mp4' : 'image/gif';
   const file = new File([blob], 'beatass.' + ext, {type});
   if(navigator.canShare && navigator.canShare({files:[file]})){
-    try{ await navigator.share({files:[file], text:'beatass.com'}); return; }
+    try{ await navigator.share({files:[file], text:SHARE_CAPTION}); return; }
     catch(e){ if(e && e.name === 'AbortError') return; }
   }
   download(state.videoUrl || state.gifUrl, 'beatass.' + ext);
@@ -1793,6 +1794,18 @@ $('#btn-save').onclick = () => {
   const url = state.videoUrl || state.gifUrl;
   const ext = state.videoUrl ? 'mp4' : (state.isStill ? 'png' : 'gif');
   if(url) download(url, 'beatass.' + ext);
+};
+
+/* One caption everywhere, so what people paste next to the clip always
+   carries the door back in. */
+const SHARE_CAPTION = 'Someone had feelings and took it out on a doll. Make one at beatass.com';
+$('#btn-copy').onclick = async () => {
+  const b = $('#btn-copy');
+  try{ await navigator.clipboard.writeText(SHARE_CAPTION); }
+  catch(e){ return; }
+  const was = b.textContent;
+  b.textContent = 'Copied';
+  setTimeout(() => { b.textContent = was; }, 1400);
 };
 
 $('#btn-restart').onclick = restart;
