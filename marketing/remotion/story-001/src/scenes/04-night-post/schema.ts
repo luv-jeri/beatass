@@ -5,7 +5,7 @@ export const schema = {
   sfxVolume: {type: 'number', label: 'Clip SFX volume', default: 0.22, min: 0, max: 1, step: 0.05},
 } as const;
 
-export const durationInFrames = 125;
+export const durationInFrames = 156;
 
 // Plucked default values — the registry and Master consume these as props.
 export const defaults = Object.fromEntries(

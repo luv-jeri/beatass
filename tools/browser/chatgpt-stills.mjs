@@ -69,7 +69,12 @@ async function runJob(context, job) {
       const busy = await page.locator('[data-testid="stop-button"]').isVisible().catch(() => false);
       if (busy) continue;
       src = await page.evaluate(() => {
-        const imgs = [...document.querySelectorAll('img[src*="oaiusercontent"], img[src^="blob:"]')];
+        // 2026-08: ChatGPT serves generated images from backend-api/estuary.
+        // Scope to assistant turns so an uploaded board image never counts.
+        const scope = document.querySelectorAll('[data-message-author-role="assistant"]').length
+          ? '[data-message-author-role="assistant"] ' : '';
+        const imgs = [...document.querySelectorAll(
+          `${scope}img[src*="oaiusercontent"], ${scope}img[src*="estuary/content"], ${scope}img[src^="blob:"]`)];
         return imgs.length ? imgs[imgs.length - 1].src : null;
       });
       if (src) break;

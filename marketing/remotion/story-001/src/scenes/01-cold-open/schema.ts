@@ -3,11 +3,11 @@ export const schema = {
   src: {type: 'text', label: 'Clip file (public/)', default: 'clips/current/scene-1.mp4'},
   clipSeconds: {type: 'number', label: 'Source clip length (s)', default: 8, min: 1, max: 30, step: 0.5},
   sfxVolume: {type: 'number', label: 'Clip SFX volume', default: 0.22, min: 0, max: 1, step: 0.05},
-  labelText: {type: 'text', label: 'Top label', default: 'TRUE STORY - 2013 - FINALE'},
+  labelText: {type: 'text', label: 'Top label', default: 'A CAMPFIRE STORY'},
   labelAt: {type: 'number', label: 'Label reveal (s, scene-local)', default: 0.6, min: 0, max: 10, step: 0.1},
 } as const;
 
-export const durationInFrames = 85;
+export const durationInFrames = 243;
 
 // Plucked default values — the registry and Master consume these as props.
 export const defaults = Object.fromEntries(
