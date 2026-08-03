@@ -1,7 +1,7 @@
 What beatass.com stores when you send a message, what it never stores, and how to make it stop.
 
     <h1>Privacy</h1>
-    <p class="updated">Last updated 2 August 2026.</p>
+    <p class="updated">Last updated 3 August 2026.</p>
 
     <p>This page describes exactly what beatass.com does with information. It is
       written to be checked against the code, not to be long.</p>
@@ -26,11 +26,19 @@ What beatass.com stores when you send a message, what it never stores, and how t
       <li>The GIF and the video, stored as files.</li>
       <li>The time it was sent.</li>
       <li>A one-way scrambled version of your IP address. Not the address itself.</li>
+      <li>Your own email address, but only if you filled in the reply box, and only
+        so a reply can reach you. Nothing at all if you left it blank.</li>
     </ul>
 
     <h2>What we never store</h2>
-    <p><strong>Nothing that identifies you as the sender.</strong> No name, no email
-      address, no account, no raw IP address. Your IP address is passed through a
+    <p><strong>Nothing that identifies you as the sender, unless you ask for a
+      reply.</strong> No name, no account, no raw IP address. The one exception is
+      the reply box: if you type your own email address there when you send, we
+      store that address, for one purpose only, which is passing a reply back to
+      you. The person you wrote to never sees it. They get a reply link that goes
+      through us, so their words reach you without your address ever reaching
+      them. Leave that box empty and we hold no address for you at all, and no
+      reply can be delivered. Your IP address is passed through a
       one-way function with a secret key, and only a shortened version of the result
       is kept. We cannot look your address up from it. It can only be used to tell
       whether two messages came from the same place, which is there for two narrow

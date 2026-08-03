@@ -1,5 +1,5 @@
 /* The side pages: same paper, same three inks, but built for reading rather
-   than for one screen. No embedded fonts here on purpose — baking three
+   than for one screen. No embedded fonts here on purpose - baking three
    woff2 files into five more pages would cost about a megabyte to say
    nothing the system fonts don't already say. */
 :root{
