@@ -46,6 +46,7 @@ function credentials() {
 }
 
 const DRY = process.argv.includes('--dry-run');
+const HANDOFF = process.argv.includes('--handoff'); // stage everything, human clicks Share
 const LOGIN_ONLY = process.argv.includes('--login');
 
 const say = (m) => console.log(m);
@@ -192,6 +193,16 @@ async function post(page, filePath, caption) {
   await page.waitForTimeout(6000);
   await dismissPopups(page);
 
+  // Toggle Select Crop to the full original frame — Instagram defaults to a
+  // 4:5 center-crop that beheads 9:16 reels (2026-08-04: three reels shipped
+  // with their tops cut off before this line existed).
+  const cropSvg = page.locator('svg[aria-label="Select Crop"], svg[aria-label="Select crop"]').first();
+  if (await cropSvg.count()) {
+    await cropSvg.locator('xpath=ancestor::button[1]')
+      .or(cropSvg.locator('xpath=ancestor::*[@role="button"][1]')).first().click();
+    await page.waitForTimeout(1200);
+  }
+
   for (const step of ['Next', 'Next']) {
     const b = page.getByRole('button', { name: step, exact: true }).first();
     await b.waitFor({ state: 'visible', timeout: 45000 });
@@ -215,9 +226,29 @@ async function post(page, filePath, caption) {
     return false;
   }
 
+  if (HANDOFF) {
+    // stop right before Share and keep the browser alive: the human presses
+    // the button. (Born 2026-08-04: three reels "posted" that never existed.)
+    say('\n— READY. The post is staged; press Share in the browser window.');
+    say('  This window stays open until you Ctrl-C this script.');
+    await new Promise(() => {});
+  }
+
   await page.getByRole('button', { name: /^share$/i }).first().click();
-  await page.waitForTimeout(12000);
-  say('shared.');
+  // A 40MB reel uploads for minutes after Share; leaving early kills it.
+  // Success is Instagram SAYING it shared, never a timer. (Same 2026-08-04 bug.)
+  const confirmed = await page
+    .getByText(/has been shared|your (reel|post) was shared|shared successfully/i)
+    .first()
+    .waitFor({ state: 'visible', timeout: 300000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!confirmed) {
+    await page.screenshot({ path: path.join(HERE, 'last-failure.png') });
+    say('NOT CONFIRMED: Instagram never said the post was shared (5 min). See tools/instagram/last-failure.png');
+    return false;
+  }
+  say('shared — confirmed by Instagram.');
   return true;
 }
 
