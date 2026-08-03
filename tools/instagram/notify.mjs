@@ -1,11 +1,12 @@
 /**
  * Tells a confession's recipient on Instagram that a message is waiting for
- * them, by DM from our own account. The DM says openly that it is automated,
- * and carries only the /m view link - the page with the message, the doll
- * clip, block, report, and reply.
+ * them, by DM from our own account. It arrives as three separate messages -
+ * a one-line intro, then their confession alone in its own bubble, then the
+ * link plus the automated/opt-out notice. The link goes to the /m page: the
+ * full message, the doll clip, block, report, and the only reply box.
  *
  *   node tools/instagram/notify.mjs                     list what is waiting
- *   node tools/instagram/notify.mjs --text <id>         print the DM word for word, no browser
+ *   node tools/instagram/notify.mjs --text <id>         print all three messages, no browser
  *   node tools/instagram/notify.mjs --selftest          check the preview logic, no database
  *   node tools/instagram/notify.mjs --dry-run <id>      walk one message, screenshot, send NOTHING
  *   node tools/instagram/notify.mjs --send <id>         send one DM
@@ -136,15 +137,38 @@ export function dmPreview(body) {
   return { text: (space > DM_PREVIEW - 60 ? cut.slice(0, space) : cut).trimEnd() + '...', clipped: true };
 }
 
-export const dmText = (m, link) => {
+/* Three bubbles, not one (Sanjay, 2026-08-03): "its very hard to know what is
+   the actual message as its buttered with the admin message". A single blob
+   buries the confession between a greeting and a legal footer. Sent as
+   separate messages, the middle bubble is nothing but their words - which is
+   the only part a stranger actually cares about. */
+export const dmParts = (m, link) => {
   const p = dmPreview(m.body);
-  return 'hey - someone left you an anonymous message on beatass.com\n\n' +
-    (p.text ? '"' + p.text + '"\n\n' : '') +
+  const parts = [];
+  if (p.text) {
+    parts.push('hey - someone left you an anonymous message on beatass.com. this is what they said:');
+    parts.push('"' + p.text + '"');
+  } else {
+    parts.push('hey - someone left you an anonymous message on beatass.com.');
+  }
+  parts.push(
     (p.clipped ? 'read the rest' : 'see what they did to the doll') +
     ' (and reply to them) here: ' + link + '\n\n' +
     'this is an automated message from beatass.com. open the link to read it, ' +
-    'share it, report it, or block us so we never message you again.';
+    'share it, report it, or block us so we never message you again.');
+  return parts;
 };
+
+/** The whole DM as one block of text, for printing and reading. Never typed. */
+export const dmText = (m, link) => dmParts(m, link).join('\n\n');
+
+/** Print the DM the way it will land: one framed block per bubble. */
+function showParts(parts) {
+  parts.forEach((p, i) => {
+    say(`  message ${i + 1} of ${parts.length}:`);
+    say(p.split('\n').map((l) => '    | ' + l).join('\n') + '\n');
+  });
+}
 
 /* --selftest proves the preview logic before any DM is composed: no database,
    no browser, nothing outward. Runs in CI. */
@@ -164,23 +188,45 @@ if (args.includes('--selftest')) {
   eq('carriage returns normalise', dmPreview('a\r\nb').text, 'a\nb');
   eq('runs of blank lines collapse', dmPreview('a\n\n\n\n\nb').text, 'a\n\nb');
   const m = { body: 'i still think about it', id: 'a'.repeat(16), view_token: 'b'.repeat(32) };
-  const t = dmText(m, 'https://beatass.com/m?id=x&t=y');
+  const LINK = 'https://beatass.com/m?id=x&t=y';
+  const t = dmText(m, LINK);
   eq('the words are in the DM', t.includes('"i still think about it"'), true);
-  eq('the link is in the DM', t.includes('https://beatass.com/m?id=x&t=y'), true);
+  eq('the link is in the DM', t.includes(LINK), true);
   eq('the reply route is the page', t.includes('reply to them'), true);
   eq('the opt-out line survives', t.includes('block us so we never message you again'), true);
   eq('a clipped DM says so', dmText({ body: long }, 'L').includes('read the rest'), true);
   eq('an empty body still sends a link', dmText({ body: '' }, 'L').includes('L'), true);
-  console.log(process.exitCode ? '\ndm selftest FAILED' : 'dm preview selftest: 16/16 pass');
+
+  /* The split is the whole point (Sanjay: the confession was "buttered with
+     the admin message"). Bubble 2 must be their words and NOTHING else - if a
+     greeting, a link, or the opt-out line ever creeps back into it, these go
+     red. */
+  const p = dmParts(m, LINK);
+  eq('a normal DM is three messages', p.length, 3);
+  eq('bubble 2 is only their words', p[1], '"i still think about it"');
+  eq('bubble 2 has no link', p[1].includes('beatass.com'), false);
+  eq('bubble 2 has no greeting', /hey /.test(p[1]), false);
+  eq('bubble 2 has no legal footer', p[1].includes('automated'), false);
+  eq('bubble 1 introduces it', p[0].includes('anonymous message'), true);
+  eq('bubble 1 carries no link', p[0].includes(LINK), false);
+  eq('bubble 3 carries the link', p[2].includes(LINK), true);
+  eq('bubble 3 carries the opt-out', p[2].includes('block us so we never message you again'), true);
+  eq('an empty body drops the quote bubble', dmParts({ body: '' }, 'L').length, 2);
+  eq('a clipped body still splits in three', dmParts({ body: long }, 'L').length, 3);
+  eq('every bubble fits an Instagram DM', p.every((x) => x.length <= 900), true);
+  eq('no bubble is empty', p.every((x) => x.trim().length > 0), true);
+
+  console.log(process.exitCode ? '\ndm selftest FAILED' : 'dm selftest: 29/29 pass');
   process.exit(process.exitCode || 0);
 }
 
 /* ---------- --text <id>: exactly what the DM will say. No browser. ---------- */
 if (TEXT_ID) {
   const m = loadOne(TEXT_ID);
+  const parts = dmParts(m, linkFor(m));
   say(`\nmessage ${m.id} -> @${m.to_handle} (for "${m.to_name}")`);
-  say('the DM will say:\n');
-  say(dmText(m, linkFor(m)).split('\n').map((l) => '  | ' + l).join('\n') + '\n');
+  say(`it arrives as ${parts.length} separate Instagram messages:\n`);
+  showParts(parts);
   process.exit(0);
 }
 
@@ -266,19 +312,52 @@ async function typeDm(page, text) {
   return box;
 }
 
-/** Open the thread, type the DM, then send (or, in dry mode, clear and stop). */
+/** Empty the composer without sending. Used by every dry run. */
+async function clearBox(page) {
+  await page.keyboard.press(process.platform === 'darwin' ? 'Meta+a' : 'Control+a');
+  await page.keyboard.press('Backspace');
+}
+
+/**
+ * Open the thread and deliver the DM as separate bubbles.
+ *
+ * The one thing that keeps a dry run dry: the ONLY thing in here that sends is
+ * the Send button, it is behind `if (dry) ... continue`, and nothing ever
+ * presses a bare Enter (typeDm uses Shift+Enter). A dry run types each bubble,
+ * photographs it, wipes the box, and moves on - so it can rehearse a
+ * three-message send without one of them leaving.
+ *
+ * Returns how many bubbles actually went out.
+ */
 async function deliver(page, m, dry) {
   await openThread(page, m.to_handle);
-  await typeDm(page, dmText(m, linkFor(m)));
-  if (dry) {
-    await page.screenshot({ path: path.join(HERE, 'dm-dry-run.png') });
-    await page.keyboard.press(process.platform === 'darwin' ? 'Meta+a' : 'Control+a');
-    await page.keyboard.press('Backspace');
-    return;
+  const parts = dmParts(m, linkFor(m));
+  let out = 0;
+  for (let i = 0; i < parts.length; i++) {
+    await typeDm(page, parts[i]);
+    if (dry) {
+      await page.screenshot({ path: path.join(HERE, `dm-dry-run-${i + 1}.png`) });
+      await clearBox(page);
+      continue;
+    }
+    try {
+      await page.locator('div[role="button"][aria-label="Send"]').first().click({ timeout: 10000 });
+    } catch (e) {
+      /* Half-delivered. Whoever catches this must still mark the message as
+         notified, or a retry re-sends the bubbles that already landed. */
+      e.partsSent = out;
+      throw e;
+    }
+    out++;
+    /* Bubbles land a beat apart, the way a person types them - three in the
+       same second is a spam signature. */
+    if (i < parts.length - 1) await page.waitForTimeout(1800 + Math.floor(Math.random() * 1600));
   }
-  await page.locator('div[role="button"][aria-label="Send"]').first().click({ timeout: 10000 });
-  await page.waitForTimeout(4000);
-  await page.screenshot({ path: path.join(HERE, 'dm-sent.png') });
+  if (!dry) {
+    await page.waitForTimeout(3000);
+    await page.screenshot({ path: path.join(HERE, 'dm-sent.png') });
+  }
+  return out;
 }
 
 /* ---------- --block: honour a STOP forever ---------- */
@@ -317,7 +396,14 @@ if (AUTO) {
           await page.waitForTimeout(wait);
         }
       } catch (e) {
-        say(`    skipped [${r.id}]: ${e.message.split('\n')[0]}`);
+        if (e.partsSent) {
+          /* Some bubbles landed. Record it anyway - a retry would repeat them. */
+          recordSent(sent, r.id);
+          done++;
+          say(`    PARTIAL [${r.id}]: ${e.partsSent} of 3 messages sent, then: ${e.message.split('\n')[0]}`);
+        } else {
+          say(`    skipped [${r.id}]: ${e.message.split('\n')[0]}`);
+        }
         await page.screenshot({ path: path.join(HERE, 'last-failure.png') }).catch(() => {});
       }
     }
@@ -353,23 +439,29 @@ const m = loadOne(id);
 const sent = loadSent();
 if (SEND_ID && sent[m.id]) die(`message ${m.id} was already sent to @${m.to_handle} on ${sent[m.id]}. Not sending twice.`);
 
+const parts = dmParts(m, linkFor(m));
 say(`\nmessage ${m.id} -> @${m.to_handle} (for "${m.to_name}")`);
-say('the DM will say:\n');
-say(dmText(m, linkFor(m)).split('\n').map((l) => '  | ' + l).join('\n') + '\n');
+say(`it arrives as ${parts.length} separate Instagram messages:\n`);
+showParts(parts);
 
 const browser = await launch(CONFIG.headless === true);
 const page = browser.pages()[0] || await browser.newPage();
 try {
   await ensureRightAccount(page);
-  await deliver(page, m, !!DRY_ID);
+  const out = await deliver(page, m, !!DRY_ID);
   if (DRY_ID) {
-    say('- dry run: everything worked up to the Send button, and it was NOT pressed.');
-    say('  what it would have looked like: tools/instagram/dm-dry-run.png');
+    say(`- dry run: all ${parts.length} messages were typed and the Send button was NOT pressed.`);
+    say(`  what each one would have looked like: tools/instagram/dm-dry-run-1..${parts.length}.png`);
   } else {
     recordSent(sent, m.id);
-    say(`✓ sent. @${m.to_handle} has the link. Screenshot: tools/instagram/dm-sent.png`);
+    say(`✓ sent ${out} messages. @${m.to_handle} has the words and the link. Screenshot: tools/instagram/dm-sent.png`);
   }
 } catch (err) {
+  if (err.partsSent) {
+    recordSent(sent, m.id);
+    say(`! PARTIAL: ${err.partsSent} of ${parts.length} messages reached @${m.to_handle} before this failed.`);
+    say('  Logged as sent so a retry cannot repeat them. Finish it by hand if it matters.');
+  }
   await page.screenshot({ path: path.join(HERE, 'last-failure.png') }).catch(() => {});
   console.error('\n✗ ' + err.message);
   console.error('  screenshot of what it was looking at: tools/instagram/last-failure.png');
