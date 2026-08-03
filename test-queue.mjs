@@ -87,14 +87,22 @@ d1(SEED);
 console.log(`starting the worker on ${PORT}...`);
 const dev = spawn('npx', ['wrangler', 'dev', '--local', '--port', String(PORT),
   '--var', `ADMIN_EMAIL:${EMAIL}`, '--var', `ADMIN_PASSWORD:${PASSWORD}`,
-  '--var', `BLOCK_SECRET:${SECRET}`], { stdio: ['ignore', 'pipe', 'pipe'] });
+  '--var', `BLOCK_SECRET:${SECRET}`],
+  /* detached so the whole process group can be killed at the end. `npx` is a
+     wrapper: signalling it leaves workerd and esbuild running, which keeps
+     node's event loop alive forever. On CI that hung the job for fourteen
+     minutes after every check had already passed. */
+  { stdio: ['ignore', 'pipe', 'pipe'], detached: true });
 let devLog = '';
 dev.stdout.on('data', (b) => { devLog += b; });
 dev.stderr.on('data', (b) => { devLog += b; });
 // 143 is our own SIGTERM at the end of the run, not a crash
 dev.on('exit', (code) => { if (code && code !== 143) console.error('\nWORKER EXITED ' + code + ':\n' + devLog.slice(-1500)); });
 
-const stop = () => { try { dev.kill('SIGTERM'); } catch {} };
+const stop = () => {
+  try { process.kill(-dev.pid, 'SIGTERM'); } catch {}   // the group: workerd and esbuild too
+  try { dev.kill('SIGTERM'); } catch {}
+};
 process.on('exit', stop);
 process.on('SIGINT', () => { stop(); process.exit(130); });
 
@@ -186,5 +194,8 @@ try {
   stop();
 }
 
-if (errs.length) { console.error('\nQUEUE ERRORS:\n  ' + errs.join('\n  ') + '\n'); process.exit(1); }
-console.log('\nqueue guard: all checks pass');
+if (errs.length) console.error('\nQUEUE ERRORS:\n  ' + errs.join('\n  ') + '\n');
+else console.log('\nqueue guard: all checks pass');
+/* Explicit, always. Anything the dev server left behind would otherwise hold
+   the process open long after the answer is known. */
+process.exit(errs.length ? 1 : 0);
