@@ -37,6 +37,20 @@ assert.match(builtHtml, /<link rel="icon" href="\/favicon\.ico" sizes="any">/,
 assert.match(builtHtml, /<link rel="icon" type="image\/png" sizes="48x48" href="\/favicon-48\.png">/,
   'built homepage does not declare the 48x48 PNG favicon');
 
+// A picture written into the HTML as a data: URI has no web address of its own,
+// so Google's favicon crawler can never fetch it - and declared last, it is the
+// one browsers pick. One lived here until 2026-08-03 and the search result
+// showed a blank icon the whole time.
+assert.doesNotMatch(builtHtml, /<link[^>]*rel="icon"[^>]*href="data:/,
+  'the homepage declares an inline data: favicon again - Google cannot fetch one');
+
+// Google reads the site name from these two and the title. They have to agree,
+// or it falls back to showing the bare domain.
+assert.match(builtHtml, /<meta property="og:site_name" content="BeatAss">/,
+  'og:site_name no longer says BeatAss');
+assert.match(builtHtml, /"@type":"WebSite"[^}]*"name":"BeatAss"/,
+  'the WebSite structured data no longer names the site BeatAss');
+
 const png48 = fs.readFileSync(path.join(ROOT, 'public', 'favicon-48.png'));
 assert.deepEqual([...png48.subarray(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10],
   'favicon-48.png is not a PNG');
