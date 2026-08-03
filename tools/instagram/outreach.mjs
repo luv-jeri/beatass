@@ -98,8 +98,11 @@ export function outreachPlan({ handle, log = {}, cfg = OUT, counts = null, day =
   let comment = true;
   if (cfg.comment === false) { comment = false; why.comment = 'commenting is turned off in config.json'; }
   else if (rec.commented) { comment = false; why.comment = `already commented on ${rec.commented.slice(0, 10)}`; }
-  else if (rec.commentSkipped) { comment = false; why.comment = `nothing to comment on (${rec.commentSkipped})`; }
   else if (n.comments >= commentCap) { comment = false; why.comment = `daily comment limit of ${commentCap} reached`; }
+  /* `commentSkipped` is written down but deliberately does NOT block. "Private"
+     and "no posts" are today's answer, not a permanent one: somebody who was
+     private when we first looked can accept the follow request an hour later,
+     and then their posts are there. Only an actual comment blocks for ever. */
 
   return { follow, comment, why };
 }
@@ -134,6 +137,12 @@ export const FOLLOWED_LABELS = ['Following', 'Requested'];
    clicking THAT unfollows somebody we just followed. */
 export const followButtonRx = () => new RegExp(`^(${FOLLOW_LABELS.join('|')})$`);
 
+/* Instagram's actual words are "This profile is private". Looking for "this
+   ACCOUNT is private" matched nothing, so a private profile looked to us like
+   a public one with no posts - and "no posts" was written down as the reason.
+   Both wordings and the line underneath them are accepted now. */
+export const PRIVATE_RX = /this (profile|account) is private|follow to see their photos/i;
+
 /* ---------- the browser walk ---------- */
 
 const wait = (page, a, b) => page.waitForTimeout(a + Math.floor(Math.random() * (b - a)));
@@ -160,7 +169,7 @@ async function readProfile(page, handle) {
   await page.goto(`${IG}/${handle}/`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(4000);
   await dismissPopups(page);
-  return page.evaluate(({ h, followLabels, doneLabels }) => {
+  return page.evaluate(({ h, followLabels, doneLabels, privateSrc }) => {
     const header = document.querySelector('header');
     const text = document.body.innerText || '';
     const labels = header
@@ -176,13 +185,19 @@ async function readProfile(page, handle) {
       .filter((href) => href.startsWith('/' + h + '/') || /^\/(p|reel)\//.test(href));
     return {
       exists: !!header && !/sorry, this page isn't available/i.test(text),
-      private: /this account is private/i.test(text),
+      private: new RegExp(privateSrc, 'i').test(text),
       already: labels.some((t) => doneLabels.includes(t)),
       canFollow: labels.some((t) => followLabels.includes(t)),
-      tiles: tiles.slice(0, 3),
+      /* every post on the first screen, not just the newest: comments can be
+         turned off on any one of them, and we move down the list until one
+         takes a comment */
+      tiles: tiles.slice(0, 12),
       labels
     };
-  }, { h: handle.toLowerCase(), followLabels: FOLLOW_LABELS, doneLabels: FOLLOWED_LABELS });
+  }, {
+    h: handle.toLowerCase(), followLabels: FOLLOW_LABELS,
+    doneLabels: FOLLOWED_LABELS, privateSrc: PRIVATE_RX.source
+  });
 }
 
 /**
@@ -208,42 +223,57 @@ async function pressFollow(page, handle) {
 }
 
 /**
- * Comment on one post. `fill` is used rather than typing, because it sets the
- * value in one go and never presses a key - and Enter in Instagram's comment
- * box posts immediately. That is what keeps a dry run dry.
+ * Comment on the newest post that will take one. Comments can be turned off
+ * per post, so a locked newest post is not the end of it: walk down to the
+ * next, and the next, until one accepts or the posts run out.
+ *
+ * `fill` is used rather than typing, because it sets the value in one go and
+ * never presses a key - and Enter in Instagram's comment box posts
+ * immediately. That is what keeps a dry run dry.
  */
-async function pressComment(page, url, text, dry) {
-  await page.goto(url, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(4500);
-  await dismissPopups(page);
+async function pressComment(page, urls, text, dry, say) {
+  let locked = 0;
+  for (let i = 0; i < urls.length; i++) {
+    await page.goto(urls[i], { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(4500);
+    await dismissPopups(page);
 
-  const box = page.locator('textarea[placeholder^="Add a comment"]').first();
-  if (!await box.count()) throw new Error('comments are turned off on that post');
-  await box.waitFor({ state: 'visible', timeout: 15000 });
-  await box.click();
-  await box.fill(text);
-  await page.waitForTimeout(1200);
+    const box = page.locator('textarea[placeholder^="Add a comment"]').first();
+    const open = await box.waitFor({ state: 'visible', timeout: 8000 }).then(() => true).catch(() => false);
+    if (!open) {
+      locked++;
+      say(`    outreach: comments are off on post ${i + 1}, trying the next one.`);
+      continue;
+    }
 
-  if (dry) {
-    await page.screenshot({ path: path.join(HERE, 'outreach-dry-comment.png') });
-    await box.fill('');
-    return null;
+    await box.click();
+    await box.fill(text);
+    await page.waitForTimeout(1200);
+
+    if (dry) {
+      await page.screenshot({ path: path.join(HERE, 'outreach-dry-comment.png') });
+      await box.fill('');
+      return { url: urls[i], index: i + 1, locked };
+    }
+
+    /* The Post button only exists once the box has text, and there is more
+       than one thing called Post on the page - scope it to the comment form. */
+    const form = page.locator('form:has(textarea[placeholder^="Add a comment"])').first();
+    await form.getByRole('button', { name: 'Post', exact: true }).first().click({ timeout: 10000 });
+    await page.waitForTimeout(4000);
+
+    /* Proof, not optimism: our words have to be on the page afterwards.
+       Instagram silently swallows comments when it thinks you are spamming,
+       and the only tell is that nothing appears. */
+    const landed = await page.evaluate((t) => (document.body.innerText || '').includes(t), text.slice(0, 45));
+    /* Deliberately fatal, not "try the next post". A swallowed comment means
+       we are being limited, and hammering four more posts is exactly the
+       behaviour that turns a limit into a ban. */
+    if (!landed) throw new Error(`the comment did not appear on post ${i + 1} - Instagram may have refused it`);
+    await page.screenshot({ path: path.join(HERE, 'outreach-commented.png') });
+    return { url: page.url(), index: i + 1, locked };
   }
-
-  /* The Post button only exists once the box has text, and there is more than
-     one thing called Post on the page - scope it to the comment form. */
-  const form = page.locator('form:has(textarea[placeholder^="Add a comment"])').first();
-  await form.getByRole('button', { name: 'Post', exact: true }).first().click({ timeout: 10000 });
-  await page.waitForTimeout(4000);
-
-  /* Proof, not optimism: our words have to be on the page and the box has to
-     be empty again. Instagram silently swallows comments when it thinks you
-     are spamming, and the only tell is that nothing appears. */
-  const probe = text.slice(0, 45);
-  const landed = await page.evaluate((t) => (document.body.innerText || '').includes(t), probe);
-  if (!landed) throw new Error('the comment did not appear on the post - Instagram may have refused it');
-  await page.screenshot({ path: path.join(HERE, 'outreach-commented.png') });
-  return page.url();
+  throw new Error(`comments are turned off on all ${urls.length} of their posts`);
 }
 
 /**
@@ -322,14 +352,15 @@ export async function runOutreach(page, handle, { dry = false, say = console.log
 
   await wait(page, 6000, 16000);      // a beat between actions, never a burst
   try {
-    const url = await pressComment(page, IG + profile.tiles[0], text, dry);
+    const r = await pressComment(page, profile.tiles.map((t) => IG + t), text, dry, say);
+    const which = r.index === 1 ? 'latest post' : `post ${r.index} (comments were off on the ${r.locked} above it)`;
     if (dry) {
-      say(`    outreach (dry): would comment on ${IG}${profile.tiles[0]}`);
+      say(`    outreach (dry): would comment on ${r.url} - their ${which}`);
       say(`      "${text}"`);
     } else {
-      note({ commented: new Date().toISOString(), commentUrl: url, comment: text });
+      note({ commented: new Date().toISOString(), commentUrl: r.url, comment: text });
       result.commented = true;
-      say(`    outreach: commented on @${h}'s latest post.`);
+      say(`    outreach: commented on @${h}'s ${which}.`);
     }
   } catch (e) {
     say(`    outreach: comment failed for @${h}: ${e.message.split('\n')[0]}`);
@@ -426,8 +457,20 @@ if (IS_MAIN && args.includes('--selftest')) {
   eq('nobody is commented on twice', outreachPlan({ handle: 'old', log: commentedAlready, day }).comment, false);
   eq('a second confession to the same person adds nothing', JSON.stringify(outreachPlan({ handle: 'old', log: commentedAlready, day })).includes('"follow":false'), true);
 
-  eq('a private account is not retried every time',
-    outreachPlan({ handle: 'p', log: { p: { commentSkipped: 'private account' } }, day }).comment, false);
+  /* The opposite of what this said before, on purpose: @mayyankk_1 was private
+     when we looked, so nothing could be commented on, and then he accepted the
+     follow request. A permanent skip would have locked him out for ever. */
+  eq('a private account is looked at again later, because they can accept the follow',
+    outreachPlan({ handle: 'p', log: { p: { commentSkipped: 'private account' } }, day }).comment, true);
+  eq('an actual comment is still permanent',
+    outreachPlan({ handle: 'p', log: { p: { commented: stamp, commentSkipped: 'private account' } }, day }).comment, false);
+
+  /* Instagram's real wording. Getting this wrong made a private profile look
+     like a public one with nothing posted. */
+  eq('Instagram\'s actual words are read as private', PRIVATE_RX.test('anjaliijaiswal | 5 posts | This profile is private'), true);
+  eq('the other wording counts too', PRIVATE_RX.test('This account is private'), true);
+  eq('the line underneath counts too', PRIVATE_RX.test('Follow to see their photos and videos.'), true);
+  eq('an ordinary profile is not called private', PRIVATE_RX.test('mayyankk_1 | 3 posts | 167 followers | Following'), false);
 
   /* caps */
   const many = {};
