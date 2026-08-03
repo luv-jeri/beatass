@@ -1331,6 +1331,50 @@ function tone(freq, end, dur, gain, shape){
   o.connect(g); g.connect(ac.destination);
   o.start(); o.stop(ac.currentTime + dur);
 }
+/* ---- the real recorded effects ----
+   Made once with ElevenLabs (tools/sfx/generate.mjs), reviewed by ear, and
+   shipped as files in /sfx/. Everything below this block is the hand-built
+   synthesised version, and it stays, because these have to be fetched and a
+   fetch can fail: offline, a slow phone, or this page opened straight off disk
+   with no sfx folder beside it. A doll that goes silent because a network
+   request failed is worse than one that makes a simpler noise. */
+const SAMPLES = Object.create(null);
+/* levelled by hand - the generator returns them at different loudnesses and
+   the pin came back much quieter than the punches */
+const SAMPLE_GAIN = { 'punch':.85, 'punch-hard':.95, 'pin':2.4, 'fire':.8, 'fire-loop':.45, 'love':.75, 'reset':.6 };
+let samplesAsked = false;
+function loadSamples(){
+  if(samplesAsked) return; samplesAsked = true;
+  const ac = audio(); if(!ac) return;
+  for(const n of Object.keys(SAMPLE_GAIN)){
+    fetch('sfx/' + n + '.mp3')
+      .then(r => r.ok ? r.arrayBuffer() : Promise.reject(new Error('missing')))
+      .then(b => ac.decodeAudioData(b))
+      .then(buf => { SAMPLES[n] = buf; })
+      .catch(() => {});          /* this one stays on the synth, quietly */
+  }
+}
+/* Start downloading at the FIRST touch anywhere, not at the first sound.
+   Waiting for the first sound means the first punch of every session is the
+   fallback, which is the one punch that decides whether this feels good.
+   A pointerdown is a real gesture, so the audio context is allowed to exist,
+   and decoding works fine while it is still suspended. */
+addEventListener('pointerdown', loadSamples, { once: true, passive: true });
+
+/** Play a recorded effect. Returns false if we do not have it, which is the
+ *  signal for the caller to fall through to the synthesised version. */
+function shot(name, gain, rate){
+  const buf = SAMPLES[name], ac = audio();
+  if(!buf || !ac) return false;
+  const src = ac.createBufferSource(); src.buffer = buf;
+  src.playbackRate.value = rate || 1;      /* small random shifts so repeats do not sound like a recording */
+  const g = ac.createGain();
+  g.gain.value = (SAMPLE_GAIN[name] || 1) * (gain === undefined ? 1 : gain);
+  src.connect(g); g.connect(ac.destination);
+  src.start();
+  return true;
+}
+
 /* One burst of noise, but starting at a chosen moment and with a proper attack.
    `noise` above slams to full volume instantly, which is right for a slap and
    wrong for everything else — a sound with no attack reads as a click, and a
@@ -1381,6 +1425,8 @@ const SFX = {
   punch(k){
     const c = Math.min(k || 1, 10);          /* a streak hits harder and lower */
     const v = .88 + Math.random()*.3;
+    /* a streak earns the heavier recording, and the pitch drifts down with it */
+    if(shot(c >= 4 ? 'punch-hard' : 'punch', 1, (c >= 4 ? .95 : 1) + (Math.random()*.14 - .07) - c*.012)) return;
     const hard = 1 + c*.04;
     grain(0,     0.012, 5200*v, 2600, 0.22*hard, 'highpass');          /* skin contact */
     grain(0.004, 0.14,  1100*v, 90,   0.5*hard,  'lowpass');           /* the slap */
@@ -1393,6 +1439,7 @@ const SFX = {
      taking it. The slide is what makes it satisfying, and it was missing. */
   pin(){
     const v = .93 + Math.random()*.16;
+    if(shot('pin', 1, .94 + Math.random()*.14)) return;
     grain(0,     0.008, 9000*v, 5200, 0.30, 'highpass');               /* the point breaks the surface */
     voice(0.002, 3300*v, 2100, 0.035, 0.16, 'triangle', 0.002);        /* the tiny metal ring */
     grain(0.010, 0.075, 2600*v, 380, 0.22, 'bandpass', 6);             /* sliding through the cloth */
@@ -1402,6 +1449,7 @@ const SFX = {
   /* The moment it catches. The ongoing burn is a loop, further down - a fire
      that makes one puff and then falls silent is the bug this had. */
   fire(){
+    if(shot('fire', 1, .97 + Math.random()*.08)) return;
     grain(0,    0.5,  260, 1600, 0.20, 'lowpass');                     /* the catch, rising */
     grain(0.03, 0.9,  1800, 400,  0.16, 'bandpass', 1.4);              /* the roar */
     grain(0.05, 0.28, 5200, 1400, 0.10, 'highpass');                   /* first crackles */
@@ -1410,10 +1458,11 @@ const SFX = {
   /* Warmth, not a xylophone. A chord that blooms instead of three notes in a
      row, because being held is one feeling and not three. */
   love(){
+    if(shot('love')) return;
     [392, 523, 659, 784].forEach((f, i) => voice(i*0.045, f, f*1.005, 0.9 - i*0.08, 0.075, 'sine', 0.09));
     grain(0, 0.5, 400, 1200, 0.035, 'lowpass');                        /* a soft breath under it */
   },
-  reset(){ grain(0, 0.3, 2600, 180, 0.12, 'lowpass'); voice(0.02, 260, 110, 0.16, 0.09, 'triangle', 0.02); },
+  reset(){ if(shot('reset')) return; grain(0, 0.3, 2600, 180, 0.12, 'lowpass'); voice(0.02, 260, 110, 0.16, 0.09, 'triangle', 0.02); },
   select(){ voice(0, 1150, 1150, 0.03, 0.08, 'square', 0.002); }
 };
 
@@ -1428,6 +1477,18 @@ const SFX = {
 let burn = null, loveHum = null;
 function startBurn(){
   const ac = audio(); if(!ac || burn) return;
+  /* the recorded fire, made with loop:true so its ends already match */
+  const rec = SAMPLES['fire-loop'];
+  if(rec){
+    const src = ac.createBufferSource(); src.buffer = rec; src.loop = true;
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(SAMPLE_GAIN['fire-loop'], ac.currentTime + 0.5);
+    src.connect(g); g.connect(ac.destination);
+    src.start();
+    burn = { src, g, pops: null };        /* the recording has its own crackles */
+    return;
+  }
   const n = Math.floor(ac.sampleRate * 2);
   const buf = ac.createBuffer(1, n, ac.sampleRate);
   const d = buf.getChannelData(0);
@@ -1475,6 +1536,7 @@ function stopLoveHum(){ if(loveHum){ clearInterval(loveHum); loveHum = null; } }
 
 /** Called every frame. Makes the sound match the doll's actual state. */
 function soundState(D){
+  if(AC) loadSamples();
   const shouldBurn = !muted && D.onFire;
   if(shouldBurn && !burn) startBurn();
   if(!shouldBurn && burn) stopBurn();
@@ -1528,6 +1590,7 @@ function buzz(n, k){
 }
 function play(n, k){
   buzz(n, k);
+  loadSamples();          /* a safety net; the pointerdown below normally wins */
   if(!muted && SFX[n]) try{ SFX[n](k); }catch(err){}
 }
 

@@ -96,7 +96,22 @@ const srv=http.createServer((q,s)=>{
     });
     return;
   }
-  try{s.writeHead(200,{'Content-Type':'text/html'});s.end(fs.readFileSync(path.join(ROOT,q.url==='/'?'beatass.html':q.url.split('?')[0])))}catch{s.writeHead(404);s.end()}
+  /* Read the file BEFORE writing the header. The other way round, a missing
+     file threw after the 200 had already gone out, and the 404 attempt then
+     crashed the whole run with ERR_HTTP_HEADERS_SENT - which is how adding
+     /sfx/*.mp3 to the page took this test down with it.
+     Falls back to public/ so the built assets (sound effects, icons) resolve
+     the same way they do in production. */
+  const rel = q.url === '/' ? 'beatass.html' : decodeURIComponent(q.url.split('?')[0]).replace(/^\/+/, '');
+  const TYPES = { '.html':'text/html', '.mp3':'audio/mpeg', '.png':'image/png', '.svg':'image/svg+xml',
+                  '.css':'text/css', '.js':'text/javascript', '.xml':'application/xml', '.txt':'text/plain' };
+  let body = null;
+  for(const base of [ROOT, path.join(ROOT,'public')]){
+    try{ body = fs.readFileSync(path.join(base, rel)); break; }catch{}
+  }
+  if(body === null){ s.writeHead(404); s.end(); return; }
+  s.writeHead(200,{'Content-Type': TYPES[path.extname(rel)] || 'application/octet-stream'});
+  s.end(body);
 });
 await new Promise(r=>srv.listen(8894,r));
 fs.mkdirSync(ROOT+'/shots',{recursive:true});

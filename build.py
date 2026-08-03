@@ -212,6 +212,21 @@ def build_pages(public: pathlib.Path, app_html: str) -> int:
     if not touch.is_file():
         raise SystemExit("!! design/assets/brand/png/apple-touch-180.png is missing")
     (public / "apple-touch-icon.png").write_bytes(touch.read_bytes())
+
+    # The doll's sound effects. Made once with ElevenLabs by
+    # tools/sfx/generate.mjs and committed like any other asset - the site must
+    # never depend on an outside service being up to make a noise.
+    sfx_src = HERE / "design" / "assets" / "sfx"
+    if sfx_src.is_dir():
+        sfx_out = public / "sfx"
+        sfx_out.mkdir(exist_ok=True)
+        n = 0
+        for f in sorted(sfx_src.glob("*.mp3")):
+            (sfx_out / f.name).write_bytes(f.read_bytes())
+            n += 1
+        print(f"copied {n} sound effects into public/sfx/")
+    else:
+        print("!! no design/assets/sfx - the doll will fall back to synthesised sound")
     # Real favicon files: Google's favicon crawler cannot read the inline
     # data-URI icon, so search results show a grey globe without these.
     png = HERE / "design" / "assets" / "brand" / "png"
