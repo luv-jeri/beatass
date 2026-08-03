@@ -873,7 +873,7 @@ function adminPage(data) {
     ${card('top countries (7d)', rows((data.visits.countries || []).map((r) => ({ k: r.country || '??', n: r.n })), 'no visits logged yet'))}
   </div>
 
-  <div id="queue" style="margin:14px 0">${queueSection}</div>
+  <!--queue-start--><div id="queue" style="margin:14px 0">${queueSection}</div><!--queue-end-->
 
   ${card('all confessions',
     filterBar +

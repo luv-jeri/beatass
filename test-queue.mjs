@@ -21,6 +21,11 @@ const PORT = 8788;
 const BASE = `http://127.0.0.1:${PORT}`;
 const EMAIL = 'queue-test@localhost';
 const PASSWORD = 'not-a-real-password-' + Math.random().toString(36).slice(2);
+/* Fresh every run on purpose. The login has a per-IP attempt ceiling keyed off
+   a hash of this secret, and the local KV survives between runs - with a fixed
+   secret the tenth run gets a 429 and fails for a reason that has nothing to do
+   with the code under test. */
+const SECRET = 'queue-test-' + Math.random().toString(36).slice(2);
 
 const d1 = (sql, json) => {
   const r = spawnSync('npx', ['wrangler', 'd1', 'execute', 'beatass-db', '--local',
@@ -82,7 +87,7 @@ d1(SEED);
 console.log(`starting the worker on ${PORT}...`);
 const dev = spawn('npx', ['wrangler', 'dev', '--local', '--port', String(PORT),
   '--var', `ADMIN_EMAIL:${EMAIL}`, '--var', `ADMIN_PASSWORD:${PASSWORD}`,
-  '--var', 'BLOCK_SECRET:queue-test-secret'], { stdio: ['ignore', 'pipe', 'pipe'] });
+  '--var', `BLOCK_SECRET:${SECRET}`], { stdio: ['ignore', 'pipe', 'pipe'] });
 let devLog = '';
 dev.stdout.on('data', (b) => { devLog += b; });
 dev.stderr.on('data', (b) => { devLog += b; });
@@ -148,7 +153,13 @@ try {
   await move(cookie, 'not-a-real-id', 'queue');       // malformed id: must not move
   await move(cookie, 'ffffffff00000005', 'queue');    // no consent, right state: must not move
 
-  const page = await (await req(BASE + '/admin', { headers: { cookie } })).text();
+  const full = await (await req(BASE + '/admin', { headers: { cookie } })).text();
+  /* Only the queue section. The page below it is the moderation log, which
+     shows every confession on purpose - checking the whole page passed by
+     accident once and hid the fact that this was never testing the queue. */
+  const a = full.indexOf('<!--queue-start-->'), b = full.indexOf('<!--queue-end-->');
+  assert.ok(a > -1 && b > a, 'could not find the queue section on the admin page');
+  const page = full.slice(a, b);
   const st = allStates();
 
   console.log('\nwithout signing in:');
