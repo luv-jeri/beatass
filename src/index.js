@@ -89,7 +89,7 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
      keeps older clients working, and an empty caption is fine. */
   const line = caption
     ? esc(caption)
-    : (stats ? `…and this is what they did to you. (${esc(stats)})` : '');
+    : (stats ? `...and this is what they did to you. (${esc(stats)})` : '');
   /* Built out of tables and inline styles because that is the only layout every
      mail client agrees on — Gmail strips <style> blocks, Outlook renders with
      Word. The page's own fonts cannot come along (a mail client will not load a
@@ -152,7 +152,7 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
              font, so the one thing that makes this product look like itself has
              to arrive as pixels or not at all. Drawn at 2x by
              tools/make-email-header.mjs from the same doll the site uses. -->
-        <a href="${pageUrl}" style="text-decoration:none"><img src="${pageUrl}/email-header.png" alt="beatass — say the thing you'd never say" width="536" style="display:block;width:100%;max-width:536px;height:auto;border:0"></a>
+        <a href="${pageUrl}" style="text-decoration:none"><img src="${pageUrl}/email-header.png" alt="beatass - say the thing you'd never say" width="536" style="display:block;width:100%;max-width:536px;height:auto;border:0"></a>
 
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="pad" style="padding:4px 26px 22px">
 
@@ -308,6 +308,51 @@ ${replyUrl ? `<div style="margin:24px 0 0;text-align:center">
 </body></html>`;
 }
 
+/* Every mail client staples the WHOLE original message onto a reply as quoted
+   text. Relaying that verbatim buries the two words somebody actually typed
+   under a wall of "> ..." - reported live 2026-08-03, and it looked awful.
+   So: cut at the first quote marker and keep only what they wrote.
+   Deliberately conservative. Cutting too much would silently eat a real
+   sentence, which is worse than leaving one stray line in. */
+const QUOTE_MARKERS = [
+  /^[ \t]*On\b[\s\S]{0,300}?\bwrote:[ \t]*$/m,          // Gmail / Apple Mail, often wraps
+  /^[ \t]*>/m,                                          // any quoted line
+  /^[ \t]*-{2,}[ \t]*Original Message[ \t]*-{2,}/im,    // Outlook
+  /^[ \t]*_{10,}[ \t]*$/m,                              // Outlook divider rule
+  /^[ \t]*From:[ \t]*\S[^\n]*\n[ \t]*(Sent|Date|To):/im,// Outlook header block
+  /^[ \t]*Sent from my /im,
+  /^[ \t]*Get Outlook for /im,
+];
+
+export function stripQuoted(raw) {
+  const text = String(raw || '').replace(/\r\n?/g, '\n');
+  let cut = text.length;
+  for (const re of QUOTE_MARKERS) {
+    const m = re.exec(text);
+    if (m && m.index < cut) cut = m.index;
+  }
+  return text.slice(0, cut).replace(/\n{3,}/g, '\n\n').trim();
+}
+
+/* HTML replies hide the same chain in <blockquote> / gmail_quote instead of
+   "> ". Strip those wholesale, then keep the line breaks - the relay card
+   renders pre-wrap, so collapsing every newline would run it into one blob. */
+export function htmlToText(html) {
+  return String(html || '')
+    .replace(/<blockquote[\s\S]*?<\/blockquote>/gi, '')
+    .replace(/<div[^>]*gmail_quote[\s\S]*$/i, '')
+    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|tr|li|h[1-6])>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#0?39;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n');
+}
+
 /* The relay email: somebody's actual words coming back. Same paper as the
    confession but quieter chrome - this one is a private letter, not an event. */
 function relayHtml({ intro, body, footer, pageUrl }) {
@@ -336,7 +381,7 @@ ${body ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0
    somebody is annoyed with us doesn't also look broken. */
 const notice = (title, line) =>
   new Response(
-    `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)} — beatass</title>
+    `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)} - beatass</title>
 <body style="margin:0;min-height:100dvh;display:grid;place-items:center;background:#fbf7ea;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#26356e;padding:24px">
 <div style="max-width:420px;text-align:center">
 <h1 style="font-size:26px;margin:0 0 10px">${esc(title)}</h1>
@@ -349,7 +394,7 @@ const notice = (title, line) =>
    whole point: a link scanner follows links, it does not submit forms. */
 const confirm = (title, line, label, action) =>
   new Response(
-    `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${esc(title)} — beatass</title>
+    `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${esc(title)} - beatass</title>
 <body style="margin:0;min-height:100dvh;display:grid;place-items:center;background:#fbf7ea;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#26356e;padding:24px">
 <div style="max-width:420px;text-align:center">
 <h1 style="font-size:26px;margin:0 0 10px">${esc(title)}</h1>
@@ -871,10 +916,11 @@ export default {
       await env.RATE.put('rd:' + fromHash, String(usedToday + 1), { expirationTtl: RELAY_WINDOW });
 
       const parsed = await PostalMime.parse(message.raw);
-      let text = (parsed.text || '').trim();
-      if (!text && parsed.html)
-        text = String(parsed.html).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      let text = stripQuoted(parsed.text || '');
+      if (!text && parsed.html) text = stripQuoted(htmlToText(parsed.html));
       text = text.slice(0, 5000);
+      /* nothing but a quoted chain: they hit reply and typed nothing, so there
+         is genuinely nothing to pass on */
       if (!text) return;
 
       await sendViaResend(env, {
