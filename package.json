@@ -2,10 +2,10 @@
   "name": "beatass",
   "version": "0.1.0",
   "private": true,
-  "description": "beatass.com prototype — anonymous confession + voodoo doll GIF",
+  "description": "beatass.com prototype \u2014 anonymous confession + voodoo doll GIF",
   "scripts": {
     "build": "python3 build.py",
-    "test": "python3 build.py && node test-relay.mjs && node tools/instagram/notify.mjs --selftest && node tools/instagram/outreach.mjs --selftest && node tools/classify.mjs --selftest && node test.mjs && node test-queue.mjs",
+    "test": "python3 build.py && node test-relay.mjs && node tools/instagram/notify.mjs --selftest && node tools/instagram/outreach.mjs --selftest && node tools/classify.mjs --selftest && node test.mjs && node test-sound.mjs && node test-queue.mjs",
     "serve": "python3 -m http.server 8080"
   },
   "devDependencies": {

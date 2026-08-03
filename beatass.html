@@ -260,6 +260,11 @@ a{color:var(--red)}a:hover{color:var(--ink)}
   transform:rotate(-1.4deg);pointer-events:none;transition:opacity var(--dur-fade)}
 .rec.on ~ .clock{opacity:0}
 
+.mute{position:absolute;top:6px;left:8px;background:none;border:0;cursor:pointer;padding:5px;
+  color:var(--ink);opacity:.5;line-height:0}
+.mute:hover,.mute:focus-visible{opacity:1}
+.mute.off{color:var(--red);opacity:.95}
+.mute svg{width:21px;height:21px;display:block}
 .redo{position:absolute;top:6px;right:96px;display:none;background:var(--hl);
   border:var(--bw-pen) solid var(--ink);border-radius:var(--radius-pen-sm);cursor:pointer;
   font-weight:700;font-size:var(--fs-caption);color:var(--ink);padding:7px 11px;min-height:36px;
@@ -522,6 +527,15 @@ a{color:var(--red)}a:hover{color:var(--ink)}
     <path d="M16 27C10.5 22.8 4.5 19 4.5 13.2 4.5 9.3 7.3 6.6 10.7 6.6c2.4 0 4.3 1.4 5.3 3.4 1-2 2.9-3.5 5.4-3.5 3.4 0 6.1 2.8 6.1 6.6C27.5 19 21.6 22.7 16 27z"
       fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/>
   </symbol>
+  <symbol id="i-sound" viewBox="0 0 32 32">
+    <path d="M5 12.5h5l6-5v17l-6-5H5z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M21 11.5c2.4 2.6 2.4 6.4 0 9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M25.5 8c4 4.4 4 11.6 0 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-muted" viewBox="0 0 32 32">
+    <path d="M5 12.5h5l6-5v17l-6-5H5z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M21.5 12l8 8M29.5 12l-8 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+  </symbol>
   <symbol id="i-plane" viewBox="0 0 150 110">
     <path d="M8 52c44-16 92-30 136-38-20 28-38 54-52 84-6-14-11-24-17-32-16-6-38-11-67-14z"
       fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
@@ -596,6 +610,8 @@ a{color:var(--red)}a:hover{color:var(--ink)}
               <div class="stage-body">
                 <label style="position:fixed;left:-99px;top:0;width:1px;height:1px;opacity:.01;pointer-events:none" aria-hidden="true"><input type="checkbox" switch id="ios-tick" tabindex="-1"></label>
                 <canvas id="doll" width="440" height="440" aria-label="A hand-drawn voodoo doll. Tap or drag to hit it."></canvas>
+                <button class="mute" id="b-mute" type="button" aria-pressed="false" aria-label="Turn the sound off" title="sound on">
+                  <svg viewBox="0 0 32 32"><use href="#i-sound" id="mute-icon"/></svg></button>
                 <div class="rec" id="rec"><i></i><span id="rec-t">10.0s left</span></div>
                 <div class="clock" id="clock">you get <span id="clock-n">10</span> seconds</div>
                 <button class="redo" id="btn-redo" type="button">record again</button>
@@ -1321,37 +1337,176 @@ function tone(freq, end, dur, gain, shape){
   o.connect(g); g.connect(ac.destination);
   o.start(); o.stop(ac.currentTime + dur);
 }
+/* One burst of noise, but starting at a chosen moment and with a proper attack.
+   `noise` above slams to full volume instantly, which is right for a slap and
+   wrong for everything else — a sound with no attack reads as a click, and a
+   pile of clicks is what "the sounds are bad" actually means. */
+function grain(at, dur, from, to, gain, type, q){
+  const ac = audio(); if(!ac) return;
+  const t0 = ac.currentTime + at;
+  const n = Math.max(1, Math.floor(ac.sampleRate * dur));
+  const buf = ac.createBuffer(1, n, ac.sampleRate);
+  const d = buf.getChannelData(0);
+  /* brown-ish noise, not white: white noise is a hiss, brown noise has weight,
+     and weight is what a body blow and a fire both need */
+  let v = 0;
+  for(let i = 0; i < n; i++){ v = (v + (Math.random()*2 - 1) * .22) * .96; d[i] = v * 3; }
+  const src = ac.createBufferSource(); src.buffer = buf;
+  const f = ac.createBiquadFilter(); f.type = type || 'lowpass';
+  if(q) f.Q.value = q;
+  f.frequency.setValueAtTime(from, t0);
+  f.frequency.exponentialRampToValueAtTime(Math.max(to, 40), t0 + dur);
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(gain, t0 + Math.min(0.012, dur*.2));   /* the attack */
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  src.connect(f); f.connect(g); g.connect(ac.destination);
+  src.start(t0); src.stop(t0 + dur);
+}
+/* a pitched voice that can start late, bend, and be shaped — the building
+   block for anything that should feel like a body rather than a beep */
+function voice(at, freq, end, dur, gain, shape, atk){
+  const ac = audio(); if(!ac) return;
+  const t0 = ac.currentTime + at;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = shape || 'sine';
+  o.frequency.setValueAtTime(freq, t0);
+  o.frequency.exponentialRampToValueAtTime(Math.max(end, 20), t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(gain, t0 + (atk === undefined ? 0.006 : atk));
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(ac.destination);
+  o.start(t0); o.stop(t0 + dur + 0.02);
+}
+
 const SFX = {
-  /* a punch is three sounds at once: the slap (noise), the body (a low thump
-     that drops in pitch), and a knuckle crack on top. Tiny random detune so
-     two punches never sound like a recording played twice. */
+  /* A punch is four things landing a few milliseconds apart, and the gaps are
+     the whole point: contact, then the body absorbing it, then the room. All
+     at once is a click; spread over 40ms it is a hit. Every value is nudged at
+     random so no two punches are the same recording twice. */
   punch(k){
-    const c = Math.min(k || 1, 10);          /* the streak makes it hit harder */
-    const v = .9 + Math.random()*.25;
-    noise(0.11, 1400*v, 110, 0.4 + c*.015);
-    tone(120*v*(1 + c*.05), 42, 0.16, 0.4 + c*.02, 'sine');
-    tone(300*v, 90, 0.05, 0.16, 'triangle');
-    noise(0.03, 6000, 3000, 0.12, 'highpass');
+    const c = Math.min(k || 1, 10);          /* a streak hits harder and lower */
+    const v = .88 + Math.random()*.3;
+    const hard = 1 + c*.04;
+    grain(0,     0.012, 5200*v, 2600, 0.22*hard, 'highpass');          /* skin contact */
+    grain(0.004, 0.14,  1100*v, 90,   0.5*hard,  'lowpass');           /* the slap */
+    voice(0.006, 150*v*hard, 38, 0.20, 0.55*hard, 'sine', 0.004);      /* the body */
+    voice(0.010, 78*v, 30, 0.30, 0.30*hard, 'triangle', 0.010);        /* the weight under it */
+    if(c >= 3) grain(0.02, 0.22, 700, 120, 0.09*hard, 'lowpass');      /* the room, once it gets going */
   },
+  /* A needle going into cloth, which is a small sound made of three exact
+     parts: the skin giving way, the shaft sliding through, and the doll
+     taking it. The slide is what makes it satisfying, and it was missing. */
   pin(){
-    const v = .95 + Math.random()*.15;
-    tone(2600*v, 1400, 0.04, 0.15, 'square');
-    noise(0.06, 7000, 2400, 0.1, 'highpass');
-    tone(180, 70, 0.05, 0.12, 'sine');           /* the doll takes it in the body */
+    const v = .93 + Math.random()*.16;
+    grain(0,     0.008, 9000*v, 5200, 0.30, 'highpass');               /* the point breaks the surface */
+    voice(0.002, 3300*v, 2100, 0.035, 0.16, 'triangle', 0.002);        /* the tiny metal ring */
+    grain(0.010, 0.075, 2600*v, 380, 0.22, 'bandpass', 6);             /* sliding through the cloth */
+    voice(0.016, 210*v, 78, 0.13, 0.20, 'sine', 0.006);                /* he takes it in the body */
+    voice(0.020, 105*v, 60, 0.20, 0.10, 'sine', 0.014);                /* and it settles */
   },
+  /* The moment it catches. The ongoing burn is a loop, further down - a fire
+     that makes one puff and then falls silent is the bug this had. */
   fire(){
-    noise(0.7, 900, 260, 0.16, 'bandpass');
-    noise(0.25, 3400, 900, 0.07, 'highpass');    /* the first crackle */
-    tone(70, 45, 0.5, 0.08, 'sine');             /* low whoosh underneath */
+    grain(0,    0.5,  260, 1600, 0.20, 'lowpass');                     /* the catch, rising */
+    grain(0.03, 0.9,  1800, 400,  0.16, 'bandpass', 1.4);              /* the roar */
+    grain(0.05, 0.28, 5200, 1400, 0.10, 'highpass');                   /* first crackles */
+    voice(0.02, 58, 34, 0.8, 0.14, 'sine', 0.06);                      /* the low whoomph */
   },
+  /* Warmth, not a xylophone. A chord that blooms instead of three notes in a
+     row, because being held is one feeling and not three. */
   love(){
-    const t = (f, d) => setTimeout(() => tone(f, f*1.4, 0.22, 0.1), d);
-    tone(523, 740, 0.18, 0.12); t(659, 90); t(784, 190);
+    [392, 523, 659, 784].forEach((f, i) => voice(i*0.045, f, f*1.005, 0.9 - i*0.08, 0.075, 'sine', 0.09));
+    grain(0, 0.5, 400, 1200, 0.035, 'lowpass');                        /* a soft breath under it */
   },
-  reset(){ noise(0.22, 2400, 200, 0.1, 'highpass'); tone(240, 120, 0.12, 0.08, 'triangle'); },
-  select(){ tone(1100, 1100, 0.035, 0.09, 'square'); }
+  reset(){ grain(0, 0.3, 2600, 180, 0.12, 'lowpass'); voice(0.02, 260, 110, 0.16, 0.09, 'triangle', 0.02); },
+  select(){ voice(0, 1150, 1150, 0.03, 0.08, 'square', 0.002); }
 };
+
+/* ---- the sounds that continue, because the thing causing them continues ----
+   Burning and being loved are STATES, not events. They were played once, on
+   the button press, and then the doll burned in total silence - which is
+   exactly what "the burning sound is missing" describes. These are driven off
+   D.onFire and D.loving from the animation loop, not from the button handler,
+   so every way of turning them off (the button, picking the other tool, reset,
+   the fire going out on its own) stops the sound without needing to remember
+   to. One source of truth, no site to forget. */
+let burn = null, loveHum = null;
+function startBurn(){
+  const ac = audio(); if(!ac || burn) return;
+  const n = Math.floor(ac.sampleRate * 2);
+  const buf = ac.createBuffer(1, n, ac.sampleRate);
+  const d = buf.getChannelData(0);
+  let v = 0;
+  for(let i = 0; i < n; i++){ v = (v + (Math.random()*2 - 1)*.25) * .955; d[i] = v*2.6; }
+  /* the seam of a looping buffer is audible as a tick unless it is faded */
+  const fade = Math.floor(ac.sampleRate * .05);
+  for(let i = 0; i < fade; i++){ const k = i/fade; d[i] *= k; d[n-1-i] *= k; }
+
+  const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
+  const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 620; f.Q.value = .7;
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0.0001, ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.13, ac.currentTime + 0.5);      /* it takes hold */
+  src.connect(f); f.connect(g); g.connect(ac.destination);
+  src.start();
+  /* real fire is not a steady hiss, it is a hiss plus irregular pops */
+  const pops = setInterval(() => {
+    if(muted) return;
+    grain(0, 0.04 + Math.random()*0.05, 3000 + Math.random()*4000, 700, 0.05 + Math.random()*0.06, 'bandpass', 2);
+    if(Math.random() < .35) voice(0.02, 90 + Math.random()*60, 45, 0.12, 0.05, 'sine', 0.01);
+  }, 190);
+  burn = { src, g, pops };
+}
+function stopBurn(){
+  if(!burn) return;
+  const ac = audio(); const b = burn; burn = null;
+  clearInterval(b.pops);
+  try{
+    b.g.gain.cancelScheduledValues(ac.currentTime);
+    b.g.gain.setValueAtTime(Math.max(0.0002, b.g.gain.value), ac.currentTime);
+    b.g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.45);   /* dies down, never cut */
+    b.src.stop(ac.currentTime + 0.5);
+  }catch(err){}
+}
+function startLoveHum(){
+  if(loveHum) return;
+  loveHum = setInterval(() => {
+    if(muted) return;
+    const f = [523, 587, 659, 784][Math.floor(Math.random()*4)];
+    voice(0, f, f*1.01, 1.1, 0.035, 'sine', 0.25);                     /* barely there, on purpose */
+  }, 1500);
+}
+function stopLoveHum(){ if(loveHum){ clearInterval(loveHum); loveHum = null; } }
+
+/** Called every frame. Makes the sound match the doll's actual state. */
+function soundState(D){
+  const shouldBurn = !muted && D.onFire;
+  if(shouldBurn && !burn) startBurn();
+  if(!shouldBurn && burn) stopBurn();
+  const shouldLove = !muted && D.loving;
+  if(shouldLove && !loveHum) startLoveHum();
+  if(!shouldLove && loveHum) stopLoveHum();
+}
 let muted = false;
+/* A page that makes a continuous noise needs a way to stop it. The fire used
+   to be one short puff, so this did not matter much; now that he burns until
+   you put him out, it does. Deliberately NOT remembered between visits: the
+   privacy page says this site stores nothing on your machine, and a saved
+   preference would quietly make that untrue for one line of comfort. */
+{
+  const b = document.getElementById('b-mute');
+  if(b) b.onclick = () => {
+    muted = !muted;
+    b.classList.toggle('off', muted);
+    b.setAttribute('aria-pressed', muted ? 'true' : 'false');
+    b.setAttribute('aria-label', muted ? 'Turn the sound on' : 'Turn the sound off');
+    b.title = muted ? 'sound off' : 'sound on';
+    b.querySelector('use').setAttribute('href', muted ? '#i-muted' : '#i-sound');
+    /* soundState() picks the change up on the next frame and stops the fire */
+    if(!muted) play('select');
+  };
+}
 /* Haptics ride along with every sound. Patterns in ms: number = one buzz,
    array = buzz/pause/buzz. Android phones vibrate; iPhones silently skip this
    — Safari has no vibration API at all, a platform wall, not a bug here. */
@@ -1478,6 +1633,7 @@ function loop(now){
     return;
   }
   step(D, dt);
+  soundState(D);          /* burning and being loved are states, so they sound like states */
   drawDoll(ctx, D, boil, css);
   paintMeters();
   requestAnimationFrame(loop);
