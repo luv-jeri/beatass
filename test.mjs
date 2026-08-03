@@ -19,7 +19,10 @@ const ogTitle = oneMeta(/<meta property="og:title" content="([^"]+)">/, 'og:titl
 const twitterTitle = oneMeta(/<meta name="twitter:title" content="([^"]+)">/, 'twitter:title');
 assert.equal(ogTitle, searchTitle, 'og:title drifted from the search title');
 assert.equal(twitterTitle, searchTitle, 'twitter:title drifted from the search title');
-assert.match(searchTitle, /^BeatAss 👊/, 'search title lost the proper-cased brand and punch');
+// No emoji and no em-dash on purpose (Sanjay, 2026-08-03): Google strips the
+// emoji anyway, and the em-dash reads as an AI tell in the search listing.
+assert.match(searchTitle, /^BeatAss /, 'search title lost the proper-cased brand');
+assert.ok(!/[—–…👊😈🪆🔥]/u.test(searchTitle), 'search title has an emoji or em-dash again');
 
 const searchDescription = oneMeta(/<meta name="description" content="([^"]+)">/, 'description');
 const ogDescription = oneMeta(/<meta property="og:description" content="([^"]+)">/, 'og:description');
@@ -27,7 +30,7 @@ const twitterDescription = oneMeta(/<meta name="twitter:description" content="([
 assert.equal(ogDescription, searchDescription, 'og:description drifted from the search description');
 assert.equal(twitterDescription, searchDescription, 'twitter:description drifted from the search description');
 assert.ok([...searchDescription].length < 155, 'search description is 155 characters or longer');
-assert.match(searchDescription, /😈/, 'search description lost its playful opening');
+assert.ok(!/[—–…👊😈🪆🔥]/u.test(searchDescription), 'search description has an emoji or em-dash again');
 
 assert.match(builtHtml, /<link rel="icon" href="\/favicon\.ico" sizes="any">/,
   'built homepage does not declare /favicon.ico');
