@@ -227,6 +227,10 @@ console.log('POST /api/send:', sent.count, 'calls |', Math.round(sent.body.lengt
 if(missing.length) errs.push('fields missing from the POST body: '+missing.join(', '));
 if(!sent.body.includes('priya@example.com')) errs.push('the recipient address never reached the API');
 if(!sent.body.includes('me@example.com')) errs.push('the sender reply-to address never reached the API');
+/* Consent defaults to NO. Nobody ticked the share box on this send, so the
+   field must be absent - a message nobody agreed to share is never postable. */
+console.log('share consent default:', sent.body.includes('name="shareOk"') ? 'LEAKED A YES' : 'no (correct)');
+if(sent.body.includes('name="shareOk"')) errs.push('an unticked share box still sent consent to the API');
 if(!/^multipart\/form-data/.test(sent.type)) errs.push('the POST was not multipart/form-data');
 if(!sent.body.includes('GIF89a')) errs.push('no real GIF bytes in the POST body');
 await p.screenshot({path:ROOT+'/shots/v3-sent.png'});
@@ -240,7 +244,14 @@ await p.fill('#i-msg','no email this time, find them on instagram');
 await p.click('#go'); await p.waitForTimeout(400);
 const hOpen = await p.isVisible('#ov-preview.on');
 const hTo = hOpen ? await p.textContent('#p-to') : '';
+// the reset must have cleared the previous send's consent, not carried it over
+const shareCarried = await p.isChecked('#i-share');
+if(shareCarried) errs.push('the share box stayed ticked after a reset - consent must be per message');
+await p.check('#i-share');                       // this time the sender says yes
 await p.click('button:has-text("Send it")'); await p.waitForTimeout(600);
+const shareSent = sent.body.includes('name="shareOk"') && /name="shareOk"[\s\S]{0,40}?1/.test(sent.body);
+console.log('share consent when ticked:', shareSent ? 'yes, carried' : 'NEVER REACHED THE API');
+if(!shareSent) errs.push('a ticked share box did not reach the API');
 const hLine = await p.textContent('#sent-line').catch(()=> '');
 const hasHandle = sent.body.includes('name="handle"') && sent.body.includes('some.person_99');
 const noEmailField = !sent.body.includes('name="email"');
@@ -272,6 +283,11 @@ const movFits = await m2.evaluate(()=>{const c=document.querySelector('#ov-previ
   return {top:Math.round(c.top),bottom:Math.round(c.bottom),win:window.innerHeight,
           pageScroll:document.documentElement.scrollHeight>window.innerHeight+1};});
 console.log('mobile preview:', JSON.stringify(movFits));
+/* The send button and the consent box both live at the bottom of this card. If
+   the card runs off the screen they are below the fold, and the last thing
+   anyone sees before sending is cut in half. Measured, not eyeballed. */
+if(movFits.bottom > movFits.win) errs.push(`the preview card runs ${movFits.bottom-movFits.win}px off the bottom of a phone screen`);
+if(movFits.top < 0) errs.push(`the preview card runs ${-movFits.top}px off the top of a phone screen`);
 await m2.screenshot({path:ROOT+'/shots/v3-mobile-preview.png'});
 
 console.log('ERRORS:', errs.length?errs:'none');

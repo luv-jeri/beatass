@@ -17,7 +17,16 @@ CREATE TABLE IF NOT EXISTS messages (
   reports      INTEGER NOT NULL DEFAULT 0,
   sender_email TEXT,                       -- the sender's own address, if they want replies. Never shown.
   to_handle    TEXT,                       -- the recipient's Instagram handle, if given. Never shown.
-  view_token   TEXT                        -- /m link token, minted at send time for the IG notifier. Set only when to_handle is.
+  view_token   TEXT,                       -- /m link token, minted at send time for the IG notifier. Set only when to_handle is.
+  -- The sharing lane. A confession is a private letter by default: share_ok is
+  -- 0 unless the sender ticked the box on the send screen, and nothing with a 0
+  -- may ever be posted anywhere. Everything below is meaningless without it.
+  share_ok     INTEGER NOT NULL DEFAULT 0, -- 1 only if the sender said yes, in words, at send time
+  score        INTEGER,                    -- 0-100, how well it reads as a post. NULL = not judged yet
+  score_reason TEXT,                       -- one line from the classifier, so a number is never the whole story
+  scored_at    INTEGER,                    -- unix seconds
+  post_state   TEXT,                       -- NULL | 'queued' (Sanjay pressed post) | 'posted' | 'skipped'
+  posted_at    INTEGER                     -- unix seconds, set when it actually went out
 );
 
 CREATE INDEX IF NOT EXISTS idx_messages_created ON messages (created_at);

@@ -1231,6 +1231,11 @@ async function handle(request, env, ctx) {
       // Optional: the recipient's Instagram handle, for delivery by DM/comment
       // when the sender knows the handle. Stored, never shown to anyone.
       const toHandle = String(form.get('handle') || '').trim().replace(/^@+/, '').toLowerCase().slice(0, 30);
+      /* Consent to be shared publicly. Only the exact string '1' counts, and it
+         is only ever sent when the sender ticked the box on the send screen. A
+         missing field means no - which is what every message sent before this
+         existed will keep meaning, forever. */
+      const shareOk = String(form.get('shareOk') || '') === '1' ? 1 : 0;
 
       if (!name || name.length > MAX_NAME) return json({ error: 'That name looks wrong.' }, 400);
       if (email && !okEmail(email)) return json({ error: "That's not an email address." }, 400);
@@ -1280,8 +1285,8 @@ async function handle(request, env, ctx) {
       await Promise.all(puts);
 
       await env.DB.prepare(
-        `INSERT INTO messages (id, to_email, to_name, body, stats, has_gif, has_mp4, created_at, sender_hash, sender_email, to_handle, view_token)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO messages (id, to_email, to_name, body, stats, has_gif, has_mp4, created_at, sender_hash, sender_email, to_handle, view_token, share_ok)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
         // to_email is NOT NULL in the schema, so a handle-only message stores it
         // as '' (empty string). Every read treats '' as "no email" - it is falsy,
@@ -1295,7 +1300,7 @@ async function handle(request, env, ctx) {
         // will contain anyway: the right to view this one message.
         .bind(mid, email, name, body, stats, gif && gif.size ? 1 : 0, mp4 && mp4.size ? 1 : 0,
               Math.floor(Date.now() / 1000), ipHash, senderEmail || null, toHandle || null,
-              toHandle ? await token(env.BLOCK_SECRET, 'view:' + mid) : null)
+              toHandle ? await token(env.BLOCK_SECRET, 'view:' + mid) : null, shareOk)
         .run();
 
       const gifUrl = gif && gif.size ? `${site}/media/${mid}.gif` : '';
