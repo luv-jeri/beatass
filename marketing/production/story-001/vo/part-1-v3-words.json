@@ -1,0 +1,647 @@
+[
+ {
+  "word": "In",
+  "start": 0,
+  "end": 0.139
+ },
+ {
+  "word": "2013,",
+  "start": 0.209,
+  "end": 1.196
+ },
+ {
+  "word": "a",
+  "start": 1.265,
+  "end": 1.335
+ },
+ {
+  "word": "man",
+  "start": 1.428,
+  "end": 1.672
+ },
+ {
+  "word": "confessed",
+  "start": 1.741,
+  "end": 2.171
+ },
+ {
+  "word": "to",
+  "start": 2.194,
+  "end": 2.252
+ },
+ {
+  "word": "a",
+  "start": 2.322,
+  "end": 2.345
+ },
+ {
+  "word": "murder",
+  "start": 2.415,
+  "end": 2.74
+ },
+ {
+  "word": "inside",
+  "start": 2.798,
+  "end": 3.286
+ },
+ {
+  "word": "a",
+  "start": 3.32,
+  "end": 3.344
+ },
+ {
+  "word": "meme.",
+  "start": 3.402,
+  "end": 4.272
+ },
+ {
+  "word": "Reddit",
+  "start": 4.272,
+  "end": 4.585
+ },
+ {
+  "word": "had",
+  "start": 4.632,
+  "end": 4.748
+ },
+ {
+  "word": "a",
+  "start": 4.783,
+  "end": 4.806
+ },
+ {
+  "word": "running",
+  "start": 4.864,
+  "end": 5.12
+ },
+ {
+  "word": "joke",
+  "start": 5.178,
+  "end": 5.421
+ },
+ {
+  "word": "called",
+  "start": 5.468,
+  "end": 5.746
+ },
+ {
+  "word": "Confession",
+  "start": 5.816,
+  "end": 6.397
+ },
+ {
+  "word": "Bear,",
+  "start": 6.466,
+  "end": 6.919
+ },
+ {
+  "word": "a",
+  "start": 7.128,
+  "end": 7.198
+ },
+ {
+  "word": "sad",
+  "start": 7.314,
+  "end": 7.592
+ },
+ {
+  "word": "little",
+  "start": 7.651,
+  "end": 7.848
+ },
+ {
+  "word": "bear",
+  "start": 7.883,
+  "end": 8.08
+ },
+ {
+  "word": "you",
+  "start": 8.15,
+  "end": 8.231
+ },
+ {
+  "word": "pinned",
+  "start": 8.301,
+  "end": 8.533
+ },
+ {
+  "word": "your",
+  "start": 8.556,
+  "end": 8.684
+ },
+ {
+  "word": "secrets",
+  "start": 8.742,
+  "end": 9.171
+ },
+ {
+  "word": "to.",
+  "start": 9.229,
+  "end": 10.077
+ },
+ {
+  "word": "The",
+  "start": 10.077,
+  "end": 10.205
+ },
+ {
+  "word": "secrets",
+  "start": 10.274,
+  "end": 10.739
+ },
+ {
+  "word": "were",
+  "start": 10.797,
+  "end": 10.913
+ },
+ {
+  "word": "small",
+  "start": 10.959,
+  "end": 11.331
+ },
+ {
+  "word": "and",
+  "start": 11.377,
+  "end": 11.459
+ },
+ {
+  "word": "silly,",
+  "start": 11.54,
+  "end": 12.086
+ },
+ {
+  "word": "like",
+  "start": 12.295,
+  "end": 12.515
+ },
+ {
+  "word": "farting",
+  "start": 12.573,
+  "end": 13.119
+ },
+ {
+  "word": "and",
+  "start": 13.177,
+  "end": 13.258
+ },
+ {
+  "word": "blaming",
+  "start": 13.305,
+  "end": 13.676
+ },
+ {
+  "word": "the",
+  "start": 13.723,
+  "end": 13.792
+ },
+ {
+  "word": "dog,",
+  "start": 13.839,
+  "end": 14.303
+ },
+ {
+  "word": "and",
+  "start": 14.512,
+  "end": 14.675
+ },
+ {
+  "word": "everyone",
+  "start": 14.756,
+  "end": 15.197
+ },
+ {
+  "word": "laughed",
+  "start": 15.243,
+  "end": 15.557
+ },
+ {
+  "word": "along.",
+  "start": 15.603,
+  "end": 16.904
+ },
+ {
+  "word": "Then",
+  "start": 16.904,
+  "end": 17.159
+ },
+ {
+  "word": "one",
+  "start": 17.229,
+  "end": 17.403
+ },
+ {
+  "word": "night",
+  "start": 17.45,
+  "end": 17.693
+ },
+ {
+  "word": "at",
+  "start": 17.752,
+  "end": 17.833
+ },
+ {
+  "word": "two",
+  "start": 17.868,
+  "end": 18.007
+ },
+ {
+  "word": "in",
+  "start": 18.065,
+  "end": 18.123
+ },
+ {
+  "word": "the",
+  "start": 18.158,
+  "end": 18.228
+ },
+ {
+  "word": "morning,",
+  "start": 18.274,
+  "end": 18.762
+ },
+ {
+  "word": "a",
+  "start": 18.913,
+  "end": 18.982
+ },
+ {
+  "word": "user",
+  "start": 19.098,
+  "end": 19.365
+ },
+ {
+  "word": "called",
+  "start": 19.412,
+  "end": 19.667
+ },
+ {
+  "word": "Narado",
+  "start": 19.737,
+  "end": 20.294
+ },
+ {
+  "word": "posted",
+  "start": 20.387,
+  "end": 20.77
+ },
+ {
+  "word": "his",
+  "start": 20.805,
+  "end": 20.909
+ },
+ {
+  "word": "own.",
+  "start": 20.967,
+  "end": 21.687
+ },
+ {
+  "word": "His",
+  "start": 21.687,
+  "end": 21.861
+ },
+ {
+  "word": "post",
+  "start": 21.931,
+  "end": 22.186
+ },
+ {
+  "word": "said",
+  "start": 22.221,
+  "end": 22.384
+ },
+ {
+  "word": "his",
+  "start": 22.418,
+  "end": 22.488
+ },
+ {
+  "word": "sister's",
+  "start": 22.523,
+  "end": 22.871
+ },
+ {
+  "word": "boyfriend",
+  "start": 22.906,
+  "end": 23.382
+ },
+ {
+  "word": "had",
+  "start": 23.428,
+  "end": 23.521
+ },
+ {
+  "word": "been",
+  "start": 23.545,
+  "end": 23.696
+ },
+ {
+  "word": "violent",
+  "start": 23.754,
+  "end": 24.172
+ },
+ {
+  "word": "and",
+  "start": 24.218,
+  "end": 24.288
+ },
+ {
+  "word": "hooked",
+  "start": 24.322,
+  "end": 24.543
+ },
+ {
+  "word": "on",
+  "start": 24.589,
+  "end": 24.671
+ },
+ {
+  "word": "drugs,",
+  "start": 24.729,
+  "end": 25.309
+ },
+ {
+  "word": "so",
+  "start": 25.483,
+  "end": 25.634
+ },
+ {
+  "word": "he",
+  "start": 25.716,
+  "end": 25.785
+ },
+ {
+  "word": "ended",
+  "start": 25.867,
+  "end": 26.099
+ },
+ {
+  "word": "the",
+  "start": 26.122,
+  "end": 26.192
+ },
+ {
+  "word": "man's",
+  "start": 26.238,
+  "end": 26.54
+ },
+ {
+  "word": "life,",
+  "start": 26.598,
+  "end": 27.028
+ },
+ {
+  "word": "and",
+  "start": 27.237,
+  "end": 27.411
+ },
+ {
+  "word": "nobody",
+  "start": 27.504,
+  "end": 27.898
+ },
+ {
+  "word": "ever",
+  "start": 27.956,
+  "end": 28.107
+ },
+ {
+  "word": "knew.",
+  "start": 28.154,
+  "end": 29.814
+ },
+ {
+  "word": "The",
+  "start": 29.814,
+  "end": 30.0
+ },
+ {
+  "word": "death",
+  "start": 30.058,
+  "end": 30.302
+ },
+ {
+  "word": "was",
+  "start": 30.348,
+  "end": 30.453
+ },
+ {
+  "word": "ruled",
+  "start": 30.522,
+  "end": 30.778
+ },
+ {
+  "word": "an",
+  "start": 30.801,
+  "end": 30.871
+ },
+ {
+  "word": "overdose,",
+  "start": 30.929,
+  "end": 31.474
+ },
+ {
+  "word": "and",
+  "start": 31.497,
+  "end": 31.625
+ },
+ {
+  "word": "he",
+  "start": 31.695,
+  "end": 31.776
+ },
+ {
+  "word": "titled",
+  "start": 31.846,
+  "end": 32.206
+ },
+ {
+  "word": "the",
+  "start": 32.229,
+  "end": 32.299
+ },
+ {
+  "word": "post,",
+  "start": 32.345,
+  "end": 32.763
+ },
+ {
+  "word": "I",
+  "start": 32.972,
+  "end": 33.03
+ },
+ {
+  "word": "finally",
+  "start": 33.239,
+  "end": 33.68
+ },
+ {
+  "word": "have",
+  "start": 33.727,
+  "end": 33.854
+ },
+ {
+  "word": "the",
+  "start": 33.889,
+  "end": 33.959
+ },
+ {
+  "word": "guts",
+  "start": 34.04,
+  "end": 34.354
+ },
+ {
+  "word": "to",
+  "start": 34.412,
+  "end": 34.493
+ },
+ {
+  "word": "say",
+  "start": 34.574,
+  "end": 34.795
+ },
+ {
+  "word": "it.",
+  "start": 34.853,
+  "end": 35.48
+ },
+ {
+  "word": "Within",
+  "start": 35.48,
+  "end": 35.782
+ },
+ {
+  "word": "hours",
+  "start": 35.852,
+  "end": 36.211
+ },
+ {
+  "word": "it",
+  "start": 36.258,
+  "end": 36.328
+ },
+ {
+  "word": "had",
+  "start": 36.374,
+  "end": 36.49
+ },
+ {
+  "word": "ten",
+  "start": 36.537,
+  "end": 36.78
+ },
+ {
+  "word": "thousand",
+  "start": 36.838,
+  "end": 37.187
+ },
+ {
+  "word": "upvotes",
+  "start": 37.256,
+  "end": 37.686
+ },
+ {
+  "word": "and",
+  "start": 37.732,
+  "end": 37.848
+ },
+ {
+  "word": "three",
+  "start": 37.918,
+  "end": 38.243
+ },
+ {
+  "word": "thousand",
+  "start": 38.313,
+  "end": 38.731
+ },
+ {
+  "word": "comments,",
+  "start": 38.8,
+  "end": 39.207
+ },
+ {
+  "word": "every",
+  "start": 39.253,
+  "end": 39.543
+ },
+ {
+  "word": "one",
+  "start": 39.613,
+  "end": 39.752
+ },
+ {
+  "word": "of",
+  "start": 39.787,
+  "end": 39.834
+ },
+ {
+  "word": "them",
+  "start": 39.88,
+  "end": 40.02
+ },
+ {
+  "word": "asking,",
+  "start": 40.101,
+  "end": 40.53
+ },
+ {
+  "word": "is",
+  "start": 40.554,
+  "end": 40.681
+ },
+ {
+  "word": "this",
+  "start": 40.728,
+  "end": 40.902
+ },
+ {
+  "word": "a",
+  "start": 40.96,
+  "end": 40.995
+ },
+ {
+  "word": "joke?",
+  "start": 41.111,
+  "end": 42.492
+ },
+ {
+  "word": "Then",
+  "start": 42.493,
+  "end": 42.806
+ },
+ {
+  "word": "Narado",
+  "start": 42.888,
+  "end": 43.329
+ },
+ {
+  "word": "himself",
+  "start": 43.399,
+  "end": 43.747
+ },
+ {
+  "word": "replied,",
+  "start": 43.793,
+  "end": 44.374
+ },
+ {
+  "word": "with",
+  "start": 44.525,
+  "end": 44.699
+ },
+ {
+  "word": "one",
+  "start": 44.769,
+  "end": 45.036
+ },
+ {
+  "word": "single",
+  "start": 45.094,
+  "end": 45.43
+ },
+ {
+  "word": "sentence.",
+  "start": 45.465,
+  "end": 46.348
+ }
+]

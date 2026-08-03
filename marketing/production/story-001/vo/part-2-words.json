@@ -1,0 +1,622 @@
+[
+ {
+  "word": "He",
+  "start": 0,
+  "end": 0.151
+ },
+ {
+  "word": "confessed",
+  "start": 0.209,
+  "end": 0.65
+ },
+ {
+  "word": "to",
+  "start": 0.673,
+  "end": 0.731
+ },
+ {
+  "word": "a",
+  "start": 0.801,
+  "end": 0.824
+ },
+ {
+  "word": "murder",
+  "start": 0.882,
+  "end": 1.196
+ },
+ {
+  "word": "inside",
+  "start": 1.242,
+  "end": 1.625
+ },
+ {
+  "word": "a",
+  "start": 1.649,
+  "end": 1.672
+ },
+ {
+  "word": "meme,",
+  "start": 1.741,
+  "end": 2.299
+ },
+ {
+  "word": "replied",
+  "start": 2.624,
+  "end": 3.065
+ },
+ {
+  "word": "that",
+  "start": 3.088,
+  "end": 3.193
+ },
+ {
+  "word": "there",
+  "start": 3.216,
+  "end": 3.344
+ },
+ {
+  "word": "was",
+  "start": 3.379,
+  "end": 3.471
+ },
+ {
+  "word": "some",
+  "start": 3.518,
+  "end": 3.738
+ },
+ {
+  "word": "truth",
+  "start": 3.773,
+  "end": 4.052
+ },
+ {
+  "word": "behind",
+  "start": 4.11,
+  "end": 4.435
+ },
+ {
+  "word": "it,",
+  "start": 4.505,
+  "end": 4.876
+ },
+ {
+  "word": "and",
+  "start": 5.259,
+  "end": 5.422
+ },
+ {
+  "word": "then",
+  "start": 5.468,
+  "end": 5.596
+ },
+ {
+  "word": "he",
+  "start": 5.642,
+  "end": 5.7
+ },
+ {
+  "word": "vanished.",
+  "start": 5.77,
+  "end": 7.105
+ },
+ {
+  "word": "But",
+  "start": 7.105,
+  "end": 7.326
+ },
+ {
+  "word": "Reddit",
+  "start": 7.384,
+  "end": 7.651
+ },
+ {
+  "word": "does",
+  "start": 7.685,
+  "end": 7.825
+ },
+ {
+  "word": "not",
+  "start": 7.871,
+  "end": 7.987
+ },
+ {
+  "word": "let",
+  "start": 8.045,
+  "end": 8.185
+ },
+ {
+  "word": "a",
+  "start": 8.22,
+  "end": 8.254
+ },
+ {
+  "word": "thing",
+  "start": 8.301,
+  "end": 8.463
+ },
+ {
+  "word": "like",
+  "start": 8.521,
+  "end": 8.672
+ },
+ {
+  "word": "that",
+  "start": 8.707,
+  "end": 8.881
+ },
+ {
+  "word": "go.",
+  "start": 8.951,
+  "end": 9.845
+ },
+ {
+  "word": "His",
+  "start": 9.845,
+  "end": 10.042
+ },
+ {
+  "word": "account",
+  "start": 10.077,
+  "end": 10.379
+ },
+ {
+  "word": "was",
+  "start": 10.425,
+  "end": 10.518
+ },
+ {
+  "word": "anonymous,",
+  "start": 10.565,
+  "end": 11.296
+ },
+ {
+  "word": "but",
+  "start": 11.366,
+  "end": 11.54
+ },
+ {
+  "word": "every",
+  "start": 11.61,
+  "end": 11.935
+ },
+ {
+  "word": "comment",
+  "start": 12.004,
+  "end": 12.364
+ },
+ {
+  "word": "he",
+  "start": 12.422,
+  "end": 12.492
+ },
+ {
+  "word": "had",
+  "start": 12.55,
+  "end": 12.655
+ },
+ {
+  "word": "ever",
+  "start": 12.724,
+  "end": 13.003
+ },
+ {
+  "word": "written",
+  "start": 13.049,
+  "end": 13.328
+ },
+ {
+  "word": "was",
+  "start": 13.374,
+  "end": 13.479
+ },
+ {
+  "word": "public,",
+  "start": 13.549,
+  "end": 14.094
+ },
+ {
+  "word": "and",
+  "start": 14.245,
+  "end": 14.396
+ },
+ {
+  "word": "thousands",
+  "start": 14.477,
+  "end": 14.942
+ },
+ {
+  "word": "of",
+  "start": 14.977,
+  "end": 15.023
+ },
+ {
+  "word": "strangers",
+  "start": 15.081,
+  "end": 15.534
+ },
+ {
+  "word": "started",
+  "start": 15.569,
+  "end": 15.917
+ },
+ {
+  "word": "digging",
+  "start": 15.975,
+  "end": 16.254
+ },
+ {
+  "word": "through",
+  "start": 16.312,
+  "end": 16.556
+ },
+ {
+  "word": "all",
+  "start": 16.614,
+  "end": 16.869
+ },
+ {
+  "word": "of",
+  "start": 16.927,
+  "end": 16.974
+ },
+ {
+  "word": "it.",
+  "start": 17.043,
+  "end": 18.204
+ },
+ {
+  "word": "A",
+  "start": 18.204,
+  "end": 18.308
+ },
+ {
+  "word": "birthday",
+  "start": 18.39,
+  "end": 18.808
+ },
+ {
+  "word": "in",
+  "start": 18.843,
+  "end": 18.912
+ },
+ {
+  "word": "one",
+  "start": 18.982,
+  "end": 19.179
+ },
+ {
+  "word": "thread",
+  "start": 19.237,
+  "end": 19.586
+ },
+ {
+  "word": "led",
+  "start": 19.644,
+  "end": 19.795
+ },
+ {
+  "word": "to",
+  "start": 19.841,
+  "end": 19.899
+ },
+ {
+  "word": "a",
+  "start": 19.969,
+  "end": 19.992
+ },
+ {
+  "word": "workplace",
+  "start": 20.062,
+  "end": 20.607
+ },
+ {
+  "word": "in",
+  "start": 20.654,
+  "end": 20.712
+ },
+ {
+  "word": "another,",
+  "start": 20.77,
+  "end": 21.292
+ },
+ {
+  "word": "then",
+  "start": 21.42,
+  "end": 21.664
+ },
+ {
+  "word": "to",
+  "start": 21.745,
+  "end": 21.826
+ },
+ {
+  "word": "a",
+  "start": 21.896,
+  "end": 21.919
+ },
+ {
+  "word": "linked",
+  "start": 21.966,
+  "end": 22.221
+ },
+ {
+  "word": "profile,",
+  "start": 22.279,
+  "end": 22.941
+ },
+ {
+  "word": "a",
+  "start": 23.057,
+  "end": 23.127
+ },
+ {
+  "word": "city,",
+  "start": 23.208,
+  "end": 23.591
+ },
+ {
+  "word": "and",
+  "start": 23.626,
+  "end": 23.765
+ },
+ {
+  "word": "finally",
+  "start": 23.858,
+  "end": 24.404
+ },
+ {
+  "word": "a",
+  "start": 24.648,
+  "end": 24.74
+ },
+ {
+  "word": "photo.",
+  "start": 24.822,
+  "end": 26.192
+ },
+ {
+  "word": "Piece",
+  "start": 26.192,
+  "end": 26.529
+ },
+ {
+  "word": "by",
+  "start": 26.575,
+  "end": 26.714
+ },
+ {
+  "word": "piece",
+  "start": 26.807,
+  "end": 27.121
+ },
+ {
+  "word": "they",
+  "start": 27.156,
+  "end": 27.295
+ },
+ {
+  "word": "rebuilt",
+  "start": 27.376,
+  "end": 27.806
+ },
+ {
+  "word": "him,",
+  "start": 27.852,
+  "end": 28.131
+ },
+ {
+  "word": "and",
+  "start": 28.282,
+  "end": 28.421
+ },
+ {
+  "word": "within",
+  "start": 28.468,
+  "end": 28.723
+ },
+ {
+  "word": "days",
+  "start": 28.804,
+  "end": 29.106
+ },
+ {
+  "word": "his",
+  "start": 29.164,
+  "end": 29.269
+ },
+ {
+  "word": "real",
+  "start": 29.338,
+  "end": 29.547
+ },
+ {
+  "word": "name",
+  "start": 29.617,
+  "end": 29.814
+ },
+ {
+  "word": "and",
+  "start": 29.838,
+  "end": 29.919
+ },
+ {
+  "word": "face",
+  "start": 29.988,
+  "end": 30.267
+ },
+ {
+  "word": "were",
+  "start": 30.302,
+  "end": 30.441
+ },
+ {
+  "word": "all",
+  "start": 30.488,
+  "end": 30.72
+ },
+ {
+  "word": "over",
+  "start": 30.79,
+  "end": 30.94
+ },
+ {
+  "word": "the",
+  "start": 30.975,
+  "end": 31.045
+ },
+ {
+  "word": "blogs.",
+  "start": 31.068,
+  "end": 31.997
+ },
+ {
+  "word": "He",
+  "start": 31.997,
+  "end": 32.101
+ },
+ {
+  "word": "was",
+  "start": 32.148,
+  "end": 32.252
+ },
+ {
+  "word": "watching",
+  "start": 32.322,
+  "end": 32.636
+ },
+ {
+  "word": "it",
+  "start": 32.682,
+  "end": 32.752
+ },
+ {
+  "word": "happen.",
+  "start": 32.798,
+  "end": 33.762
+ },
+ {
+  "word": "So",
+  "start": 33.762,
+  "end": 33.89
+ },
+ {
+  "word": "he",
+  "start": 33.948,
+  "end": 34.006
+ },
+ {
+  "word": "posted",
+  "start": 34.075,
+  "end": 34.447
+ },
+ {
+  "word": "one",
+  "start": 34.517,
+  "end": 34.795
+ },
+ {
+  "word": "final",
+  "start": 34.877,
+  "end": 35.225
+ },
+ {
+  "word": "message,",
+  "start": 35.271,
+  "end": 35.817
+ },
+ {
+  "word": "claiming",
+  "start": 35.991,
+  "end": 36.386
+ },
+ {
+  "word": "it",
+  "start": 36.432,
+  "end": 36.49
+ },
+ {
+  "word": "was",
+  "start": 36.525,
+  "end": 36.618
+ },
+ {
+  "word": "all",
+  "start": 36.688,
+  "end": 36.955
+ },
+ {
+  "word": "a",
+  "start": 37.013,
+  "end": 37.048
+ },
+ {
+  "word": "joke,",
+  "start": 37.117,
+  "end": 37.605
+ },
+ {
+  "word": "and",
+  "start": 37.779,
+  "end": 37.942
+ },
+ {
+  "word": "deleted",
+  "start": 37.988,
+  "end": 38.499
+ },
+ {
+  "word": "everything.",
+  "start": 38.615,
+  "end": 39.706
+ },
+ {
+  "word": "It",
+  "start": 39.706,
+  "end": 39.834
+ },
+ {
+  "word": "was",
+  "start": 39.869,
+  "end": 39.973
+ },
+ {
+  "word": "too",
+  "start": 40.054,
+  "end": 40.275
+ },
+ {
+  "word": "late.",
+  "start": 40.356,
+  "end": 41.378
+ },
+ {
+  "word": "Someone",
+  "start": 41.378,
+  "end": 41.761
+ },
+ {
+  "word": "had",
+  "start": 41.796,
+  "end": 41.889
+ },
+ {
+  "word": "already",
+  "start": 41.924,
+  "end": 42.191
+ },
+ {
+  "word": "emailed",
+  "start": 42.249,
+  "end": 42.609
+ },
+ {
+  "word": "the",
+  "start": 42.632,
+  "end": 42.713
+ },
+ {
+  "word": "FBI.",
+  "start": 42.76,
+  "end": 43.607
+ }
+]

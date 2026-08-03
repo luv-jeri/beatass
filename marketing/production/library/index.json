@@ -1,0 +1,234 @@
+[
+ {
+  "type": "voice",
+  "path": "elevenlabs:pFZP5JQG7iQjIQuC4Bku",
+  "tags": [
+   "lily",
+   "narrator",
+   "approved"
+  ],
+  "note": "Lily - THE narrator voice. Use eleven_multilingual_v2 with tts.mjs --stitch (approved by ear 2026-08-04); eleven_v3 only for single-shot A/B takes.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "vo",
+  "path": "marketing/production/story-001/vo/part-1-v3-take-b.mp3",
+  "tags": [
+   "part-1",
+   "approved",
+   "stitched"
+  ],
+  "note": "Approved Part 1 narration (46.6s) + alignment/words JSONs beside it. The ear-style exemplar.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "prompt",
+  "path": "marketing/production/story-001/vo/part-1-v3-script.txt",
+  "tags": [
+   "script",
+   "approved",
+   "ear-style"
+  ],
+  "note": "Approved Part 1 script - the reference for how reel scripts must read (full connected sentences, one arc, 129 words).",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "music",
+  "path": "marketing/production/story-001/vo/part-1-v3-music-a.mp3",
+  "tags": [
+   "bed",
+   "curious",
+   "light",
+   "approved"
+  ],
+  "note": "Quiet felt-piano curious bed (30.8s). Approved in Part 1 notebook reel at 0.12 volume.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "music",
+  "path": "marketing/production/story-001/vo/part-1-v3-music-b.mp3",
+  "tags": [
+   "bed",
+   "dark",
+   "dread",
+   "approved"
+  ],
+  "note": "Low dark drone rising-unease bed (28.1s - END-FADE it, do not let it hard-stop). Approved at 0.14 volume.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "music",
+  "path": "marketing/production/story-001/vo/part-1-v2-music-a.mp3",
+  "tags": [
+   "rejected"
+  ],
+  "note": "v2 playful-dark clip - REJECTED by ear 2026-08-04 ('really bad to hear'). Kept for reference only.",
+  "date": "2026-08-03"
+ },
+ {
+  "type": "music",
+  "path": "marketing/production/story-001/vo/part-1-v2-music-b.mp3",
+  "tags": [
+   "rejected"
+  ],
+  "note": "v2 dread clip - REJECTED by ear 2026-08-04. Kept for reference only.",
+  "date": "2026-08-03"
+ },
+ {
+  "type": "sfx",
+  "path": "marketing/production/story-001/sfx/paper-whoosh-soft.mp3",
+  "tags": [
+   "soft",
+   "paper",
+   "open",
+   "approved"
+  ],
+  "note": "Gentle page-turn whoosh (1.5s). Approved opener accent at 0.3.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "sfx",
+  "path": "marketing/production/story-001/sfx/sub-pulse-soft.mp3",
+  "tags": [
+   "soft",
+   "sub",
+   "turn",
+   "approved"
+  ],
+  "note": "Muffled distant sub pulse (2s). Approved dark-turn accent at 0.32.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "sfx",
+  "path": "marketing/production/story-001/sfx/sting-soft.mp3",
+  "tags": [
+   "soft",
+   "sting",
+   "cliffhanger",
+   "approved"
+  ],
+  "note": "Quiet distant piano-note sting (3s). Approved cliffhanger accent at 0.32.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "sfx",
+  "path": "marketing/production/story-001/sfx/whoosh-dark.mp3",
+  "tags": [
+   "noir",
+   "loud"
+  ],
+  "note": "v2 noir set (whoosh/sub-drop/heartbeat/sting/ping-swarm beside it). Caused the 'SFX drowning the VO' rejection at 0.6-0.8; only ever use at 0.35 or below.",
+  "date": "2026-08-03"
+ },
+ {
+  "type": "clip",
+  "path": "marketing/remotion/story-001/public/clips/style-1",
+  "tags": [
+   "notebook",
+   "part-1",
+   "approved",
+   "the-style"
+  ],
+  "note": "THE 9 Part-1 scenes in living-notebook style (8s, 720p, bottom-fifth watermark band - ClipPlayer crops 20%). Sanjay's picked style.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "clip",
+  "path": "marketing/remotion/story-001/public/clips/style-4",
+  "tags": [
+   "felt",
+   "part-1",
+   "approved-alt"
+  ],
+  "note": "9 Part-1 scenes, felt-puppet style. Approved alternate.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "clip",
+  "path": "marketing/remotion/story-001/public/clips/style-8",
+  "tags": [
+   "storybook",
+   "part-1",
+   "approved-alt"
+  ],
+  "note": "9 Part-1 scenes, dark-storybook style. Approved alternate.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "clip",
+  "path": "marketing/production/story-001/clips",
+  "tags": [
+   "noir",
+   "part-1",
+   "v2"
+  ],
+  "note": "9 Part-1 scenes in noir style (10s). Video approved in v2 but style superseded by notebook.",
+  "date": "2026-08-03"
+ },
+ {
+  "type": "still",
+  "path": "marketing/production/story-001/frames",
+  "tags": [
+   "noir",
+   "part-1"
+  ],
+  "note": "9 noir v2 stills + contact sheet + NOIR-CONFESSION style board.",
+  "date": "2026-08-03"
+ },
+ {
+  "type": "prompt",
+  "path": "marketing/production/style-tests/PART1-3STYLES-27-FLOW-PROMPTS.txt",
+  "tags": [
+   "style-lock",
+   "notebook",
+   "felt",
+   "storybook",
+   "scene-choreography"
+  ],
+  "note": "The 27-prompt file: 3 style locks x 9 scene choreographies. Copy a style lock verbatim for new parts; scene blocks show the choreography pattern.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "prompt",
+  "path": "marketing/STYLE-TEST-PROMPTS.md",
+  "tags": [
+   "style-bakeoff",
+   "8-styles"
+  ],
+  "note": "8-style bake-off prompts (video + still versions). Source of the notebook/felt/storybook locks.",
+  "date": "2026-08-03"
+ },
+ {
+  "type": "clip",
+  "path": "marketing/production/style-tests/clips",
+  "tags": [
+   "style-test",
+   "doll"
+  ],
+  "note": "Single 8s style-test clips: notebook / felt / storybook doll-bop. Good style references for prompts.",
+  "date": "2026-08-03"
+ },
+ {
+  "type": "music",
+  "path": "marketing/production/story-001/vo/part-2-music-hunt.mp3",
+  "tags": [
+   "bed",
+   "tense",
+   "hunt",
+   "part-2"
+  ],
+  "note": "Part 2 second-half hunt bed - one notch tenser than the dark drone",
+  "date": "2026-08-03"
+ },
+ {
+  "type": "sfx",
+  "path": "marketing/production/story-001/sfx/music-box-note.mp3",
+  "tags": [
+   "brand",
+   "end-card",
+   "music-box"
+  ],
+  "note": "The brand end-card sound - one music-box note (series part 3 close)",
+  "date": "2026-08-03"
+ }
+]

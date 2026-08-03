@@ -2,7 +2,7 @@
 export const schema = {
   src: {type: 'text', label: 'Clip file (public/)', default: 'clips/scene-3.mp4'},
   clipSeconds: {type: 'number', label: 'Source clip length (s)', default: 10, min: 1, max: 30, step: 0.5},
-  sfxVolume: {type: 'number', label: 'Clip SFX volume', default: 0.3, min: 0, max: 1, step: 0.05},
+  sfxVolume: {type: 'number', label: 'Clip SFX volume', default: 0.22, min: 0, max: 1, step: 0.05},
 } as const;
 
 export const durationInFrames = 300;

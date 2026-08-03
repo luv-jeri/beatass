@@ -1,16 +1,18 @@
 ---
 project: story-001
 fps: 30
-vo: vo/part-1.mp3
+vo: vo/part-3-vo.mp3
 timing: locked
 ---
 
 | # | Time | VO | Scene | Assets |
 |---|------|----|-------|--------|
-| B01 | 00:00.0-00:04.1 | In 2013 a man confessed to murder in a meme | 01-hook-card | |
-| B02 | 00:04.1-00:15.7 | Confession Bear was a silly meme, sad bear small secrets | 02-bear-clip | |
-| B03 | 00:15.7-00:19.8 | Then one night a user called Narado posted his own | 03-post-clip | |
-| B04 | 00:19.8-00:34.4 | Top line, bottom line, ruled an overdose, the post title | 04-confession-card | |
-| B05 | 00:34.4-00:41.0 | Ten thousand upvotes three thousand comments is this a joke | 05-explosion-clip | |
-| B06 | 00:41.0-00:44.6 | Then Narado himself replied, one sentence | 06-reply-clip | |
-| B07 | 00:44.6-00:47.6 | Cliffhanger: there is some truth behind it, part 2 | 07-cliffhanger-card | |
+| B01 | 00:00.0-00:02.8 | police opened a cold case | 01-cold-open | |
+| B02 | 00:02.8-00:10.7 | detectives checked the overdose | 02-bear-meme | |
+| B03 | 00:10.7-00:14.3 | internet waited | 03-silly-secrets | |
+| B04 | 00:14.3-00:18.5 | no charges, silence | 04-night-post | |
+| B05 | 00:18.5-00:22.3 | a journalist | 05-the-words | |
+| B06 | 00:22.3-00:27.0 | she asked the sister | 06-ink-bleed | |
+| B07 | 00:27.0-00:32.6 | an ill-advised prank | 07-case-closed | |
+| B08 | 00:32.6-00:39.9 | fake, except SOME truth | 08-explosion | |
+| B09 | 00:39.9-00:48.3 | so you tell me + end card | 09-one-reply | |

@@ -2,24 +2,29 @@
 // than the clip, the clip slows to fit (a 10s clip in an 11.6s slot plays at
 // 0.86x — invisible for noir pacing). If the slot is shorter, the sequence
 // simply trims the tail. Clip SFX stays low under the narration.
+//
+// cropBottom: Flow stamps a watermark near the bottom edge; stills/clips are
+// generated with an empty bottom band, and this crop cuts that band off by
+// oversizing the video and anchoring it to the top.
 import React from 'react';
 import {AbsoluteFill, OffthreadVideo, staticFile, useVideoConfig} from 'remotion';
 
-export const ClipPlayer: React.FC<{src: string; clipSeconds: number; sfxVolume: number}> = ({
+export const ClipPlayer: React.FC<{src: string; clipSeconds: number; sfxVolume: number; cropBottom?: number}> = ({
   src,
   clipSeconds,
   sfxVolume,
+  cropBottom = 0.2,
 }) => {
   const {fps, durationInFrames} = useVideoConfig();
   const slotSeconds = durationInFrames / fps;
   const playbackRate = clipSeconds < slotSeconds ? clipSeconds / slotSeconds : 1;
   return (
-    <AbsoluteFill>
+    <AbsoluteFill style={{overflow: 'hidden'}}>
       <OffthreadVideo
         src={staticFile(src)}
         playbackRate={playbackRate}
         volume={sfxVolume}
-        style={{width: '100%', height: '100%', objectFit: 'cover'}}
+        style={{width: '100%', height: `${100 / (1 - cropBottom)}%`, objectFit: 'cover', objectPosition: 'top'}}
       />
     </AbsoluteFill>
   );

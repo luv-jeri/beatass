@@ -1,0 +1,642 @@
+[
+ {
+  "word": "The",
+  "start": 0,
+  "end": 0.151
+ },
+ {
+  "word": "police",
+  "start": 0.197,
+  "end": 0.511
+ },
+ {
+  "word": "opened",
+  "start": 0.557,
+  "end": 0.836
+ },
+ {
+  "word": "a",
+  "start": 0.859,
+  "end": 0.882
+ },
+ {
+  "word": "cold",
+  "start": 0.952,
+  "end": 1.231
+ },
+ {
+  "word": "case",
+  "start": 1.3,
+  "end": 1.591
+ },
+ {
+  "word": "because",
+  "start": 1.637,
+  "end": 1.881
+ },
+ {
+  "word": "of",
+  "start": 1.904,
+  "end": 1.95
+ },
+ {
+  "word": "a",
+  "start": 1.997,
+  "end": 2.02
+ },
+ {
+  "word": "meme.",
+  "start": 2.078,
+  "end": 2.833
+ },
+ {
+  "word": "San",
+  "start": 2.833,
+  "end": 3.112
+ },
+ {
+  "word": "Diego",
+  "start": 3.158,
+  "end": 3.53
+ },
+ {
+  "word": "detectives",
+  "start": 3.588,
+  "end": 4.168
+ },
+ {
+  "word": "quietly",
+  "start": 4.238,
+  "end": 4.679
+ },
+ {
+  "word": "began",
+  "start": 4.737,
+  "end": 5.004
+ },
+ {
+  "word": "checking",
+  "start": 5.062,
+  "end": 5.399
+ },
+ {
+  "word": "whether",
+  "start": 5.445,
+  "end": 5.677
+ },
+ {
+  "word": "a",
+  "start": 5.735,
+  "end": 5.759
+ },
+ {
+  "word": "young",
+  "start": 5.852,
+  "end": 6.061
+ },
+ {
+  "word": "man",
+  "start": 6.142,
+  "end": 6.397
+ },
+ {
+  "word": "who",
+  "start": 6.444,
+  "end": 6.56
+ },
+ {
+  "word": "died",
+  "start": 6.618,
+  "end": 6.873
+ },
+ {
+  "word": "of",
+  "start": 6.908,
+  "end": 6.955
+ },
+ {
+  "word": "an",
+  "start": 6.989,
+  "end": 7.036
+ },
+ {
+  "word": "overdose",
+  "start": 7.082,
+  "end": 7.767
+ },
+ {
+  "word": "had",
+  "start": 8.011,
+  "end": 8.174
+ },
+ {
+  "word": "really",
+  "start": 8.255,
+  "end": 8.545
+ },
+ {
+  "word": "died",
+  "start": 8.603,
+  "end": 8.859
+ },
+ {
+  "word": "of",
+  "start": 8.893,
+  "end": 8.951
+ },
+ {
+  "word": "something",
+  "start": 8.998,
+  "end": 9.323
+ },
+ {
+  "word": "else.",
+  "start": 9.381,
+  "end": 10.681
+ },
+ {
+  "word": "The",
+  "start": 10.681,
+  "end": 10.855
+ },
+ {
+  "word": "internet",
+  "start": 10.936,
+  "end": 11.389
+ },
+ {
+  "word": "waited",
+  "start": 11.459,
+  "end": 11.784
+ },
+ {
+  "word": "for",
+  "start": 11.819,
+  "end": 11.923
+ },
+ {
+  "word": "an",
+  "start": 11.97,
+  "end": 12.028
+ },
+ {
+  "word": "arrest,",
+  "start": 12.063,
+  "end": 12.655
+ },
+ {
+  "word": "and",
+  "start": 12.806,
+  "end": 12.957
+ },
+ {
+  "word": "it",
+  "start": 13.026,
+  "end": 13.084
+ },
+ {
+  "word": "never",
+  "start": 13.131,
+  "end": 13.316
+ },
+ {
+  "word": "came.",
+  "start": 13.375,
+  "end": 14.303
+ },
+ {
+  "word": "There",
+  "start": 14.303,
+  "end": 14.466
+ },
+ {
+  "word": "were",
+  "start": 14.489,
+  "end": 14.593
+ },
+ {
+  "word": "no",
+  "start": 14.628,
+  "end": 14.709
+ },
+ {
+  "word": "charges,",
+  "start": 14.779,
+  "end": 15.464
+ },
+ {
+  "word": "and",
+  "start": 15.557,
+  "end": 15.719
+ },
+ {
+  "word": "no",
+  "start": 15.789,
+  "end": 15.894
+ },
+ {
+  "word": "statement,",
+  "start": 15.963,
+  "end": 16.59
+ },
+ {
+  "word": "just",
+  "start": 16.764,
+  "end": 16.973
+ },
+ {
+  "word": "silence.",
+  "start": 17.02,
+  "end": 18.483
+ },
+ {
+  "word": "Then",
+  "start": 18.483,
+  "end": 18.82
+ },
+ {
+  "word": "a",
+  "start": 18.901,
+  "end": 18.936
+ },
+ {
+  "word": "journalist",
+  "start": 19.005,
+  "end": 19.47
+ },
+ {
+  "word": "did",
+  "start": 19.516,
+  "end": 19.632
+ },
+ {
+  "word": "the",
+  "start": 19.656,
+  "end": 19.725
+ },
+ {
+  "word": "one",
+  "start": 19.807,
+  "end": 20.027
+ },
+ {
+  "word": "thing",
+  "start": 20.085,
+  "end": 20.317
+ },
+ {
+  "word": "Reddit",
+  "start": 20.41,
+  "end": 20.689
+ },
+ {
+  "word": "could",
+  "start": 20.735,
+  "end": 20.909
+ },
+ {
+  "word": "not",
+  "start": 21.002,
+  "end": 21.362
+ },
+ {
+  "word": "do.",
+  "start": 21.455,
+  "end": 22.338
+ },
+ {
+  "word": "She",
+  "start": 22.338,
+  "end": 22.466
+ },
+ {
+  "word": "found",
+  "start": 22.547,
+  "end": 22.779
+ },
+ {
+  "word": "his",
+  "start": 22.826,
+  "end": 22.93
+ },
+ {
+  "word": "sister",
+  "start": 22.965,
+  "end": 23.278
+ },
+ {
+  "word": "and",
+  "start": 23.336,
+  "end": 23.418
+ },
+ {
+  "word": "asked",
+  "start": 23.487,
+  "end": 23.708
+ },
+ {
+  "word": "her",
+  "start": 23.743,
+  "end": 23.812
+ },
+ {
+  "word": "directly",
+  "start": 23.859,
+  "end": 24.405
+ },
+ {
+  "word": "if",
+  "start": 24.463,
+  "end": 24.556
+ },
+ {
+  "word": "a",
+  "start": 24.614,
+  "end": 24.637
+ },
+ {
+  "word": "boyfriend",
+  "start": 24.706,
+  "end": 25.159
+ },
+ {
+  "word": "of",
+  "start": 25.206,
+  "end": 25.252
+ },
+ {
+  "word": "hers",
+  "start": 25.322,
+  "end": 25.531
+ },
+ {
+  "word": "had",
+  "start": 25.566,
+  "end": 25.658
+ },
+ {
+  "word": "ever",
+  "start": 25.717,
+  "end": 25.937
+ },
+ {
+  "word": "died.",
+  "start": 26.018,
+  "end": 27.028
+ },
+ {
+  "word": "Her",
+  "start": 27.028,
+  "end": 27.202
+ },
+ {
+  "word": "answer",
+  "start": 27.272,
+  "end": 27.678
+ },
+ {
+  "word": "was",
+  "start": 27.736,
+  "end": 27.841
+ },
+ {
+  "word": "that",
+  "start": 27.887,
+  "end": 28.015
+ },
+ {
+  "word": "it",
+  "start": 28.05,
+  "end": 28.119
+ },
+ {
+  "word": "was",
+  "start": 28.154,
+  "end": 28.259
+ },
+ {
+  "word": "an",
+  "start": 28.293,
+  "end": 28.363
+ },
+ {
+  "word": "ill-advised",
+  "start": 28.456,
+  "end": 29.164
+ },
+ {
+  "word": "prank,",
+  "start": 29.234,
+  "end": 29.791
+ },
+ {
+  "word": "and",
+  "start": 29.942,
+  "end": 30.07
+ },
+ {
+  "word": "that",
+  "start": 30.128,
+  "end": 30.244
+ },
+ {
+  "word": "nobody",
+  "start": 30.314,
+  "end": 30.697
+ },
+ {
+  "word": "she",
+  "start": 30.766,
+  "end": 30.894
+ },
+ {
+  "word": "knew",
+  "start": 30.975,
+  "end": 31.196
+ },
+ {
+  "word": "had",
+  "start": 31.254,
+  "end": 31.347
+ },
+ {
+  "word": "overdosed.",
+  "start": 31.405,
+  "end": 32.601
+ },
+ {
+  "word": "So",
+  "start": 32.601,
+  "end": 32.729
+ },
+ {
+  "word": "the",
+  "start": 32.787,
+  "end": 32.856
+ },
+ {
+  "word": "whole",
+  "start": 32.903,
+  "end": 33.089
+ },
+ {
+  "word": "confession",
+  "start": 33.112,
+  "end": 33.553
+ },
+ {
+  "word": "was",
+  "start": 33.588,
+  "end": 33.692
+ },
+ {
+  "word": "fake.",
+  "start": 33.762,
+  "end": 34.551
+ },
+ {
+  "word": "Except",
+  "start": 34.551,
+  "end": 34.946
+ },
+ {
+  "word": "for",
+  "start": 34.969,
+  "end": 35.05
+ },
+ {
+  "word": "the",
+  "start": 35.073,
+  "end": 35.143
+ },
+ {
+  "word": "one",
+  "start": 35.213,
+  "end": 35.433
+ },
+ {
+  "word": "comment",
+  "start": 35.491,
+  "end": 35.84
+ },
+ {
+  "word": "he",
+  "start": 35.886,
+  "end": 35.944
+ },
+ {
+  "word": "wrote",
+  "start": 35.991,
+  "end": 36.2
+ },
+ {
+  "word": "before",
+  "start": 36.223,
+  "end": 36.455
+ },
+ {
+  "word": "he",
+  "start": 36.49,
+  "end": 36.536
+ },
+ {
+  "word": "vanished,",
+  "start": 36.594,
+  "end": 37.233
+ },
+ {
+  "word": "that",
+  "start": 37.407,
+  "end": 37.581
+ },
+ {
+  "word": "there",
+  "start": 37.616,
+  "end": 37.802
+ },
+ {
+  "word": "is",
+  "start": 37.837,
+  "end": 37.918
+ },
+ {
+  "word": "SOME",
+  "start": 37.976,
+  "end": 38.185
+ },
+ {
+  "word": "truth",
+  "start": 38.22,
+  "end": 38.522
+ },
+ {
+  "word": "behind",
+  "start": 38.58,
+  "end": 38.916
+ },
+ {
+  "word": "it.",
+  "start": 38.986,
+  "end": 39.938
+ },
+ {
+  "word": "So",
+  "start": 39.938,
+  "end": 40.112
+ },
+ {
+  "word": "you",
+  "start": 40.182,
+  "end": 40.263
+ },
+ {
+  "word": "tell",
+  "start": 40.333,
+  "end": 40.53
+ },
+ {
+  "word": "me.",
+  "start": 40.6,
+  "end": 41.424
+ },
+ {
+  "word": "A",
+  "start": 41.424,
+  "end": 41.528
+ },
+ {
+  "word": "confession,",
+  "start": 41.587,
+  "end": 42.167
+ },
+ {
+  "word": "or",
+  "start": 42.225,
+  "end": 42.33
+ },
+ {
+  "word": "the",
+  "start": 42.376,
+  "end": 42.446
+ },
+ {
+  "word": "darkest",
+  "start": 42.492,
+  "end": 42.864
+ },
+ {
+  "word": "joke",
+  "start": 42.91,
+  "end": 43.189
+ },
+ {
+  "word": "ever",
+  "start": 43.235,
+  "end": 43.467
+ },
+ {
+  "word": "posted?",
+  "start": 43.525,
+  "end": 44.396
+ }
+]
