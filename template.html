@@ -334,18 +334,21 @@ a{color:var(--red)}a:hover{color:var(--ink)}
   width:100%;min-height:0;display:flex;flex-direction:column}
 .mail .hd{display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--mail-hair);
   padding-bottom:9px;flex:none}
+/* min-width:0 + overflow-wrap: a long recipient address must wrap inside its
+   column, not shove the header sideways off a 360px phone */
+.mail .hd>div{min-width:0}
 .mail .av{width:32px;height:32px;border-radius:50%;background:var(--ink);color:#fff;flex:none;
   display:grid;place-items:center;font-weight:700;font-size:14px}
-.mail .from{font-weight:700}
+.mail .from{font-weight:700;overflow-wrap:anywhere}
 .mail .from span{color:var(--mail-faint);font-weight:400}
-.mail .to{color:var(--mail-muted);font-size:12px}
+.mail .to{color:var(--mail-muted);font-size:12px;overflow-wrap:anywhere}
 .mail .sub{font-weight:700;font-size:15.5px;margin:10px 0 5px;flex:none}
 .mail .body{min-height:0;overflow:hidden;display:flex;flex-direction:column}
 .mail .quote{border-left:3px solid var(--red);background:var(--mail-quote-bg);padding:8px 11px;
   margin:8px 0;white-space:pre-wrap;word-break:break-word;flex:none;
   display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .mail .gifwrap{text-align:center;min-height:0}
-.mail .gifwrap img{max-width:min(170px,34dvh);width:100%;border:1px solid var(--mail-hair)}
+.mail .gifwrap img{max-width:min(190px,34dvh);width:100%;border:1px solid var(--mail-hair)}
 .mail .cap{font-size:11.5px;color:var(--mail-muted);margin-top:4px}
 .mail .ft{border-top:1px solid var(--mail-hair);margin-top:9px;padding-top:8px;font-size:11px;
   color:var(--mail-faint);flex:none}
@@ -442,8 +445,12 @@ a{color:var(--red)}a:hover{color:var(--ink)}
     box-shadow:0 -6px 18px rgba(60,50,20,.1)}
   .sendbar .safety{display:none}
   .sendbar .prog{max-width:100%}
-  .ovbtns{flex-direction:column-reverse}
+  /* One big Send on top, the two quiet actions sharing the row under it.
+     Three stacked full-width buttons read as three equal choices and ate a
+     third of the phone screen (Sanjay, 2026-08-03). */
+  .ovbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .ovbtns .btn{width:100%}
+  #btn-send{grid-column:1/-1;grid-row:1;min-height:52px;font-size:17px}
   .ovnote{text-align:center}
 }
 /* ============================================================
@@ -644,7 +651,7 @@ a{color:var(--red)}a:hover{color:var(--ink)}
       <div class="ovnote">Once it's sent it can't be taken back, and they'll never know it was you.</div>
       <div class="ovnote bad" id="send-err" hidden></div>
       <div class="field sender-slip" id="f-sender">
-        <label for="i-sender">want their reply? your email (optional - never shown to them)</label>
+        <label for="i-sender">want their reply? your email (optional, never shown)</label>
         <input type="email" id="i-sender" placeholder="you@example.com" autocomplete="off" inputmode="email">
         <div class="err">that's not an email - leave it empty to stay unreachable</div>
       </div>
