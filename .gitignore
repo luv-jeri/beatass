@@ -20,6 +20,7 @@ tools/instagram/last-failure.png
 tools/instagram/dry-run.png
 tools/instagram/dm-sent.png
 tools/instagram/dm-dry-run*.png
+tools/instagram/outreach-*.png
 email-preview.html
 
 # classifier verdicts - these contain the confessions themselves, local only
@@ -30,3 +31,6 @@ content/instagram/q-*
 
 # Instagram DM notifier runtime state (which messages were DM'd) - local only
 content/instagram/.notified.json
+
+# who we have already followed and commented on - real handles, local only
+content/instagram/.outreach.json

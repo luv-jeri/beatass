@@ -24,6 +24,26 @@
     "voodoodoll"
   ],
 
+  "_outreach": "A DM from an account you do not follow lands in Instagram's 'Message requests' folder, which most people never open. These three things point people at that folder: we follow them (so they get a notification and read our bio), our bio tells them a message is waiting, and we leave one comment on their latest post. Set follow or comment to false to switch either off without touching code. The per-day numbers are deliberately below what Instagram tolerates - follows and comments to strangers are what gets an account limited, and a limited account cannot DM anybody.",
+  "outreach": {
+    "follow": true,
+    "comment": true,
+    "followPerDay": 25,
+    "commentPerDay": 15,
+
+    "_comments": "One is picked per handle, so the same person always sees the same line and fifty different people do not all get an identical comment. Every line must say where the message actually is: the requests folder.",
+    "comments": [
+      "someone left you an anonymous message on beatass.com. instagram filed it under your DM requests",
+      "we passed you an anonymous message and instagram hid it in your DM requests. worth a look",
+      "check your DM requests. somebody sent you an anonymous message through beatass.com",
+      "there is an anonymous message waiting for you in your DM requests, from beatass.com",
+      "you have an anonymous message from beatass.com sitting in your DM requests folder"
+    ],
+
+    "_bio": "Our own profile bio, 150 characters max. Someone we just followed clicks the notification, lands here, and this is the only thing that tells them why. Set it with: node tools/instagram/outreach.mjs --bio --apply",
+    "bio": "say the thing you'd never say.\nwe followed you? someone sent you a message - check your DM requests.\nanonymous. free. no login."
+  },
+
   "_headless": "false lets you watch it work, which is what you want the first few times. true runs it invisibly.",
   "headless": false
 }

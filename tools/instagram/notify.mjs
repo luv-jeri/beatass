@@ -25,6 +25,12 @@
  *   - a random pause between sends so it never bursts,
  *   - one bad message is skipped (screenshot saved), the rest still go.
  *
+ * Every delivered DM is followed by the outreach step (outreach.mjs): we follow
+ * the recipient and comment on their latest post, both pointing at the message
+ * requests folder where Instagram files a DM from a stranger. It runs AFTER the
+ * DM, never before, because both of those say "you have a message waiting" and
+ * that has to be true when they read it. A dry run stays dry through all of it.
+ *
  * A --local flag reads the local dev D1 instead of production, for testing.
  *
  * Selector honesty (G27): every Instagram selector here was captured from the
@@ -37,6 +43,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
+import { runOutreach } from './outreach.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.dirname(path.dirname(HERE));
@@ -388,12 +395,16 @@ if (AUTO) {
       say(`  ${DRY ? 'walk' : 'send'} -> @${r.to_handle} for "${r.to_name}" [${r.id}]`);
       try {
         await deliver(page, r, DRY);
+        if (!DRY) { recordSent(sent, r.id); done++; }
+        /* The message is now sitting in their requests folder. Make them look
+           at it: follow them, comment on their latest post. Both of those
+           claim a message is waiting, so neither may run before it is. */
+        await page.waitForTimeout(6000 + Math.floor(Math.random() * 9000));
+        await runOutreach(page, r.to_handle, { dry: DRY, say });
         if (!DRY) {
-          recordSent(sent, r.id);
-          done++;
-          const wait = 25000 + Math.floor(Math.random() * 50000);   // 25-75s, no bursts
-          say(`    sent. pausing ${Math.round(wait / 1000)}s.`);
-          await page.waitForTimeout(wait);
+          const pause = 25000 + Math.floor(Math.random() * 50000);   // 25-75s, no bursts
+          say(`    done. pausing ${Math.round(pause / 1000)}s.`);
+          await page.waitForTimeout(pause);
         }
       } catch (e) {
         if (e.partsSent) {
@@ -456,6 +467,11 @@ try {
     recordSent(sent, m.id);
     say(`✓ sent ${out} messages. @${m.to_handle} has the words and the link. Screenshot: tools/instagram/dm-sent.png`);
   }
+
+  /* Now the part that makes them notice it. Same dry flag all the way down. */
+  await page.waitForTimeout(6000);
+  await runOutreach(page, m.to_handle, { dry: !!DRY_ID, say });
+  if (DRY_ID) say('\ndry run over: nothing was sent, nobody was followed, no comment was posted.');
 } catch (err) {
   if (err.partsSent) {
     recordSent(sent, m.id);
