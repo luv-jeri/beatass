@@ -5,6 +5,8 @@
  * clip, block, report, and reply.
  *
  *   node tools/instagram/notify.mjs                     list what is waiting
+ *   node tools/instagram/notify.mjs --text <id>         print the DM word for word, no browser
+ *   node tools/instagram/notify.mjs --selftest          check the preview logic, no database
  *   node tools/instagram/notify.mjs --dry-run <id>      walk one message, screenshot, send NOTHING
  *   node tools/instagram/notify.mjs --send <id>         send one DM
  *   node tools/instagram/notify.mjs --auto              send every waiting DM, unattended
@@ -55,6 +57,7 @@ const DRY = args.includes('--dry');            // pairs with --auto: walk, never
 const flagVal = (f) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : null; };
 const DRY_ID = flagVal('--dry-run');
 const SEND_ID = flagVal('--send');
+const TEXT_ID = flagVal('--text');             // print the DM, touch no browser
 const BLOCK_HANDLE = flagVal('--block');
 
 const say = (m) => console.log(m);
@@ -94,7 +97,7 @@ function isBlocked(handle) {
 function pending() {
   const sent = loadSent();
   const rows = d1(
-    "SELECT m.id, m.to_name, m.to_handle, m.view_token, m.created_at FROM messages m " +
+    "SELECT m.id, m.to_name, m.to_handle, m.view_token, m.body, m.created_at FROM messages m " +
     "WHERE m.to_handle IS NOT NULL AND m.view_token IS NOT NULL " +
     "AND NOT EXISTS (SELECT 1 FROM blocklist b WHERE b.email = 'ig:' || m.to_handle) " +
     "ORDER BY m.created_at"
@@ -104,7 +107,7 @@ function pending() {
 
 function loadOne(id) {
   if (!/^[a-f0-9]{16}$/.test(id || '')) die('that does not look like a message id (16 hex chars).');
-  const rows = d1(`SELECT id, to_name, to_handle, view_token FROM messages WHERE id = ${sq(id)}`);
+  const rows = d1(`SELECT id, to_name, to_handle, view_token, body FROM messages WHERE id = ${sq(id)}`);
   if (!rows.length) die(`no message ${id} in the ${LOCAL ? 'local' : 'live'} database.`);
   const m = rows[0];
   if (!m.to_handle) die(`message ${id} has no Instagram handle - it was an email-only send.`);
@@ -116,11 +119,70 @@ function loadOne(id) {
 /* ---------- what the DM says ---------- */
 
 const linkFor = (m) => `${SITE}/m?id=${m.id}&t=${m.view_token}`;
-const dmText = (link) =>
-  'hey - someone left you an anonymous message on beatass.com\n\n' +
-  'read it (and put it on blast) here: ' + link + '\n\n' +
-  'this is an automated message from beatass.com. open the link to read it, ' +
-  'share it, report it, or block us so we never message you again.';
+
+/* The confession itself now rides in the DM (Sanjay, 2026-08-03) - a bare link
+   from an account you don't follow reads like spam, the words are what make it
+   real. Long ones get clipped, which is also the hook: the rest of it, the doll
+   clip, and the only reply box all live on the page. */
+const DM_PREVIEW = 280;
+
+export function dmPreview(body) {
+  const clean = String(body || '').replace(/\r\n?/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  if (clean.length <= DM_PREVIEW) return { text: clean, clipped: false };
+  const cut = clean.slice(0, DM_PREVIEW);
+  const space = cut.lastIndexOf(' ');
+  /* break on a word if there is one near the end, else mid-word rather than
+     throwing away half the preview to a very long unbroken string */
+  return { text: (space > DM_PREVIEW - 60 ? cut.slice(0, space) : cut).trimEnd() + '...', clipped: true };
+}
+
+export const dmText = (m, link) => {
+  const p = dmPreview(m.body);
+  return 'hey - someone left you an anonymous message on beatass.com\n\n' +
+    (p.text ? '"' + p.text + '"\n\n' : '') +
+    (p.clipped ? 'read the rest' : 'see what they did to the doll') +
+    ' (and reply to them) here: ' + link + '\n\n' +
+    'this is an automated message from beatass.com. open the link to read it, ' +
+    'share it, report it, or block us so we never message you again.';
+};
+
+/* --selftest proves the preview logic before any DM is composed: no database,
+   no browser, nothing outward. Runs in CI. */
+if (args.includes('--selftest')) {
+  const eq = (label, got, want) => {
+    if (got !== want) { console.error(`✗ ${label}\n  got:  ${JSON.stringify(got)}\n  want: ${JSON.stringify(want)}`); process.exitCode = 1; }
+  };
+  const long = 'x'.repeat(400);
+  eq('short body is quoted whole', dmPreview('you never called back').text, 'you never called back');
+  eq('short body is not clipped', dmPreview('hi').clipped, false);
+  eq('long body is clipped', dmPreview(long).clipped, true);
+  eq('clip stays within budget', dmPreview(long).text.length <= DM_PREVIEW + 3, true);
+  eq('clip ends with the marker', dmPreview(long).text.endsWith('...'), true);
+  eq('clip breaks on a word', dmPreview(('word '.repeat(80)).trim()).text.endsWith('word...'), true);
+  eq('empty body survives', dmPreview('').text, '');
+  eq('null body survives', dmPreview(null).text, '');
+  eq('carriage returns normalise', dmPreview('a\r\nb').text, 'a\nb');
+  eq('runs of blank lines collapse', dmPreview('a\n\n\n\n\nb').text, 'a\n\nb');
+  const m = { body: 'i still think about it', id: 'a'.repeat(16), view_token: 'b'.repeat(32) };
+  const t = dmText(m, 'https://beatass.com/m?id=x&t=y');
+  eq('the words are in the DM', t.includes('"i still think about it"'), true);
+  eq('the link is in the DM', t.includes('https://beatass.com/m?id=x&t=y'), true);
+  eq('the reply route is the page', t.includes('reply to them'), true);
+  eq('the opt-out line survives', t.includes('block us so we never message you again'), true);
+  eq('a clipped DM says so', dmText({ body: long }, 'L').includes('read the rest'), true);
+  eq('an empty body still sends a link', dmText({ body: '' }, 'L').includes('L'), true);
+  console.log(process.exitCode ? '\ndm selftest FAILED' : 'dm preview selftest: 16/16 pass');
+  process.exit(process.exitCode || 0);
+}
+
+/* ---------- --text <id>: exactly what the DM will say. No browser. ---------- */
+if (TEXT_ID) {
+  const m = loadOne(TEXT_ID);
+  say(`\nmessage ${m.id} -> @${m.to_handle} (for "${m.to_name}")`);
+  say('the DM will say:\n');
+  say(dmText(m, linkFor(m)).split('\n').map((l) => '  | ' + l).join('\n') + '\n');
+  process.exit(0);
+}
 
 /* ---------- the browser walk (selectors captured live, G27) ---------- */
 
@@ -207,7 +269,7 @@ async function typeDm(page, text) {
 /** Open the thread, type the DM, then send (or, in dry mode, clear and stop). */
 async function deliver(page, m, dry) {
   await openThread(page, m.to_handle);
-  await typeDm(page, dmText(linkFor(m)));
+  await typeDm(page, dmText(m, linkFor(m)));
   if (dry) {
     await page.screenshot({ path: path.join(HERE, 'dm-dry-run.png') });
     await page.keyboard.press(process.platform === 'darwin' ? 'Meta+a' : 'Control+a');
@@ -293,7 +355,7 @@ if (SEND_ID && sent[m.id]) die(`message ${m.id} was already sent to @${m.to_hand
 
 say(`\nmessage ${m.id} -> @${m.to_handle} (for "${m.to_name}")`);
 say('the DM will say:\n');
-say(dmText(linkFor(m)).split('\n').map((l) => '  | ' + l).join('\n') + '\n');
+say(dmText(m, linkFor(m)).split('\n').map((l) => '  | ' + l).join('\n') + '\n');
 
 const browser = await launch(CONFIG.headless === true);
 const page = browser.pages()[0] || await browser.newPage();
