@@ -108,6 +108,11 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
   const shareText = "someone said the thing they'd never say about me \u{1F440} beatass.com";
   const xShare = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent('https://beatass.com');
   const waShare = 'https://wa.me/?text=' + encodeURIComponent(shareText + ' https://beatass.com');
+  // Instagram has no link that can pre-fill a post from an email - it simply
+  // does not exist, and pretending otherwise would send people to a dead end.
+  // So this one opens the clip page, where the phone's own share sheet can
+  // hand the actual video to Instagram. ?to=ig lets that page lead with it.
+  const igShare = pageUrl + (pageUrl.includes('?') ? '&' : '?') + 'to=ig';
 
   return `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -213,8 +218,13 @@ ${replyUrl ? `
 
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:26px">
           <tr><td align="center" style="padding:18px 0 0;border-top:2px dotted ${FAINT}">
-            <p style="margin:0 0 10px;font-family:${SANS};font-size:14px;line-height:1.5;color:${SOFT}">Someone put you on the doll. Want everyone to know?</p>
-            <p style="margin:0;font-family:${SANS};font-size:14px"><a href="${xShare}" style="color:${RED};font-weight:700;text-decoration:none">Post on X</a> &nbsp;&middot;&nbsp; <a href="${waShare}" style="color:${RED};font-weight:700;text-decoration:none">WhatsApp</a> &nbsp;&middot;&nbsp; <a href="${pageUrl}" style="color:${RED};font-weight:700;text-decoration:none">Open &amp; share the clip</a></p>
+            <p style="margin:0 0 14px;font-family:${SANS};font-size:16px;font-weight:700;line-height:1.4;color:${SOFT}">Someone put you on the doll. Show them you saw it.</p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto"><tr>
+              <td style="padding:0 5px"><a href="${igShare}" style="display:inline-block;background:${RED};color:#ffffff;font-family:${SANS};font-size:15px;font-weight:700;text-decoration:none;padding:13px 20px;border-radius:22px 8px 24px 7px/7px 25px 6px 23px">Instagram</a></td>
+              <td style="padding:0 5px"><a href="${waShare}" style="display:inline-block;background:${RED};color:#ffffff;font-family:${SANS};font-size:15px;font-weight:700;text-decoration:none;padding:13px 20px;border-radius:8px 24px 7px 22px/25px 6px 23px 7px">WhatsApp</a></td>
+              <td style="padding:0 5px"><a href="${xShare}" style="display:inline-block;background:${RED};color:#ffffff;font-family:${SANS};font-size:15px;font-weight:700;text-decoration:none;padding:13px 20px;border-radius:24px 7px 22px 8px/6px 23px 25px 7px">X</a></td>
+            </tr></table>
+            <p style="margin:12px 0 0;font-family:${SANS};font-size:13px;line-height:1.5;color:${FAINT}">Instagram opens your clip, then use your phone's share button. <a href="${pageUrl}" style="color:${RED};font-weight:700;text-decoration:none">Or just open it here.</a></p>
           </td></tr>
         </table>
 
