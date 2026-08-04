@@ -367,5 +367,159 @@
   ],
   "note": "THE 9 Wedding Gift Part 1 scenes (Omni Flash ingredients, 8s, 720p, characters Maya/Stepsister/Fiance). Grid was newest-first; scene-N = flow-clip-(10-N).",
   "date": "2026-08-04"
+ },
+ {
+  "type": "prompt",
+  "path": "marketing/production/story-004/vo/script.txt",
+  "tags": [
+   "story-004",
+   "script",
+   "confession",
+   "ear-style"
+  ],
+  "note": "The Confession script (133 words, 52.6s VO) - confession + compassion single-reel structure: hook, confession, validated disgust, turn, context, accountability, mirror question.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "vo",
+  "path": "marketing/production/story-004/vo/story-004-vo.mp3",
+  "tags": [
+   "story-004",
+   "stitched",
+   "lily"
+  ],
+  "note": "Story-004 confession narration (52.57s, Lily stitched) + alignment/words JSONs beside it.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "music",
+  "path": "marketing/production/story-004/vo/story-004-music-a.mp3",
+  "tags": [
+   "bed",
+   "melancholic",
+   "piano",
+   "instrumental"
+  ],
+  "note": "Sparse melancholic felt-piano bed (26.8s, RMS -14.1dB, instrumental-only prompt). Story-004 first half at gain 0.040.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "music",
+  "path": "marketing/production/story-004/vo/story-004-music-b.mp3",
+  "tags": [
+   "bed",
+   "warm",
+   "strings",
+   "compassion",
+   "instrumental"
+  ],
+  "note": "Warm compassionate string-swell bed (30.8s, RMS -15.3dB, instrumental-only prompt). Story-004 second half at gain 0.046, end-faded.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "prompt",
+  "path": "marketing/production/story-005/FLOW-PROMPTS.txt",
+  "tags": [
+   "story-005",
+   "style-lock",
+   "marker-pop",
+   "punchy",
+   "approved"
+  ],
+  "note": "THE marker-pop style lock (bold ink + vivid saturated marker colors, exaggerated expressions) x 9 wedding-confession choreographies. Style probe validated by frame 2026-08-04.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "prompt",
+  "path": "marketing/production/story-005/vo/script-en.txt",
+  "tags": [
+   "story-005",
+   "script",
+   "en",
+   "conclusion-first",
+   "two-spikes"
+  ],
+  "note": "The Villain Was Right EN script (142 words, 33.9s at 1.15x) - conclusion-first hook + slap spike + reveal spike + mirror question.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "prompt",
+  "path": "marketing/production/story-005/vo/script-hi.txt",
+  "tags": [
+   "story-005",
+   "script",
+   "hindi"
+  ],
+  "note": "Hindi localization of The Villain Was Right (38.1s). Same beats as EN - one clip set serves both.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "vo",
+  "path": "marketing/production/story-005/vo/story-005-vo-en.mp3",
+  "tags": [
+   "story-005",
+   "brian",
+   "spiked-settings"
+  ],
+  "note": "Brian (nPczCjzI2devNBz1zQrb) EN narration: stability 0.30, style 0.5, speed 1.15, similarity 0.75 - the spiked-emotion delivery. Words JSONs beside it.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "vo",
+  "path": "marketing/production/story-005/vo/story-005-vo-hi.mp3",
+  "tags": [
+   "story-005",
+   "brian",
+   "hindi"
+  ],
+  "note": "Brian Hindi narration, same spiked settings, single-shot (danda text does not chunk in tts.mjs stitch).",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "music",
+  "path": "marketing/production/story-005/vo/story-005-music-a.mp3",
+  "tags": [
+   "bed",
+   "tense",
+   "staccato",
+   "instrumental"
+  ],
+  "note": "Urgent staccato-string pulse bed (30.8s, RMS -14.7dB). Story-005 first half at 0.045.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "music",
+  "path": "marketing/production/story-005/vo/story-005-music-b.mp3",
+  "tags": [
+   "bed",
+   "emotional",
+   "swell",
+   "instrumental"
+  ],
+  "note": "Soaring vindication string swell (28.9s, RMS -14.5dB). Story-005 second half at 0.045, end-faded.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "sfx",
+  "path": "marketing/production/story-005/sfx/slap-crack-soft.mp3",
+  "tags": [
+   "spike",
+   "slap",
+   "soft"
+  ],
+  "note": "Slap crack accent (RMS -36.9dB). Spike accent at 0.9 = ~12dB under VO.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "clip",
+  "path": "marketing/remotion/story-001/public/clips/story-005",
+  "tags": [
+   "story-005",
+   "marker-pop",
+   "wedding",
+   "posted"
+  ],
+  "note": "THE 9 Villain Was Right scenes (marker-pop style, 8s). S2 redone once for hair continuity. Serves both EN and HI reels. Posted 2026-08-04.",
+  "date": "2026-08-04"
  }
 ]

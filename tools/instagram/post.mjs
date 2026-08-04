@@ -80,7 +80,9 @@ function captionFor(dir, file) {
 
 /** Instagram throws a different "not now" dialog at you every few weeks. */
 async function dismissPopups(page) {
-  for (const label of ['Not now', 'Not Now', 'Cancel', 'Dismiss']) {
+  // 'OK' clears informational modals (e.g. 2026-08-04 "Video posts are now
+  // shared as reels"), which sit over the composer and swallow every click.
+  for (const label of ['Not now', 'Not Now', 'Cancel', 'Dismiss', 'OK']) {
     const b = page.getByRole('button', { name: label, exact: true });
     if (await b.count() && await b.first().isVisible().catch(() => false)) {
       await b.first().click().catch(() => {});

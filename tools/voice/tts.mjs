@@ -29,6 +29,21 @@ const out = arg('out');
 const voice = arg('voice');
 const model = arg('model', 'eleven_multilingual_v2');
 const align = arg('align');
+
+// Optional delivery knobs (ElevenLabs voice_settings). Left out = model default.
+// stability: LOW = more emotional swing, HIGH = flat/consistent (0-1)
+// style: style exaggeration (0-1) · speed: 0.7-1.2 · similarity: 0-1
+const voiceSettings = {};
+for (const [flag, apiKey] of [
+  ['stability', 'stability'],
+  ['similarity', 'similarity_boost'],
+  ['style', 'style'],
+  ['speed', 'speed'],
+]) {
+  const v = arg(flag);
+  if (v !== null) voiceSettings[apiKey] = parseFloat(v);
+}
+const settings = Object.keys(voiceSettings).length ? voiceSettings : undefined;
 if (!textFile || !out || !voice) {
   console.error('Usage: tts.mjs --text <file> --out <mp3> --voice <id> [--model <id>] [--align <json>]');
   process.exit(1);
@@ -60,6 +75,7 @@ if (process.argv.includes('--stitch')) {
       body: JSON.stringify({
         text: chunks[i],
         model_id: model,
+        voice_settings: settings,
         previous_text: chunks.slice(0, i).join(' ') || undefined,
         next_text: chunks.slice(i + 1).join(' ') || undefined,
         previous_request_ids: requestIds.slice(-3),
@@ -100,7 +116,7 @@ const url = `https://api.elevenlabs.io/v1/text-to-speech/${voice}` + (align ? '/
 const res = await fetch(url, {
   method: 'POST',
   headers: { 'xi-api-key': key, 'Content-Type': 'application/json' },
-  body: JSON.stringify({ text, model_id: model }),
+  body: JSON.stringify({ text, model_id: model, voice_settings: settings }),
 });
 if (!res.ok) {
   console.error(`ElevenLabs ${res.status}: ${(await res.text()).slice(0, 300)}`);

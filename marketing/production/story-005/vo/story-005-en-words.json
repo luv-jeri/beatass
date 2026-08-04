@@ -1,0 +1,712 @@
+[
+ {
+  "word": "I",
+  "start": 0,
+  "end": 0.07
+ },
+ {
+  "word": "stood",
+  "start": 0.151,
+  "end": 0.337
+ },
+ {
+  "word": "up",
+  "start": 0.372,
+  "end": 0.441
+ },
+ {
+  "word": "in",
+  "start": 0.476,
+  "end": 0.534
+ },
+ {
+  "word": "the",
+  "start": 0.569,
+  "end": 0.639
+ },
+ {
+  "word": "middle",
+  "start": 0.673,
+  "end": 0.848
+ },
+ {
+  "word": "of",
+  "start": 0.882,
+  "end": 0.929
+ },
+ {
+  "word": "my",
+  "start": 0.975,
+  "end": 1.045
+ },
+ {
+  "word": "best",
+  "start": 1.103,
+  "end": 1.277
+ },
+ {
+  "word": "friend's",
+  "start": 1.312,
+  "end": 1.556
+ },
+ {
+  "word": "wedding",
+  "start": 1.591,
+  "end": 1.846
+ },
+ {
+  "word": "and",
+  "start": 1.916,
+  "end": 2.02
+ },
+ {
+  "word": "I",
+  "start": 2.067,
+  "end": 2.09
+ },
+ {
+  "word": "screamed,",
+  "start": 2.159,
+  "end": 2.624
+ },
+ {
+  "word": "stop",
+  "start": 3.065,
+  "end": 3.332
+ },
+ {
+  "word": "the",
+  "start": 3.379,
+  "end": 3.448
+ },
+ {
+  "word": "wedding.",
+  "start": 3.483,
+  "end": 4.133
+ },
+ {
+  "word": "Her",
+  "start": 4.133,
+  "end": 4.249
+ },
+ {
+  "word": "mother",
+  "start": 4.296,
+  "end": 4.481
+ },
+ {
+  "word": "slapped",
+  "start": 4.516,
+  "end": 4.795
+ },
+ {
+  "word": "me.",
+  "start": 4.83,
+  "end": 5.294
+ },
+ {
+  "word": "Her",
+  "start": 5.294,
+  "end": 5.398
+ },
+ {
+  "word": "brothers",
+  "start": 5.433,
+  "end": 5.689
+ },
+ {
+  "word": "dragged",
+  "start": 5.724,
+  "end": 5.967
+ },
+ {
+  "word": "me",
+  "start": 5.991,
+  "end": 6.049
+ },
+ {
+  "word": "out",
+  "start": 6.083,
+  "end": 6.176
+ },
+ {
+  "word": "of",
+  "start": 6.211,
+  "end": 6.258
+ },
+ {
+  "word": "the",
+  "start": 6.281,
+  "end": 6.351
+ },
+ {
+  "word": "hall",
+  "start": 6.397,
+  "end": 6.583
+ },
+ {
+  "word": "while",
+  "start": 6.629,
+  "end": 6.803
+ },
+ {
+  "word": "the",
+  "start": 6.827,
+  "end": 6.896
+ },
+ {
+  "word": "whole",
+  "start": 6.943,
+  "end": 7.14
+ },
+ {
+  "word": "room",
+  "start": 7.175,
+  "end": 7.326
+ },
+ {
+  "word": "booed",
+  "start": 7.395,
+  "end": 7.57
+ },
+ {
+  "word": "at",
+  "start": 7.593,
+  "end": 7.651
+ },
+ {
+  "word": "me,",
+  "start": 7.697,
+  "end": 7.976
+ },
+ {
+  "word": "and",
+  "start": 8.255,
+  "end": 8.371
+ },
+ {
+  "word": "the",
+  "start": 8.405,
+  "end": 8.475
+ },
+ {
+  "word": "bride,",
+  "start": 8.522,
+  "end": 8.847
+ },
+ {
+  "word": "my",
+  "start": 8.881,
+  "end": 8.951
+ },
+ {
+  "word": "best",
+  "start": 9.009,
+  "end": 9.172
+ },
+ {
+  "word": "friend",
+  "start": 9.207,
+  "end": 9.439
+ },
+ {
+  "word": "since",
+  "start": 9.566,
+  "end": 9.775
+ },
+ {
+  "word": "we",
+  "start": 9.81,
+  "end": 9.868
+ },
+ {
+  "word": "were",
+  "start": 9.903,
+  "end": 10.019
+ },
+ {
+  "word": "nine",
+  "start": 10.054,
+  "end": 10.193
+ },
+ {
+  "word": "years",
+  "start": 10.217,
+  "end": 10.379
+ },
+ {
+  "word": "old,",
+  "start": 10.426,
+  "end": 10.716
+ },
+ {
+  "word": "told",
+  "start": 10.925,
+  "end": 11.111
+ },
+ {
+  "word": "me",
+  "start": 11.145,
+  "end": 11.215
+ },
+ {
+  "word": "she",
+  "start": 11.25,
+  "end": 11.343
+ },
+ {
+  "word": "never",
+  "start": 11.389,
+  "end": 11.54
+ },
+ {
+  "word": "wanted",
+  "start": 11.575,
+  "end": 11.761
+ },
+ {
+  "word": "to",
+  "start": 11.784,
+  "end": 11.83
+ },
+ {
+  "word": "see",
+  "start": 11.877,
+  "end": 11.993
+ },
+ {
+  "word": "my",
+  "start": 12.028,
+  "end": 12.097
+ },
+ {
+  "word": "face",
+  "start": 12.155,
+  "end": 12.33
+ },
+ {
+  "word": "again.",
+  "start": 12.364,
+  "end": 13.096
+ },
+ {
+  "word": "For",
+  "start": 13.096,
+  "end": 13.224
+ },
+ {
+  "word": "two",
+  "start": 13.259,
+  "end": 13.386
+ },
+ {
+  "word": "years,",
+  "start": 13.456,
+  "end": 13.711
+ },
+ {
+  "word": "I",
+  "start": 13.746,
+  "end": 13.781
+ },
+ {
+  "word": "was",
+  "start": 13.851,
+  "end": 13.955
+ },
+ {
+  "word": "the",
+  "start": 14.002,
+  "end": 14.071
+ },
+ {
+  "word": "jealous",
+  "start": 14.118,
+  "end": 14.373
+ },
+ {
+  "word": "friend",
+  "start": 14.408,
+  "end": 14.675
+ },
+ {
+  "word": "who",
+  "start": 14.779,
+  "end": 14.907
+ },
+ {
+  "word": "could",
+  "start": 14.942,
+  "end": 15.093
+ },
+ {
+  "word": "not",
+  "start": 15.139,
+  "end": 15.279
+ },
+ {
+  "word": "watch",
+  "start": 15.314,
+  "end": 15.499
+ },
+ {
+  "word": "her",
+  "start": 15.534,
+  "end": 15.615
+ },
+ {
+  "word": "be",
+  "start": 15.673,
+  "end": 15.743
+ },
+ {
+  "word": "happy.",
+  "start": 15.778,
+  "end": 16.625
+ },
+ {
+  "word": "Then",
+  "start": 16.625,
+  "end": 16.776
+ },
+ {
+  "word": "last",
+  "start": 16.834,
+  "end": 17.02
+ },
+ {
+  "word": "month,",
+  "start": 17.078,
+  "end": 17.287
+ },
+ {
+  "word": "she",
+  "start": 17.31,
+  "end": 17.414
+ },
+ {
+  "word": "showed",
+  "start": 17.449,
+  "end": 17.647
+ },
+ {
+  "word": "up",
+  "start": 17.67,
+  "end": 17.74
+ },
+ {
+  "word": "at",
+  "start": 17.774,
+  "end": 17.832
+ },
+ {
+  "word": "my",
+  "start": 17.867,
+  "end": 17.937
+ },
+ {
+  "word": "door,",
+  "start": 17.983,
+  "end": 18.192
+ },
+ {
+  "word": "shaking.",
+  "start": 18.216,
+  "end": 19.04
+ },
+ {
+  "word": "She",
+  "start": 19.04,
+  "end": 19.144
+ },
+ {
+  "word": "had",
+  "start": 19.179,
+  "end": 19.261
+ },
+ {
+  "word": "found",
+  "start": 19.295,
+  "end": 19.47
+ },
+ {
+  "word": "what",
+  "start": 19.504,
+  "end": 19.632
+ },
+ {
+  "word": "I",
+  "start": 19.679,
+  "end": 19.702
+ },
+ {
+  "word": "found.",
+  "start": 19.829,
+  "end": 20.247
+ },
+ {
+  "word": "A",
+  "start": 20.248,
+  "end": 20.306
+ },
+ {
+  "word": "second",
+  "start": 20.376,
+  "end": 20.596
+ },
+ {
+  "word": "phone,",
+  "start": 20.631,
+  "end": 20.898
+ },
+ {
+  "word": "a",
+  "start": 20.921,
+  "end": 20.956
+ },
+ {
+  "word": "second",
+  "start": 21.014,
+  "end": 21.235
+ },
+ {
+  "word": "city,",
+  "start": 21.293,
+  "end": 21.548
+ },
+ {
+  "word": "a",
+  "start": 21.572,
+  "end": 21.606
+ },
+ {
+  "word": "second",
+  "start": 21.641,
+  "end": 21.862
+ },
+ {
+  "word": "family.",
+  "start": 21.908,
+  "end": 22.756
+ },
+ {
+  "word": "A",
+  "start": 22.756,
+  "end": 22.826
+ },
+ {
+  "word": "wife,",
+  "start": 22.93,
+  "end": 23.186
+ },
+ {
+  "word": "and",
+  "start": 23.209,
+  "end": 23.302
+ },
+ {
+  "word": "a",
+  "start": 23.348,
+  "end": 23.371
+ },
+ {
+  "word": "little",
+  "start": 23.441,
+  "end": 23.638
+ },
+ {
+  "word": "boy",
+  "start": 23.673,
+  "end": 23.813
+ },
+ {
+  "word": "with",
+  "start": 23.847,
+  "end": 23.963
+ },
+ {
+  "word": "his",
+  "start": 23.998,
+  "end": 24.091
+ },
+ {
+  "word": "eyes.",
+  "start": 24.138,
+  "end": 24.567
+ },
+ {
+  "word": "I",
+  "start": 24.567,
+  "end": 24.602
+ },
+ {
+  "word": "knew",
+  "start": 24.671,
+  "end": 24.799
+ },
+ {
+  "word": "it",
+  "start": 24.822,
+  "end": 24.869
+ },
+ {
+  "word": "on",
+  "start": 24.904,
+  "end": 24.962
+ },
+ {
+  "word": "her",
+  "start": 25.008,
+  "end": 25.078
+ },
+ {
+  "word": "wedding",
+  "start": 25.113,
+  "end": 25.322
+ },
+ {
+  "word": "day.",
+  "start": 25.345,
+  "end": 25.821
+ },
+ {
+  "word": "Nobody",
+  "start": 25.821,
+  "end": 26.111
+ },
+ {
+  "word": "believed",
+  "start": 26.146,
+  "end": 26.401
+ },
+ {
+  "word": "me",
+  "start": 26.425,
+  "end": 26.494
+ },
+ {
+  "word": "then.",
+  "start": 26.529,
+  "end": 27.121
+ },
+ {
+  "word": "So",
+  "start": 27.121,
+  "end": 27.237
+ },
+ {
+  "word": "before",
+  "start": 27.295,
+  "end": 27.551
+ },
+ {
+  "word": "you",
+  "start": 27.585,
+  "end": 27.667
+ },
+ {
+  "word": "call",
+  "start": 27.725,
+  "end": 27.899
+ },
+ {
+  "word": "someone",
+  "start": 27.98,
+  "end": 28.398
+ },
+ {
+  "word": "the",
+  "start": 28.526,
+  "end": 28.63
+ },
+ {
+  "word": "villain",
+  "start": 28.677,
+  "end": 28.909
+ },
+ {
+  "word": "of",
+  "start": 28.944,
+  "end": 28.99
+ },
+ {
+  "word": "a",
+  "start": 29.025,
+  "end": 29.06
+ },
+ {
+  "word": "story,",
+  "start": 29.106,
+  "end": 29.571
+ },
+ {
+  "word": "ask",
+  "start": 29.722,
+  "end": 29.965
+ },
+ {
+  "word": "yourself",
+  "start": 30.0,
+  "end": 30.314
+ },
+ {
+  "word": "one",
+  "start": 30.418,
+  "end": 30.604
+ },
+ {
+  "word": "question.",
+  "start": 30.639,
+  "end": 31.579
+ },
+ {
+  "word": "What",
+  "start": 31.579,
+  "end": 31.742
+ },
+ {
+  "word": "if",
+  "start": 31.765,
+  "end": 31.834
+ },
+ {
+  "word": "they",
+  "start": 31.869,
+  "end": 31.985
+ },
+ {
+  "word": "were",
+  "start": 32.009,
+  "end": 32.125
+ },
+ {
+  "word": "the",
+  "start": 32.159,
+  "end": 32.241
+ },
+ {
+  "word": "only",
+  "start": 32.31,
+  "end": 32.566
+ },
+ {
+  "word": "one",
+  "start": 32.636,
+  "end": 32.891
+ },
+ {
+  "word": "telling",
+  "start": 32.961,
+  "end": 33.216
+ },
+ {
+  "word": "the",
+  "start": 33.251,
+  "end": 33.32
+ },
+ {
+  "word": "truth?",
+  "start": 33.355,
+  "end": 33.947
+ }
+]
