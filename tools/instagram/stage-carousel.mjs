@@ -61,11 +61,25 @@ await fileInput.setInputFiles(files);
 await page.waitForTimeout(6000);
 await dismissPopups();
 
+if (process.argv.includes('--stop-after-upload')) {
+  console.log('holding at the crop screen - images added, nothing clicked. Window stays open until Ctrl-C.');
+  setInterval(() => {}, 60000); // real keepalive - a bare unsettled await lets node exit
+await new Promise(() => {});
+}
+
+// Select Crop opens a MENU (Original / 1:1 / 4:5 / 16:9) - clicking the
+// button alone leaves Instagram's default crop (bitten 2026-08-04: carousel
+// posted 1:1, beheaded). Always open the menu and pick Original.
 const cropSvg = page.locator('svg[aria-label="Select Crop"], svg[aria-label="Select crop"]').first();
 if (await cropSvg.count()) {
   await cropSvg.locator('xpath=ancestor::button[1]')
     .or(cropSvg.locator('xpath=ancestor::*[@role="button"][1]')).first().click().catch(() => {});
-  await page.waitForTimeout(1200);
+  await page.waitForTimeout(900);
+  const orig = page.getByText('Original', { exact: true }).first();
+  if (await orig.isVisible().catch(() => false)) {
+    await orig.click();
+    await page.waitForTimeout(900);
+  }
 }
 
 for (const step of ['Next', 'Next']) {
@@ -98,4 +112,5 @@ if (process.argv.includes('--share')) {
 }
 console.log(`staged: ${files.length}-slide carousel - review the window and press Share.`);
 console.log('WAIT in the tab until Instagram confirms. Window stays open until Ctrl-C.');
+setInterval(() => {}, 60000); // real keepalive - a bare unsettled await lets node exit
 await new Promise(() => {});

@@ -77,6 +77,11 @@ async function stage(page, file) {
   await cropBtn.locator('xpath=ancestor::button[1]')
     .or(cropBtn.locator('xpath=ancestor::*[@role="button"][1]')).first().click();
   await page.waitForTimeout(1200);
+  const orig = page.getByText('Original', { exact: true }).first();
+  if (await orig.isVisible().catch(() => false)) {
+    await orig.click();
+    await page.waitForTimeout(900);
+  }
 
   for (const step of ['Next', 'Next']) {
     const b = page.getByRole('button', { name: step, exact: true }).first();
@@ -105,4 +110,5 @@ for (const file of files) {
 }
 console.log(`\n— ${pages.length}/${files.length} STAGED in separate tabs. Review each, press Share, and`);
 console.log('  WAIT in each tab until Instagram confirms. Window stays open until Ctrl-C.');
+setInterval(() => {}, 60000); // real keepalive - a bare unsettled await lets node exit
 await new Promise(() => {});
