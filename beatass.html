@@ -162,9 +162,19 @@ a{color:var(--red)}a:hover{color:var(--ink)}
    ============================================================ */
 .who{display:grid;grid-template-columns:1fr 1.35fr;gap:18px;flex:none}
 .field{position:relative;padding-bottom:17px;min-width:0}
-/* the handle field has no error text under it (a bad handle just turns the
-   field red), so it doesn't reserve the 17px message slot the others need */
-#f-handle{padding-bottom:0}
+/* Instagram and WhatsApp share one row. Stacking a fourth field would cost
+   another ~60px of height and break the no-scroll rule on a 360x640 phone,
+   which test.mjs measures. */
+.who.pair{grid-template-columns:1fr 1fr}
+/* neither of these has error text under it (a bad value just turns the field
+   red), so they don't reserve the 17px message slot the others need */
+#f-handle,#f-wa{padding-bottom:0}
+/* +91 is printed into the field, never typed: India-only numbers, so there is
+   no country picker and no way to get the code wrong. */
+.wa-wrap{position:relative}
+.wa-cc{position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;
+  font-weight:700;font-size:var(--fs-input);color:var(--ink-faint)}
+.wa-wrap input{padding-left:42px}
 .field label{display:block;font-weight:700;font-size:var(--fs-small);color:var(--ink-soft);
   line-height:1;margin-bottom:5px;transition:color var(--dur-err)}
 /* A box drawn in pen, not a bare underline. The underline version read as
@@ -576,11 +586,17 @@ a{color:var(--red)}a:hover{color:var(--ink)}
               <div class="err">that's not an email</div>
             </div>
           </div>
-          <div class="field" id="f-handle" style="margin-top:6px">
-            <label for="i-handle">their instagram</label>
-            <input type="text" id="i-handle" placeholder="their_username" autocomplete="off">
+          <div class="who pair" style="margin-top:6px">
+            <div class="field" id="f-handle">
+              <label for="i-handle">their instagram</label>
+              <input type="text" id="i-handle" placeholder="their_username" autocomplete="off">
+            </div>
+            <div class="field" id="f-wa">
+              <label for="i-wa">their whatsapp</label>
+              <div class="wa-wrap"><span class="wa-cc" aria-hidden="true">+91</span><input type="tel" id="i-wa" placeholder="98765 43210" autocomplete="off" inputmode="numeric" maxlength="15" aria-label="their whatsapp number, Indian mobile, country code +91 already included"></div>
+            </div>
           </div>
-          <div id="contact-note" style="margin-top:4px;font-size:11px;line-height:1.3;color:var(--ink-faint);display:flex;align-items:center;gap:5px"><svg viewBox="0 0 20 20" width="13" height="13" aria-hidden="true" style="flex:none"><circle cx="10" cy="10" r="8.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="6.3" r="1.1" fill="currentColor"/><rect x="9.1" y="8.9" width="1.8" height="5.8" rx=".9" fill="currentColor"/></svg><span>email or instagram, at least one. email is the most reliable.</span></div>
+          <div id="contact-note" style="margin-top:4px;font-size:11px;line-height:1.3;color:var(--ink-faint);display:flex;align-items:center;gap:5px"><svg viewBox="0 0 20 20" width="13" height="13" aria-hidden="true" style="flex:none"><circle cx="10" cy="10" r="8.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="6.3" r="1.1" fill="currentColor"/><rect x="9.1" y="8.9" width="1.8" height="5.8" rx=".9" fill="currentColor"/></svg><span>email, instagram or whatsapp - at least one. email is the most reliable.</span></div>
 
           <div class="saybox">
             <div class="pane-label">what do you want to say?</div>
@@ -1204,37 +1220,53 @@ function bump(){
 }
 $('#i-msg').addEventListener('input', bump);
 /* stop shouting the moment they start fixing it */
-[['#i-name','#f-name'],['#i-email','#f-email'],['#i-handle','#f-handle'],['#i-msg','#f-msg'],['#i-sender','#f-sender']].forEach(([i,f]) =>
+[['#i-name','#f-name'],['#i-email','#f-email'],['#i-handle','#f-handle'],['#i-wa','#f-wa'],['#i-msg','#f-msg'],['#i-sender','#f-sender']].forEach(([i,f]) =>
   $(i).addEventListener('input', () => $(f).classList.remove('bad')));
-/* the "need at least one" note calms down the moment either contact field changes */
-['#i-email','#i-handle'].forEach(s => $(s).addEventListener('input', () => {
+/* the "need at least one" note calms down the moment any contact field changes */
+['#i-email','#i-handle','#i-wa'].forEach(s => $(s).addEventListener('input', () => {
   $('#contact-note').style.color = 'var(--ink-faint)';
 }));
+
+/* The same rule as the server (waNumber in src/index.js): digits only, drop a
+   leading zero and a leading country code, and what must remain is an Indian
+   mobile - ten digits starting 6, 7, 8 or 9. Two copies on purpose: this one
+   exists so the person is told before they send, that one is the one that
+   actually decides. Returns '+91XXXXXXXXXX' or '' if it can't be a number. */
+function waNumber(raw){
+  let d = String(raw||'').replace(/\D+/g,'').replace(/^0+/,'');
+  if(d.length===12 && d.startsWith('91')) d = d.slice(2);
+  return /^[6-9]\d{9}$/.test(d) ? '+91'+d : '';
+}
 
 function validate(){
   const name = $('#i-name').value.trim();
   const mail = $('#i-email').value.trim();
   const msg  = $('#i-msg').value.trim();
   const handle = $('#i-handle').value.trim().replace(/^@+/,'').toLowerCase();
+  const waRaw  = $('#i-wa').value.trim();
+  const wa     = waNumber(waRaw);
   const mailBad   = !!mail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail);   // present but wrong
   const handleBad = !!handle && !/^[a-z0-9._]{1,30}$/.test(handle);         // present but wrong
-  const noContact = !mail && !handle;                                       // no way to reach them
+  const waBad     = !!waRaw && !wa;                                        // present but wrong
+  const noContact = !mail && !handle && !wa;                                // no way to reach them
   $('#f-name').classList.toggle('bad', !name);
   $('#f-email').classList.toggle('bad', mailBad);
   $('#f-handle').classList.toggle('bad', handleBad);
+  $('#f-wa').classList.toggle('bad', waBad);
   $('#f-msg').classList.toggle('bad', msg.length < 3);
   $('#contact-note').style.color = noContact ? 'var(--red)' : 'var(--ink-faint)';
-  if(!name || mailBad || handleBad || msg.length < 3 || noContact){
+  if(!name || mailBad || handleBad || waBad || msg.length < 3 || noContact){
     buzz('error');
     const focus = !name ? '#i-name'
       : msg.length < 3 ? '#i-msg'
       : mailBad ? '#i-email'
       : handleBad ? '#i-handle'
+      : waBad ? '#i-wa'
       : '#i-email';   /* noContact: nudge the reliable channel first */
     $(focus).focus();
     return null;
   }
-  return {name, mail, msg, handle};
+  return {name, mail, msg, handle, wa};
 }
 
 /* ---------- 2. tools + hitting ---------- */
@@ -1892,7 +1924,10 @@ function preview(){
 }
 
 function openPreview(v){
-  $('#p-to').textContent    = v.mail || ('@' + v.handle);
+  /* whichever channel they gave. The handle needs its own guard: '@' + '' is
+     '@', which is truthy, so a plain || chain would show a bare @ for a
+     WhatsApp-only send. */
+  $('#p-to').textContent    = v.mail || (v.handle ? '@' + v.handle : v.wa);
   $('#p-greet').textContent = 'Hi ' + v.name + ', somebody used beatass.com to tell you something.';
   $('#p-msg').textContent   = v.msg;
   $('#p-sub').textContent   = v.name + ', someone finally said it';
@@ -1965,6 +2000,7 @@ async function send(){
   if(sender) fd.append('senderEmail', sender);
   if($('#i-share').checked) fd.append('shareOk', '1');
   if(v.handle) fd.append('handle', v.handle);
+  if(v.wa) fd.append('whatsapp', v.wa);
   if(state.gifBlob)   fd.append('gif', state.gifBlob, 'beatass.gif');
   if(state.videoBlob) fd.append('mp4', state.videoBlob, 'beatass.mp4');
 
@@ -1993,11 +2029,14 @@ function showSent(){
   buzz('send');
   $('#ov-preview').classList.remove('on');
 
-  /* Say where it actually went. Email delivers instantly; an Instagram-only
-     message is delivered to their DMs, which is slower - be honest about it. */
-  $('#sent-line').textContent = state.v && state.v.mail
+  /* Say where it actually went. Email delivers instantly; Instagram and
+     WhatsApp go out from a notifier within about a minute, which is slower -
+     be honest about it rather than implying it has already landed. */
+  const v = state.v || {};
+  const later = [v.wa ? 'WhatsApp' : '', v.handle ? 'Instagram DMs' : ''].filter(Boolean);
+  $('#sent-line').textContent = (v.mail || !later.length)
     ? "They'll never know it was you."
-    : "It's headed for their Instagram DMs. They'll never know it was you.";
+    : "It's headed for their " + later.join(' and ') + ". They'll never know it was you.";
 
   const media = $('#sent-media');
   if(state.videoUrl){
@@ -2053,7 +2092,7 @@ $('#btn-copy').onclick = async () => {
 $('#btn-restart').onclick = restart;
 function restart(){
   $('#ov-sent').classList.remove('on');
-  $('#i-name').value = $('#i-email').value = $('#i-msg').value = $('#i-sender').value = $('#i-handle').value = '';
+  $('#i-name').value = $('#i-email').value = $('#i-msg').value = $('#i-sender').value = $('#i-handle').value = $('#i-wa').value = '';
   $('#i-share').checked = false;   // consent is per message, never carried over
   bump();
   $$('.chip').forEach(c => c.classList.remove('on'));

@@ -1,0 +1,142 @@
+WHATSAPP SETUP - WHAT YOU NEED TO DO
+====================================
+
+Everything the computer could do is done. What is left is on your phone,
+plus a few one-word replies back in the chat.
+
+There are 5 steps. Step 1 is on your phone (about 3 minutes).
+Steps 2 to 5 are one word each in the chat.
+
+
+--------------------------------------------------------------------
+STEP 1 - SET UP THE BUSINESS PROFILE (on your phone, 3 minutes)
+--------------------------------------------------------------------
+
+Why: a stranger who gets a message from an unknown business number decides
+in about two seconds whether to block it. The profile is the first thing
+they check. It has to say plainly that we only deliver the message, and
+that reporting exists.
+
+Open WhatsApp Business on your phone.
+
+Everything below is written to be pasted EXACTLY as it is, emoji included.
+The emoji are not decoration - they are what stops the message reading as
+a grey wall of text that nobody finishes.
+
+
+1a. THE ABOUT LINE
+    Tap: Settings  ->  tap your own name at the top  ->  About
+    Delete "At the gym" and paste this instead (129 characters, fits):
+
+📩 we only deliver anonymous messages from beatass.com. we did not write them. every message has a link to reply, report or block.
+
+
+1b. THE DESCRIPTION
+    Tap: Settings  ->  Business tools  ->  Business profile  ->  Description
+    Paste this (244 characters, fits):
+
+📩 beatass.com lets someone write an anonymous message and take it out on a voodoo doll. ⚠️ we only deliver it - we never write the words and never share your number. 🛑 every message has a link to read it, reply, report it, or block us for good.
+
+
+1c. WEBSITE
+    Same screen, the Website field:
+
+https://beatass.com
+
+
+1d. EMAIL
+    Same screen, the Email field:
+
+someone@beatass.com
+
+
+1e. CATEGORY
+    Same screen. Choose "Internet company", or the closest thing on the list.
+
+
+1f. THE GREETING MESSAGE  (this is the important one)
+    Tap: Settings  ->  Business tools  ->  Greeting message
+    Turn it ON, set it to send to "Everyone", and paste this as the message
+    (190 characters, fits under WhatsApp's 200 limit):
+
+👋 *you have not messaged a person.* this is beatass.com - we only deliver anonymous messages, we did not write yours. 👉 the link in it lets you *reply*, *report* it, or *block us for good* 🛑
+
+    The stars around words are not a mistake. WhatsApp turns *like this*
+    into bold when the message is sent, so the important words stand out.
+
+    Why this step matters most: the greeting fires automatically the first
+    time somebody replies to us. It answers the question they are actually
+    asking ("who is this and why do you have my number?") before they
+    reach for Block. WhatsApp on a computer cannot set this at all, only
+    the phone app can, which is why this whole step is on your phone.
+
+    IMPORTANT: do not change your profile NAME ("Beat Ass"). The sending
+    tool checks that name to be sure it is signed in as the right account,
+    and it refuses to send if it does not match. If you ever do change it,
+    tell me and I will update the setting on the laptop.
+
+
+--------------------------------------------------------------------
+STEP 2 - SAY "DEPLOY" IN THE CHAT
+--------------------------------------------------------------------
+
+What I will do: add the new WhatsApp column to the live database and put
+the new version of the site online.
+
+Why it is needed: right now beatass.com has no WhatsApp field on it. Every
+test so far ran against a copy of the database on your laptop. Until this
+happens, nobody can type a WhatsApp number on the real site.
+
+This is your decision because it changes the live site and the live
+database. Nothing happens until you say it.
+
+
+--------------------------------------------------------------------
+STEP 3 - TEST IT LIKE A REAL PERSON (2 minutes, you)
+--------------------------------------------------------------------
+
+Open beatass.com on your phone or laptop. Write a confession, put YOUR OWN
+WhatsApp number in the new field, hit the doll, and send it.
+
+Then tell me, and I will deliver it. You should get three messages, and
+this time the link will actually open, because the message will really
+exist on the live site. Click the link. Try the block button on that page.
+That is the whole feature working end to end.
+
+
+--------------------------------------------------------------------
+STEP 4 - SAY "ARM THE TIMER"
+--------------------------------------------------------------------
+
+What I will do: install a small background job that wakes up every 60
+seconds, looks for messages waiting to be sent, and sends them without
+anybody watching.
+
+What you will notice: when there IS something to send, a WhatsApp window
+opens on your screen by itself, sends the messages, and closes. That looks
+odd but it is necessary - WhatsApp refuses to stay logged in unless there
+is a real visible window (I tested this twice). When nothing is waiting,
+no window ever opens, so most of the time you will never see it.
+
+Off switch, any time, one line:
+launchctl unload ~/Library/LaunchAgents/com.beatass.whatsapp.plist
+
+
+--------------------------------------------------------------------
+STEP 5 - SAY "COMMIT"
+--------------------------------------------------------------------
+
+I save all of this work to the project history. Nothing is saved yet.
+
+
+--------------------------------------------------------------------
+IF SOMETHING LOOKS WRONG LATER
+--------------------------------------------------------------------
+
+The full technical version of all of this lives in WHATSAPP.md in the
+project folder. When WhatsApp changes its website and the sender breaks,
+it stops and saves a photo of the screen it was stuck on, at:
+
+tools/whatsapp/last-failure.png
+
+Show me that photo and it is usually a one-line fix.

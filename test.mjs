@@ -295,6 +295,42 @@ if(!/Instagram/.test(hLine)) errs.push('the sent screen did not say the message 
 await p.click('button:has-text("Send another")').catch(()=>{});
 await p.waitForTimeout(300);
 
+/* ---- whatsapp-only: no email, no handle, a number typed the messy way.
+       Proves the +91 is added for them, the spaces are cleaned off, and the
+       API is handed the one shape the database stores. ---- */
+await p.fill('#i-name','Anjali'); await p.fill('#i-wa','098765 43210');
+await p.fill('#i-msg','no email, no instagram, just whatsapp');
+await p.click('#go'); await p.waitForTimeout(400);
+const wOpen = await p.isVisible('#ov-preview.on');
+const wTo = wOpen ? await p.textContent('#p-to') : '';
+await p.click('button:has-text("Send it")'); await p.waitForTimeout(600);
+const wLine = await p.textContent('#sent-line').catch(()=> '');
+const hasWa = sent.body.includes('name="whatsapp"') && sent.body.includes('+919876543210');
+const waNoEmail = !sent.body.includes('name="email"') && !sent.body.includes('name="handle"');
+console.log('whatsapp-only send:', wOpen, '| to shows:', JSON.stringify(wTo),
+  '| number normalised:', hasWa, '| other channels omitted:', waNoEmail,
+  '| honest copy:', /WhatsApp/.test(wLine));
+if(!wOpen) errs.push('whatsapp-only preview did not open');
+if(wOpen && wTo !== '+919876543210') errs.push('preview "to" line did not show the whatsapp number');
+if(!hasWa) errs.push('the whatsapp number never reached the API in +91 form');
+if(!waNoEmail) errs.push('an email or handle field was posted on a whatsapp-only send');
+if(!/WhatsApp/.test(wLine)) errs.push('the sent screen did not say the message goes to WhatsApp');
+await p.click('button:has-text("Send another")').catch(()=>{});
+await p.waitForTimeout(300);
+
+/* A number that cannot be an Indian mobile must stop the send, not travel to
+   the server and come back as an error. */
+await p.fill('#i-name','Nope'); await p.fill('#i-wa','12345');
+await p.fill('#i-msg','this number is not a real one');
+await p.click('#go'); await p.waitForTimeout(400);
+const badWaBlocked = !(await p.isVisible('#ov-preview.on'));
+const badWaFlagged = await p.locator('#f-wa').evaluate(el => el.classList.contains('bad'));
+console.log('bad whatsapp number:', badWaBlocked ? 'blocked (correct)' : 'LET THROUGH',
+  '| field flagged:', badWaFlagged);
+if(!badWaBlocked) errs.push('a bad whatsapp number still opened the preview');
+if(!badWaFlagged) errs.push('a bad whatsapp number did not turn the field red');
+await p.fill('#i-wa',''); await p.fill('#i-name',''); await p.fill('#i-msg','');
+
 // mobile flow + overlay fit
 const m2 = await b.newPage({viewport:{width:390,height:844}, isMobile:true, hasTouch:true});
 await m2.goto('http://localhost:8894/',{waitUntil:'networkidle'}); await m2.waitForTimeout(600);

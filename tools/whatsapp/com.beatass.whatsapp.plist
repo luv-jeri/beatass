@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Sends waiting WhatsApp messages, every 60 seconds. An empty check never
+     touches WhatsApp (it only glances at the database), so a short timer is
+     cheap and just means a message goes out within about a minute of being
+     written.
+
+     NOT loaded by default: loading this arms an unattended sender that messages
+     real people, which is Sanjay's decision, not a script's.
+
+     Arm it:    cp tools/whatsapp/com.beatass.whatsapp.plist ~/Library/LaunchAgents/
+                launchctl load ~/Library/LaunchAgents/com.beatass.whatsapp.plist
+     Stop it:   launchctl unload ~/Library/LaunchAgents/com.beatass.whatsapp.plist -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.beatass.whatsapp</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/sanjaykumar/Claude/Projects/banyan/ventures/beatass/tools/whatsapp/auto-whatsapp.sh</string>
+  </array>
+  <key>StartInterval</key>
+  <integer>60</integer>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>60</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/sanjaykumar/.config/beatass-whatsapp/launchd.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/sanjaykumar/.config/beatass-whatsapp/launchd.log</string>
+</dict>
+</plist>

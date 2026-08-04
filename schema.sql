@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS messages (
   reports      INTEGER NOT NULL DEFAULT 0,
   sender_email TEXT,                       -- the sender's own address, if they want replies. Never shown.
   to_handle    TEXT,                       -- the recipient's Instagram handle, if given. Never shown.
-  view_token   TEXT,                       -- /m link token, minted at send time for the IG notifier. Set only when to_handle is.
+  to_whatsapp  TEXT,                       -- the recipient's WhatsApp number as '+91XXXXXXXXXX', if given. Never shown.
+  view_token   TEXT,                       -- /m link token, minted at send time for the notifiers. Set whenever a handle or a number is.
   -- The sharing lane. A confession is a private letter by default: share_ok is
   -- 0 unless the sender ticked the box on the send screen, and nothing with a 0
   -- may ever be posted anywhere. Everything below is meaningless without it.

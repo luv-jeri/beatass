@@ -15,6 +15,9 @@ public/
 # copied to marketing/production/story-001/final/ instead)
 marketing/remotion/story-001/out/
 
+# screenshots from the WhatsApp tools - these show real chats and real numbers
+tools/whatsapp/*.png
+
 # debugging screenshots from the Instagram poster
 tools/instagram/last-failure.png
 tools/instagram/dry-run.png

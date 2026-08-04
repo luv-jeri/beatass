@@ -37,6 +37,20 @@ const json = (obj, status = 200) =>
 
 const okEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s);
 
+/* WhatsApp numbers, India only.
+   People paste phone numbers in every shape there is - spaces, dashes, a
+   country code, the old trunk zero - so take the digits and nothing else, drop
+   a leading zero and a leading 91, and what has to remain is the ten digits of
+   an Indian mobile, which always start 6, 7, 8 or 9.
+   Returns the ONE shape we store, +91XXXXXXXXXX, or '' when it cannot be one.
+   Every number entering the system goes through here, which is why nothing
+   downstream ever has to wonder what shape it was given. */
+function waNumber(raw) {
+  let d = String(raw || '').replace(/\D+/g, '').replace(/^0+/, '');
+  if (d.length === 12 && d.startsWith('91')) d = d.slice(2);
+  return /^[6-9]\d{9}$/.test(d) ? '+91' + d : '';
+}
+
 /* ---------- small crypto helpers ---------- */
 
 async function hmac(secret, message) {
@@ -536,11 +550,12 @@ function adminWhere(query) {
   const params = [];
   if (query.q) {
     const like = '%' + query.q.replace(/[%_\\]/g, '\\$&') + '%';
-    where.push("(to_name LIKE ? ESCAPE '\\' OR to_email LIKE ? ESCAPE '\\' OR to_handle LIKE ? ESCAPE '\\' OR body LIKE ? ESCAPE '\\' OR sender_email LIKE ? ESCAPE '\\')");
-    params.push(like, like, like, like, like);
+    where.push("(to_name LIKE ? ESCAPE '\\' OR to_email LIKE ? ESCAPE '\\' OR to_handle LIKE ? ESCAPE '\\' OR to_whatsapp LIKE ? ESCAPE '\\' OR body LIKE ? ESCAPE '\\' OR sender_email LIKE ? ESCAPE '\\')");
+    params.push(like, like, like, like, like, like);
   }
   if (query.channel === 'email') where.push("to_email <> ''");
   else if (query.channel === 'ig') where.push("(to_handle IS NOT NULL AND to_handle <> '')");
+  else if (query.channel === 'wa') where.push("(to_whatsapp IS NOT NULL AND to_whatsapp <> '')");
   else if (query.channel === 'both') where.push("(to_email <> '' AND to_handle IS NOT NULL AND to_handle <> '')");
   if (query.media === 'gif') where.push('has_gif = 1');
   else if (query.media === 'mp4') where.push('has_mp4 = 1');
@@ -566,6 +581,7 @@ async function adminData(env, query) {
        SUM(CASE WHEN reports > 0 THEN 1 ELSE 0 END) reported_rows,
        SUM(CASE WHEN to_email <> '' THEN 1 ELSE 0 END) with_email,
        SUM(CASE WHEN to_handle IS NOT NULL AND to_handle <> '' THEN 1 ELSE 0 END) with_handle,
+       SUM(CASE WHEN to_whatsapp IS NOT NULL AND to_whatsapp <> '' THEN 1 ELSE 0 END) with_whatsapp,
        SUM(CASE WHEN sender_email IS NOT NULL AND sender_email <> '' THEN 1 ELSE 0 END) with_reply
      FROM messages`
   ).first();
@@ -586,7 +602,7 @@ async function adminData(env, query) {
   const totalRow = await env.DB.prepare(`SELECT COUNT(*) c FROM messages ${clause}`).bind(...params).first();
   const total = (totalRow && totalRow.c) || 0;
   const rows = await env.DB.prepare(
-    `SELECT id, to_name, to_email, to_handle, body, has_gif, has_mp4, reports, sender_email, sender_hash, created_at
+    `SELECT id, to_name, to_email, to_handle, to_whatsapp, body, has_gif, has_mp4, reports, sender_email, sender_hash, created_at
      FROM messages ${clause} ORDER BY created_at DESC LIMIT ? OFFSET ?`
     // ponytail: OFFSET paging is fine into the tens of thousands here; switch to
     // keyset (WHERE created_at < last) only if an admin ever pages that deep.
@@ -727,10 +743,12 @@ function adminPage(data) {
 
   const recentRows = (t.rows || []).map((r) => {
     const when = new Date(r.created_at * 1000).toISOString().slice(0, 16).replace('T', ' ');
-    const chan = (r.to_email && r.to_handle) ? 'email + ig'
-      : r.to_email ? 'email'
-      : r.to_handle ? '@' + r.to_handle : '-';
-    const dest = r.to_email ? r.to_email : (r.to_handle ? '@' + r.to_handle : '');
+    /* Three channels can now combine, so list whichever are set rather than
+       naming every pair - "email + ig + wa" reads fine and never goes stale. */
+    const chan = [r.to_email ? 'email' : '', r.to_handle ? 'ig' : '', r.to_whatsapp ? 'wa' : '']
+      .filter(Boolean).join(' + ') || '-';
+    const dest = [r.to_email || '', r.to_handle ? '@' + r.to_handle : '', r.to_whatsapp || '']
+      .filter(Boolean).join(', ');
     const media = [r.has_gif ? 'GIF' : '', r.has_mp4 ? 'MP4' : ''].filter(Boolean).join(' ') || '-';
     const sender = r.sender_email ? esc(r.sender_email) : 'anonymous';
     const fp = r.sender_hash ? esc(String(r.sender_hash).slice(0, 8)) : '';
@@ -746,11 +764,12 @@ function adminPage(data) {
   }).join('');
 
   const filterBar = `<form method="GET" action="/admin" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px">
-    <input name="q" value="${esc(tq.q || '')}" placeholder="search from, to, handle, message..." style="${inputCss};flex:1;min-width:190px">
+    <input name="q" value="${esc(tq.q || '')}" placeholder="search from, to, handle, number, message..." style="${inputCss};flex:1;min-width:190px">
     <select name="channel" style="${inputCss}">
       <option value=""${sel('channel', '')}>any channel</option>
       <option value="email"${sel('channel', 'email')}>email</option>
       <option value="ig"${sel('channel', 'ig')}>instagram</option>
+      <option value="wa"${sel('channel', 'wa')}>whatsapp</option>
       <option value="both"${sel('channel', 'both')}>email + ig</option>
     </select>
     <select name="media" style="${inputCss}">
@@ -867,6 +886,7 @@ function adminPage(data) {
     ${card('how they were reached',
       `<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:15px"><span style="color:${SOFT}">by email</span><span style="font-weight:700">${n(s.with_email)}</span></div>
        <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:15px"><span style="color:${SOFT}">by instagram handle</span><span style="font-weight:700">${n(s.with_handle)}</span></div>
+       <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:15px"><span style="color:${SOFT}">by whatsapp number</span><span style="font-weight:700">${n(s.with_whatsapp)}</span></div>
        <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:15px"><span style="color:${SOFT}">left a reply address</span><span style="font-weight:700">${n(s.with_reply)}</span></div>`)}
     ${card('clips made',
       `<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:15px"><span style="color:${SOFT}">GIFs</span><span style="font-weight:700">${n(s.gifs)}</span></div>
@@ -1174,18 +1194,23 @@ async function handle(request, env, ctx) {
     if (path === '/block') {
       const email = (url.searchParams.get('e') || '').toLowerCase().trim();
       const handleParam = (url.searchParams.get('h') || '').toLowerCase().trim().replace(/^@+/, '');
+      const waParam = (url.searchParams.get('w') || '').trim();
       const t = url.searchParams.get('t') || '';
 
-      /* Block by email OR by Instagram handle. A handle is stored in the same
-         blocklist column behind an "ig:" prefix - a real email can never look
-         like that (it has no @), so the two namespaces can never collide. The
-         token is signed over whatever we store, so a link can only ever block
-         its own value. */
-      const byHandle = !!handleParam;
-      const blockVal = byHandle ? 'ig:' + handleParam : email;
-      const shownVal = byHandle ? '@' + handleParam : email;
-      const kind = byHandle ? 'account' : 'address';
-      const idOk = byHandle ? /^[a-z0-9._]{1,30}$/.test(handleParam) : okEmail(email);
+      /* Block by email OR by Instagram handle OR by WhatsApp number. A handle is
+         stored in the same blocklist column behind an "ig:" prefix and a number
+         behind "wa:" - a real email can never look like either (it has no @), so
+         the three namespaces can never collide. The token is signed over whatever
+         we store, so a link can only ever block its own value. */
+      const wa = waNumber(waParam);
+      const byWa = !!waParam;
+      const byHandle = !byWa && !!handleParam;
+      const blockVal = byWa ? 'wa:' + wa : byHandle ? 'ig:' + handleParam : email;
+      const shownVal = byWa ? wa : byHandle ? '@' + handleParam : email;
+      const kind = byWa ? 'number' : byHandle ? 'account' : 'address';
+      const idOk = byWa ? !!wa
+        : byHandle ? /^[a-z0-9._]{1,30}$/.test(handleParam)
+        : okEmail(email);
       if (!idOk || !sameToken(t, await token(env.BLOCK_SECRET, blockVal)))
         return notice('That link has expired', 'Reply to the message instead and we will sort it out.');
 
@@ -1194,9 +1219,11 @@ async function handle(request, env, ctx) {
           `Block this ${kind}?`,
           `Nobody will be able to use beatass.com to send anything to ${esc(shownVal)} again. This cannot be undone.`,
           'Yes, block it forever',
-          byHandle
-            ? `/block?h=${encodeURIComponent(handleParam)}&t=${encodeURIComponent(t)}`
-            : `/block?e=${encodeURIComponent(email)}&t=${encodeURIComponent(t)}`
+          byWa
+            ? `/block?w=${encodeURIComponent(wa)}&t=${encodeURIComponent(t)}`
+            : byHandle
+              ? `/block?h=${encodeURIComponent(handleParam)}&t=${encodeURIComponent(t)}`
+              : `/block?e=${encodeURIComponent(email)}&t=${encodeURIComponent(t)}`
         );
 
       const now = Math.floor(Date.now() / 1000);
@@ -1205,19 +1232,26 @@ async function handle(request, env, ctx) {
         .run();
 
       /* "Never again" has to mean every channel, not just the clicked one. A
-         recipient reached by email AND Instagram would otherwise block their
-         inbox and keep getting DMs. So an email block also silences every
-         handle that address's messages carried. (One-directional on purpose:
-         a handle block sweeps only itself - senders type both fields, so a
-         handle token must not be able to blocklist somebody's email.) */
-      if (!byHandle) {
+         recipient reached by email AND Instagram AND WhatsApp would otherwise
+         block their inbox and keep getting DMs and messages. So an email block
+         also silences every handle and every number that address's messages
+         carried. (One-directional on purpose: a handle or number block sweeps
+         only itself - senders type all three fields, so a handle token must not
+         be able to blocklist somebody's email.)
+         The email guard matters: without it a WhatsApp block would run this
+         sweep with an empty address, match every message that has no email at
+         all, and blocklist strangers' handles. */
+      if (!byWa && !byHandle) {
         const carried = await env.DB.prepare(
-          'SELECT DISTINCT to_handle FROM messages WHERE to_email = ? AND to_handle IS NOT NULL'
+          `SELECT DISTINCT to_handle, to_whatsapp FROM messages
+           WHERE to_email = ? AND (to_handle IS NOT NULL OR to_whatsapp IS NOT NULL)`
         ).bind(email).all();
         for (const r of (carried.results || []))
-          await env.DB.prepare('INSERT OR IGNORE INTO blocklist (email, created_at) VALUES (?, ?)')
-            .bind('ig:' + r.to_handle, now)
-            .run();
+          for (const val of [r.to_handle ? 'ig:' + r.to_handle : '', r.to_whatsapp ? 'wa:' + r.to_whatsapp : ''])
+            if (val)
+              await env.DB.prepare('INSERT OR IGNORE INTO blocklist (email, created_at) VALUES (?, ?)')
+                .bind(val, now)
+                .run();
       }
       return notice('Done - you will never hear from us again.',
         `That ${kind} is blocked permanently. Nobody can use beatass.com to contact you.`);
@@ -1308,19 +1342,23 @@ async function handle(request, env, ctx) {
       if (!/^[a-f0-9]{16}$/.test(mid) || !sameToken(t, await token(env.BLOCK_SECRET, 'view:' + mid)))
         return notice('That link has expired', 'Ask whoever sent it to share it again.');
       const row = await env.DB.prepare(
-        'SELECT to_email, to_name, body, has_gif, has_mp4, sender_email, to_handle FROM messages WHERE id = ?'
+        'SELECT to_email, to_name, body, has_gif, has_mp4, sender_email, to_handle, to_whatsapp FROM messages WHERE id = ?'
       ).bind(mid).first();
       if (!row) return notice('That link has expired', 'Ask whoever sent it to share it again.');
 
       const gifUrl = row.has_gif ? `${site}/media/${mid}.gif` : '';
       const mp4Url = row.has_mp4 ? `${site}/media/${mid}.mp4` : '';
       const pageUrl = `${site}/m?id=${mid}&t=${t}`;
-      // block by email when we have one, otherwise by the Instagram handle
+      /* Block by email when we have one, because an email block is the widest:
+         it sweeps every handle and number that address's messages carried.
+         Failing that, block whichever single channel reached them. */
       const blockUrl = row.to_email
         ? `${site}/block?e=${encodeURIComponent(row.to_email)}&t=${await token(env.BLOCK_SECRET, row.to_email)}`
         : row.to_handle
           ? `${site}/block?h=${encodeURIComponent(row.to_handle)}&t=${await token(env.BLOCK_SECRET, 'ig:' + row.to_handle)}`
-          : '';
+          : row.to_whatsapp
+            ? `${site}/block?w=${encodeURIComponent(row.to_whatsapp)}&t=${await token(env.BLOCK_SECRET, 'wa:' + row.to_whatsapp)}`
+            : '';
       const reportUrl = `${site}/report?id=${mid}&t=${await token(env.BLOCK_SECRET, 'r:' + mid)}`;
       const replyUrl = row.sender_email
         ? `${site}/reply?id=${mid}&t=${await token(env.BLOCK_SECRET, 'reply:' + mid)}`
@@ -1355,6 +1393,10 @@ async function handle(request, env, ctx) {
       // Optional: the recipient's Instagram handle, for delivery by DM/comment
       // when the sender knows the handle. Stored, never shown to anyone.
       const toHandle = String(form.get('handle') || '').trim().replace(/^@+/, '').toLowerCase().slice(0, 30);
+      // Optional: the recipient's WhatsApp number, for delivery by the WhatsApp
+      // notifier. Cleaned to one shape here or rejected. Stored, never shown.
+      const waRaw = String(form.get('whatsapp') || '').trim().slice(0, 24);
+      const toWa = waNumber(waRaw);
       /* Consent to be shared publicly. Only the exact string '1' counts, and it
          is only ever sent when the sender ticked the box on the send screen. A
          missing field means no - which is what every message sent before this
@@ -1369,14 +1411,17 @@ async function handle(request, env, ctx) {
         return json({ error: 'Your own email looks wrong. Fix it or leave it empty.' }, 400);
       if (toHandle && !/^[a-z0-9._]{1,30}$/.test(toHandle))
         return json({ error: 'That Instagram handle looks wrong. Letters, numbers, dots and underscores only.' }, 400);
-      // at least one way to reach them - an email (most reliable) or an Instagram handle
-      if (!email && !toHandle)
-        return json({ error: 'Add their email or their Instagram handle so we can deliver it.' }, 400);
+      if (waRaw && !toWa)
+        return json({ error: 'That WhatsApp number looks wrong. Ten digits, an Indian mobile.' }, 400);
+      // at least one way to reach them - email (most reliable), Instagram, or WhatsApp
+      if (!email && !toHandle && !toWa)
+        return json({ error: 'Add their email, Instagram or WhatsApp so we can deliver it.' }, 400);
 
-      // never send to somebody who has already told us to stop - by email or handle
+      // never send to somebody who has already told us to stop - on any channel
       const blockKeys = [];
       if (email) blockKeys.push(email);
       if (toHandle) blockKeys.push('ig:' + toHandle);
+      if (toWa) blockKeys.push('wa:' + toWa);
       const blocked = await env.DB.prepare(
         `SELECT 1 FROM blocklist WHERE email IN (${blockKeys.map(() => '?').join(',')})`
       ).bind(...blockKeys).first();
@@ -1409,22 +1454,24 @@ async function handle(request, env, ctx) {
       await Promise.all(puts);
 
       await env.DB.prepare(
-        `INSERT INTO messages (id, to_email, to_name, body, stats, has_gif, has_mp4, created_at, sender_hash, sender_email, to_handle, view_token, share_ok)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO messages (id, to_email, to_name, body, stats, has_gif, has_mp4, created_at, sender_hash, sender_email, to_handle, to_whatsapp, view_token, share_ok)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
         // to_email is NOT NULL in the schema, so a handle-only message stores it
         // as '' (empty string). Every read treats '' as "no email" - it is falsy,
         // like the null we use for the newer sender_email / to_handle columns.
         //
-        // view_token: when the recipient is reached on Instagram, the notifier
-        // (tools/instagram/notify.mjs, runs on Sanjay's machine) needs the /m
-        // link for this message. It can query D1 but cannot compute the token -
-        // BLOCK_SECRET lives only in the Worker. So the token is minted here at
-        // send time and stored beside the row. It grants exactly what the DM
-        // will contain anyway: the right to view this one message.
+        // view_token: when the recipient is reached on Instagram or WhatsApp, the
+        // notifier (tools/instagram/notify.mjs, tools/whatsapp/notify.mjs - both
+        // run on Sanjay's machine) needs the /m link for this message. It can
+        // query D1 but cannot compute the token - BLOCK_SECRET lives only in the
+        // Worker. So the token is minted here at send time and stored beside the
+        // row. It grants exactly what the message will contain anyway: the right
+        // to view this one message.
         .bind(mid, email, name, body, stats, gif && gif.size ? 1 : 0, mp4 && mp4.size ? 1 : 0,
               Math.floor(Date.now() / 1000), ipHash, senderEmail || null, toHandle || null,
-              toHandle ? await token(env.BLOCK_SECRET, 'view:' + mid) : null, shareOk)
+              toWa || null,
+              toHandle || toWa ? await token(env.BLOCK_SECRET, 'view:' + mid) : null, shareOk)
         .run();
 
       const gifUrl = gif && gif.size ? `${site}/media/${mid}.gif` : '';
@@ -1434,8 +1481,9 @@ async function handle(request, env, ctx) {
         : '';
 
       /* Email delivery happens only when they gave us an email address. A
-         handle-only message is stored now and delivered on Instagram by the
-         notifier (through the /m view page) - it sends no email here. */
+         message with no email is stored now and delivered on Instagram or
+         WhatsApp by the notifiers (through the /m view page) - nothing is
+         emailed here. */
       if (email) {
         const blockUrl = `${site}/block?e=${encodeURIComponent(email)}&t=${await token(env.BLOCK_SECRET, email)}`;
         const reportUrl = `${site}/report?id=${mid}&t=${await token(env.BLOCK_SECRET, 'r:' + mid)}`;
