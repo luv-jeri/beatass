@@ -9,11 +9,12 @@
 import React from 'react';
 import {AbsoluteFill, OffthreadVideo, staticFile, useVideoConfig} from 'remotion';
 
-export const ClipPlayer: React.FC<{src: string; clipSeconds: number; sfxVolume: number; cropBottom?: number}> = ({
+export const ClipPlayer: React.FC<{src: string; clipSeconds: number; sfxVolume: number; cropBottom?: number; startFromSeconds?: number}> = ({
   src,
   clipSeconds,
   sfxVolume,
   cropBottom = 0.2,
+  startFromSeconds = 0,
 }) => {
   const {fps, durationInFrames} = useVideoConfig();
   const slotSeconds = durationInFrames / fps;
@@ -22,6 +23,7 @@ export const ClipPlayer: React.FC<{src: string; clipSeconds: number; sfxVolume: 
     <AbsoluteFill style={{overflow: 'hidden'}}>
       <OffthreadVideo
         src={staticFile(src)}
+        startFrom={Math.round(startFromSeconds * fps)}
         playbackRate={playbackRate}
         volume={sfxVolume}
         style={{width: '100%', height: `${100 / (1 - cropBottom)}%`, objectFit: 'cover', objectPosition: 'top'}}

@@ -1,22 +1,18 @@
 ---
-project: story-003
+project: story-002-p1
 fps: 30
-vo: vo/story-003-vo-v3.mp3
+vo: vo/story-002-p1-vo.mp3
 timing: locked
 ---
 
 | # | Time | VO | Scene | Assets |
 |---|------|----|-------|--------|
-| B01 | 00:00.0-00:04.9 | lost, flashlight dying | 01-cold-open | |
-| B02 | 00:04.9-00:10.7 | the light, cottage, candle in window | 02-bear-meme | |
-| B03 | 00:10.7-00:16.8 | knocked three times, door swung open | 03-silly-secrets | |
-| B04 | 00:16.8-00:25.9 | one room, bed, warm food still steaming | 05-the-words | |
-| B05 | 00:25.9-00:36.3 | then he noticed the walls, twelve paintings faced the bed | 04-night-post | |
-| B06 | 00:36.3-00:38.6 | waited two hours, nobody came | 05-the-words | |
-| B07 | 00:38.6-00:43.6 | ate, lay down, somehow slept | 06-ink-bleed | |
-| B08 | 00:43.6-00:47.7 | sunrise, tore out, never stopped | 07-case-closed | |
-| B09 | 00:47.7-00:48.4 | flashback: the wall alive | 02-bear-clip | |
-| B10 | 00:48.4-00:49.0 | flashback: watched while eating | 03-post-clip | |
-| B11 | 00:49.0-00:49.6 | flashback: watched while sleeping | 05-explosion-clip | |
-| B12 | 00:49.6-00:53.6 | they were windows, never empty - faces at glass | 08-explosion | |
-| B13 | 00:53.6-00:58.6 | end card | 09-one-reply | |
+| B01 | 00:00.0-00:03.6 | stole my fiance, bought her wedding | wg1-invitation | |
+| B02 | 00:03.6-00:06.5 | what she took from me | wg2-page-turn | |
+| B03 | 00:06.5-00:13.7 | found her in my bedroom, my black dress | wg3-bedroom | |
+| B04 | 00:13.7-00:17.9 | she did not stop, smiled over his shoulder | wg4-the-smile | |
+| B05 | 00:17.9-00:20.5 | the wedding fund my dying mother left | wg5-envelope | |
+| B06 | 00:20.5-00:27.5 | played an edited recording at the party | wg6-party-recording | |
+| B07 | 00:27.5-00:31.3 | family believed her, fiance chose her | wg7-they-chose-her | |
+| B08 | 00:31.3-00:34.9 | lost man, money, family in one night | wg8-lost-everything | |
+| B09 | 00:34.9-00:39.3 | went quiet, started planning | wg9-planning | |

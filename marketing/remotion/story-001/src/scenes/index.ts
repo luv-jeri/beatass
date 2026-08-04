@@ -1,5 +1,23 @@
 // Scene registry — scaffold.py appends here. Do not reorder markers.
 // <scaffold:imports>
+import scene_wg1_invitation_component from './wg1-invitation/Scene';
+import {defaults as scene_wg1_invitation_defaults, durationInFrames as scene_wg1_invitation_dur} from './wg1-invitation/schema';
+import scene_wg2_page_turn_component from './wg2-page-turn/Scene';
+import {defaults as scene_wg2_page_turn_defaults, durationInFrames as scene_wg2_page_turn_dur} from './wg2-page-turn/schema';
+import scene_wg3_bedroom_component from './wg3-bedroom/Scene';
+import {defaults as scene_wg3_bedroom_defaults, durationInFrames as scene_wg3_bedroom_dur} from './wg3-bedroom/schema';
+import scene_wg4_the_smile_component from './wg4-the-smile/Scene';
+import {defaults as scene_wg4_the_smile_defaults, durationInFrames as scene_wg4_the_smile_dur} from './wg4-the-smile/schema';
+import scene_wg5_envelope_component from './wg5-envelope/Scene';
+import {defaults as scene_wg5_envelope_defaults, durationInFrames as scene_wg5_envelope_dur} from './wg5-envelope/schema';
+import scene_wg6_party_recording_component from './wg6-party-recording/Scene';
+import {defaults as scene_wg6_party_recording_defaults, durationInFrames as scene_wg6_party_recording_dur} from './wg6-party-recording/schema';
+import scene_wg7_they_chose_her_component from './wg7-they-chose-her/Scene';
+import {defaults as scene_wg7_they_chose_her_defaults, durationInFrames as scene_wg7_they_chose_her_dur} from './wg7-they-chose-her/schema';
+import scene_wg8_lost_everything_component from './wg8-lost-everything/Scene';
+import {defaults as scene_wg8_lost_everything_defaults, durationInFrames as scene_wg8_lost_everything_dur} from './wg8-lost-everything/schema';
+import scene_wg9_planning_component from './wg9-planning/Scene';
+import {defaults as scene_wg9_planning_defaults, durationInFrames as scene_wg9_planning_dur} from './wg9-planning/schema';
 import scene_01_cold_open_component from './01-cold-open/Scene';
 import {defaults as scene_01_cold_open_defaults, durationInFrames as scene_01_cold_open_dur} from './01-cold-open/schema';
 import scene_02_bear_meme_component from './02-bear-meme/Scene';
@@ -27,6 +45,15 @@ import {defaults as scene_05_explosion_clip_defaults, durationInFrames as scene_
 
 export const scenes = {
 // <scaffold:entries>
+  'wg1-invitation': {component: scene_wg1_invitation_component, defaults: scene_wg1_invitation_defaults, durationInFrames: scene_wg1_invitation_dur},
+  'wg2-page-turn': {component: scene_wg2_page_turn_component, defaults: scene_wg2_page_turn_defaults, durationInFrames: scene_wg2_page_turn_dur},
+  'wg3-bedroom': {component: scene_wg3_bedroom_component, defaults: scene_wg3_bedroom_defaults, durationInFrames: scene_wg3_bedroom_dur},
+  'wg4-the-smile': {component: scene_wg4_the_smile_component, defaults: scene_wg4_the_smile_defaults, durationInFrames: scene_wg4_the_smile_dur},
+  'wg5-envelope': {component: scene_wg5_envelope_component, defaults: scene_wg5_envelope_defaults, durationInFrames: scene_wg5_envelope_dur},
+  'wg6-party-recording': {component: scene_wg6_party_recording_component, defaults: scene_wg6_party_recording_defaults, durationInFrames: scene_wg6_party_recording_dur},
+  'wg7-they-chose-her': {component: scene_wg7_they_chose_her_component, defaults: scene_wg7_they_chose_her_defaults, durationInFrames: scene_wg7_they_chose_her_dur},
+  'wg8-lost-everything': {component: scene_wg8_lost_everything_component, defaults: scene_wg8_lost_everything_defaults, durationInFrames: scene_wg8_lost_everything_dur},
+  'wg9-planning': {component: scene_wg9_planning_component, defaults: scene_wg9_planning_defaults, durationInFrames: scene_wg9_planning_dur},
   '01-cold-open': {component: scene_01_cold_open_component, defaults: scene_01_cold_open_defaults, durationInFrames: scene_01_cold_open_dur},
   '02-bear-meme': {component: scene_02_bear_meme_component, defaults: scene_02_bear_meme_defaults, durationInFrames: scene_02_bear_meme_dur},
   '03-silly-secrets': {component: scene_03_silly_secrets_component, defaults: scene_03_silly_secrets_defaults, durationInFrames: scene_03_silly_secrets_dur},

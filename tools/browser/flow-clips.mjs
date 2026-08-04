@@ -27,7 +27,13 @@ function parsePrompts(file) {
   const jobs = [];
   for (let i = 0; i < parts.length; i++) {
     const m = parts[i].match(/^CLIP (\d+) - still: (\S+)/);
-    if (m && parts[i + 1]) jobs.push({clip: Number(m[1]), still: m[2], prompt: parts[i + 1].replace(/\s+/g, ' ').trim()});
+    if (m && parts[i + 1]) {
+      // optional "characters: Maya, Stepsister" line = saved Flow characters to
+      // attach as ingredients ("-" or absent = plain t2v)
+      const cm = parts[i].match(/^characters:\s*(.+)$/m);
+      const characters = cm && cm[1].trim() !== '-' ? cm[1].split(',').map((s) => s.trim()).filter(Boolean) : [];
+      jobs.push({clip: Number(m[1]), still: m[2], characters, prompt: parts[i + 1].replace(/\s+/g, ' ').trim()});
+    }
   }
   return jobs;
 }
@@ -42,7 +48,90 @@ async function flowPage(context) {
   return page;
 }
 
+// ---- ingredients flow (characters attached per clip, composer in Ingredients mode) ----
+
+// The composer card is the nearest useful ancestor of the contenteditable; chips
+// (attached ingredients) render inside it as small images with a "close" button.
+function composerRootEval(fn) {
+  return `(() => {
+    const ce = [...document.querySelectorAll('div[contenteditable="true"]')].pop();
+    if (!ce) return null;
+    let root = ce;
+    for (let i = 0; i < 5 && root.parentElement; i++) root = root.parentElement;
+    return (${fn})(root);
+  })()`;
+}
+
+async function clearIngredients(page) {
+  const n = await page.evaluate(composerRootEval(`(root) => {
+    const btns = [...root.querySelectorAll('button')].filter((b) =>
+      /close|remove|cancel/i.test((b.getAttribute('aria-label') || '') + b.textContent));
+    btns.forEach((b) => b.click());
+    return btns.length;
+  }`));
+  if (n) await sleep(1000);
+  return n || 0;
+}
+
+async function openPicker(page) {
+  // the "+" is the previous sibling button of the Agent pill in the composer bar
+  const found = await page.evaluate(() => {
+    const agent = [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Agent');
+    if (!agent) return false;
+    let prev = agent.previousElementSibling;
+    while (prev && prev.tagName !== 'BUTTON') prev = prev.previousElementSibling;
+    if (!prev) return false;
+    prev.setAttribute('data-flowclips', 'plus');
+    return true;
+  });
+  if (!found) throw new Error('composer + button not found (Agent pill missing?)');
+  await fireClick(page.locator('[data-flowclips="plus"]'));
+  await sleep(1500);
+}
+
+async function attachIngredients(page, names) {
+  // Agent mode swallows prompts — force the pill OFF before any attach/type
+  const agent = page.locator('button:has-text("Agent")').last();
+  if ((await agent.getAttribute('aria-pressed').catch(() => null)) === 'true') {
+    await fireClick(agent);
+    await sleep(1200);
+  }
+  const cleared = await clearIngredients(page);
+  if (cleared) console.log(`    cleared ${cleared} leftover chip(s)`);
+
+  for (const name of names) {
+    await openPicker(page);
+    const dlg = page.locator('[role="dialog"], [role="menu"], [role="listbox"]').last();
+    // filter to Characters so file assets named alike can never match
+    const filter = dlg.getByText('Characters', {exact: false}).first();
+    if (await filter.isVisible().catch(() => false)) {
+      await fireClick(filter);
+      await sleep(800);
+    }
+    const tile = dlg.getByText(name, {exact: true}).first();
+    await tile.waitFor({timeout: 10000});
+    await fireClick(tile);
+    await sleep(1200);
+    // character rows insert directly and close the picker; only some asset
+    // types surface an explicit "Add to Prompt" button — click it if present
+    const add = page.getByRole('button', {name: 'Add to Prompt'}).first();
+    if (await add.isVisible().catch(() => false)) {
+      await fireClick(add);
+      await sleep(1200);
+    }
+  }
+
+  // verify: at least one chip image per attached character inside the composer card
+  const chips = await page.evaluate(composerRootEval('(root) => root.querySelectorAll("img").length'));
+  if ((chips || 0) < names.length) {
+    throw new Error(`only ${chips || 0} ingredient chip(s) visible after attaching ${names.length}`);
+  }
+  console.log(`    attached: ${names.join(', ')} (${chips} chip(s) in composer)`);
+}
+
 async function submitClip(page, job, dryRun) {
+  if (job.characters && job.characters.length) await attachIngredients(page, job.characters);
+
   // still: none = text-to-video — no asset to attach, composer must already
   // be in Text to Video mode (set it once in the UI before running).
   if (job.still !== 'none') {
@@ -80,6 +169,7 @@ async function submitClip(page, job, dryRun) {
     await composer.click();
     await page.keyboard.press(process.platform === 'darwin' ? 'Meta+a' : 'Control+a');
     await page.keyboard.press('Backspace');
+    if (job.characters && job.characters.length) await clearIngredients(page);
     console.log(`  clip ${job.clip}: DRY RUN ok (attach + ${len} chars typed, then cleared)`);
     return;
   }
@@ -137,14 +227,14 @@ if (opt('only')) {
   jobs = jobs.filter((j) => keep.has(j.clip));
 }
 console.log(`${jobs.length} clips parsed from ${promptsFile}:`);
-for (const j of jobs) console.log(`  clip ${j.clip}  still=${j.still}  prompt=${j.prompt.length} chars`);
+for (const j of jobs) console.log(`  clip ${j.clip}  still=${j.still}  characters=[${(j.characters || []).join(',') || '-'}]  prompt=${j.prompt.length} chars`);
 if (flag('plan')) process.exit(0);
 
 if (!flag('dry-run') && !flag('yes')) {
-  console.error(`\nReal submit costs ~15 credits/clip (${jobs.length * 15} total). Re-run with --yes, or --dry-run to test.`);
+  console.error(`\nReal submit costs ~12 credits/clip on Omni Flash (${jobs.length * 12} total). Re-run with --yes, or --dry-run to test.`);
   process.exit(1);
 }
-console.log('\nReminder (cannot be verified from here): composer set to Video / Frames / 9:16 / Omni Flash / 10s / x1, Agent OFF.\n');
+console.log('\nReminder: composer must be set to Video / Ingredients / 9:16 / Omni Flash / 8s / x1. The Agent pill is auto-disabled per clip.\n');
 
 const tabs = Math.max(1, Math.min(Number(opt('tabs')) || 1, jobs.length));
 const {browser, context} = await connect();

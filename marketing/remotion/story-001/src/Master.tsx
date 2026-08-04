@@ -7,30 +7,44 @@ import {Grain} from './system/Grain';
 import {Captions} from './system/Captions';
 import {Letterbox} from './system/Letterbox';
 
-// STORY-003: no card scenes, so captions never suppress.
+// STORY-002 P1 (The Wedding Gift): no card scenes, captions never suppress.
 const SUPPRESS: Array<[number, number]> = [];
 
-// STORY-003 music arc: curious felt-piano while the cottage still feels like
-// shelter, dark drone from the paintings beat (25.7s) to the end. The drone
-// is 28.1s long so it end-fades before the final card — the last seconds sit
-// on the sting alone.
-const MUSIC_A_END = Math.round((25.9 + 3.6) * 30);
-const MUSIC_B_FROM = Math.round(25.9 * 30);
-const MUSIC_B_LEN = Math.round(30.8 * 30);
-// Audio law (Sanjay 2026-08-04): the VO is the main character. v3 mix is set
-// by MEASUREMENT, not by inherited numbers: Lyria beds measured ~-14dB RMS vs
-// the VO's -25dB, so the old 0.12-0.14 gains left music only ~6dB under
-// speech (his complaint: "music becomes so loud we can't hear narration").
-// Bed gains below put beds ~17dB under the voice; SFX gains put each accent
-// ~5-7dB under the voice inside a VO gap (per-file RMS measured 2026-08-04).
+// Music arc: curious felt-piano only while the hook still smells like a wedding
+// story; the dark drone takes over at the bedroom discovery (6.5s) and
+// end-fades at ~34.6s so "So I went quiet. And I started planning." sits on
+// the sting alone.
+const MUSIC_A_END = Math.round((6.5 + 2.4) * 30);
+const MUSIC_B_FROM = Math.round(6.5 * 30);
+const MUSIC_B_LEN = Math.round(28.1 * 30);
+// Audio law (Sanjay 2026-08-04): VO is the main character; bed gains are set
+// by MEASUREMENT. This VO means -24.4dB, both beds mean -14.3dB, so 0.044
+// puts the beds ~17dB under the voice (same margin the approved story-003
+// mix used). SFX are the ear-approved soft accents at their approved gains.
 const SFX: Array<{file: string; from: number; volume: number}> = [
   {file: 'sfx/paper-whoosh-soft.mp3', from: 0, volume: 0.3},
-  {file: 'sfx/knock-soft.mp3', from: Math.round(10.8 * 30), volume: 0.8},
-  {file: 'sfx/door-creak-soft.mp3', from: Math.round(14.4 * 30), volume: 0.39},
-  {file: 'sfx/heartbeat-soft.mp3', from: Math.round(47.7 * 30), volume: 0.8},
-  {file: 'sfx/glass-tap-soft.mp3', from: Math.round(49.6 * 30), volume: 1.0},
-  {file: 'sfx/horror-sting-soft.mp3', from: Math.round(53.6 * 30), volume: 0.8},
+  {file: 'sfx/sub-pulse-soft.mp3', from: Math.round(6.5 * 30), volume: 0.32},
+  {file: 'sfx/sting-soft.mp3', from: Math.round(36.3 * 30), volume: 0.32},
 ];
+
+// Honesty label: every dark-story reel opens with FICTIONAL STORY (product
+// line, CONCEPTS-DARK.md). Sits inside the top letterbox bar, first 2.5s.
+const FictionalTag: React.FC = () => (
+  <div
+    style={{
+      position: 'absolute',
+      top: '3.2%',
+      width: '100%',
+      textAlign: 'center',
+      ...system.type.label,
+      fontSize: 26,
+      color: system.paper,
+      opacity: 0.85,
+    }}
+  >
+    FICTIONAL STORY
+  </div>
+);
 
 export const Master: React.FC = () => (
   <AbsoluteFill style={{backgroundColor: system.bg}}>
@@ -46,17 +60,20 @@ export const Master: React.FC = () => (
     <Captions suppress={SUPPRESS} />
     <Grain opacity={0.1} vignette={0.45} />
     <Letterbox fraction={0.12} />
+    <Sequence from={0} durationInFrames={75}>
+      <FictionalTag />
+    </Sequence>
     {voFile ? <Audio src={staticFile(voFile)} /> : null}
     <Sequence from={0} durationInFrames={MUSIC_A_END}>
       <Audio
-        src={staticFile('vo/story-003-music-a-v3.mp3')}
-        volume={(f) => interpolate(f, [0, 30, MUSIC_A_END - 90, MUSIC_A_END], [0, 0.041, 0.041, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}
+        src={staticFile('vo/part-1-v3-music-a.mp3')}
+        volume={(f) => interpolate(f, [0, 30, MUSIC_A_END - 60, MUSIC_A_END], [0, 0.044, 0.044, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}
       />
     </Sequence>
     <Sequence from={MUSIC_B_FROM} durationInFrames={MUSIC_B_LEN}>
       <Audio
-        src={staticFile('vo/story-003-music-b-v3.mp3')}
-        volume={(f) => interpolate(f, [0, 120, MUSIC_B_LEN - 117, MUSIC_B_LEN], [0, 0.045, 0.045, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}
+        src={staticFile('vo/part-1-v3-music-b.mp3')}
+        volume={(f) => interpolate(f, [0, 120, MUSIC_B_LEN - 117, MUSIC_B_LEN], [0, 0.044, 0.044, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}
       />
     </Sequence>
     {SFX.map((s) => (
