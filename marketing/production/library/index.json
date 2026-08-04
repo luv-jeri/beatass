@@ -230,5 +230,70 @@
   ],
   "note": "The brand end-card sound - one music-box note (series part 3 close)",
   "date": "2026-08-03"
+ },
+ {
+  "type": "music",
+  "path": "marketing/production/story-003/vo/story-003-music-a.mp3",
+  "tags": [
+   "bed",
+   "horror",
+   "music-box",
+   "approved-use"
+  ],
+  "note": "Cold detuned music-box horror bed (30.8s). Story-003 light half at 0.12.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "music",
+  "path": "marketing/production/story-003/vo/story-003-music-b.mp3",
+  "tags": [
+   "bed",
+   "horror",
+   "dread",
+   "drone",
+   "heartbeat"
+  ],
+  "note": "Rising dread drone + slow heartbeat bed (30.8s). Story-003 dark half at 0.14, end-faded.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "sfx",
+  "path": "marketing/production/story-003/sfx",
+  "tags": [
+   "horror",
+   "soft",
+   "knock",
+   "creak",
+   "glass",
+   "heartbeat",
+   "sting"
+  ],
+  "note": "Story-003 horror accent set: knock, door creak, glass taps, heartbeat, string sting - all soft/muted, used at 0.28-0.32.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "clip",
+  "path": "marketing/remotion/story-001/public/clips/story-003",
+  "tags": [
+   "story-003",
+   "cottage",
+   "notebook",
+   "horror",
+   "posted"
+  ],
+  "note": "THE 12 story-003 scenes (8s, living notebook horror). S4-S6 paintings frozen; 8/10/11/12 alive. Posted 2026-08-04.",
+  "date": "2026-08-04"
+ },
+ {
+  "type": "prompt",
+  "path": "marketing/production/story-003/vo/script.txt",
+  "tags": [
+   "script",
+   "story-003",
+   "ear-style",
+   "posted"
+  ],
+  "note": "The Cottage script (128 words, 48.9s) - single-reel twist structure, posted 2026-08-04.",
+  "date": "2026-08-04"
  }
 ]

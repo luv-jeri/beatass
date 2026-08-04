@@ -193,14 +193,27 @@ async function post(page, filePath, caption) {
   await page.waitForTimeout(6000);
   await dismissPopups(page);
 
-  // Toggle Select Crop to the full original frame — Instagram defaults to a
-  // 4:5 center-crop that beheads 9:16 reels (2026-08-04: three reels shipped
-  // with their tops cut off before this line existed).
+  // Set the crop to the full original frame — Instagram defaults to a square
+  // center-crop that beheads 9:16 reels. Clicking the Select Crop button only
+  // OPENS the menu (2026-08-04: a reel shipped 1:1 because the code stopped
+  // there); the "Original" option inside it must be clicked too.
   const cropSvg = page.locator('svg[aria-label="Select Crop"], svg[aria-label="Select crop"]').first();
   if (await cropSvg.count()) {
     await cropSvg.locator('xpath=ancestor::button[1]')
       .or(cropSvg.locator('xpath=ancestor::*[@role="button"][1]')).first().click();
     await page.waitForTimeout(1200);
+    const original = page.getByRole('button', { name: /original/i })
+      .or(page.locator('span:text-is("Original")').locator('xpath=ancestor::*[@role="button"][1]'))
+      .or(page.locator('span:text-is("Original")'))
+      .first();
+    await original.waitFor({ state: 'visible', timeout: 10000 });
+    await original.click();
+    await page.waitForTimeout(800);
+    // close the menu again so it cannot swallow the Next click
+    await cropSvg.locator('xpath=ancestor::button[1]')
+      .or(cropSvg.locator('xpath=ancestor::*[@role="button"][1]')).first().click();
+    await page.waitForTimeout(800);
+    say('crop set to Original (full 9:16 frame)');
   }
 
   for (const step of ['Next', 'Next']) {

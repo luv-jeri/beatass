@@ -79,6 +79,23 @@ const box = page.getByRole('textbox', { name: /caption/i })
 await box.waitFor({ state: 'visible', timeout: 30000 });
 await box.click();
 await box.type(caption, { delay: 8 });
+
+if (process.argv.includes('--share')) {
+  // Success is only Instagram SAYING it shared - never a timer (2026-08-04 law).
+  const btn = page.getByRole('button', { name: 'Share', exact: true }).first();
+  await btn.click();
+  const confirm = page.getByText(/has been shared|your (reel|post) was shared|shared successfully/i).first();
+  try {
+    await confirm.waitFor({ state: 'visible', timeout: 300000 });
+    console.log('POSTED - Instagram confirmed the share.');
+    await ctx.close();
+    process.exit(0);
+  } catch {
+    await page.screenshot({ path: path.join(HERE, 'last-failure.png') }).catch(() => {});
+    console.error('NO CONFIRMATION after 5 min - screenshot at tools/instagram/last-failure.png');
+    process.exit(1);
+  }
+}
 console.log(`staged: ${files.length}-slide carousel - review the window and press Share.`);
 console.log('WAIT in the tab until Instagram confirms. Window stays open until Ctrl-C.');
 await new Promise(() => {});

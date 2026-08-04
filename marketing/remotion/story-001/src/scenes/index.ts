@@ -18,6 +18,12 @@ import scene_08_explosion_component from './08-explosion/Scene';
 import {defaults as scene_08_explosion_defaults, durationInFrames as scene_08_explosion_dur} from './08-explosion/schema';
 import scene_09_one_reply_component from './09-one-reply/Scene';
 import {defaults as scene_09_one_reply_defaults, durationInFrames as scene_09_one_reply_dur} from './09-one-reply/schema';
+import scene_02_bear_clip_component from './02-bear-clip/Scene';
+import {defaults as scene_02_bear_clip_defaults, durationInFrames as scene_02_bear_clip_dur} from './02-bear-clip/schema';
+import scene_03_post_clip_component from './03-post-clip/Scene';
+import {defaults as scene_03_post_clip_defaults, durationInFrames as scene_03_post_clip_dur} from './03-post-clip/schema';
+import scene_05_explosion_clip_component from './05-explosion-clip/Scene';
+import {defaults as scene_05_explosion_clip_defaults, durationInFrames as scene_05_explosion_clip_dur} from './05-explosion-clip/schema';
 
 export const scenes = {
 // <scaffold:entries>
@@ -30,4 +36,7 @@ export const scenes = {
   '07-case-closed': {component: scene_07_case_closed_component, defaults: scene_07_case_closed_defaults, durationInFrames: scene_07_case_closed_dur},
   '08-explosion': {component: scene_08_explosion_component, defaults: scene_08_explosion_defaults, durationInFrames: scene_08_explosion_dur},
   '09-one-reply': {component: scene_09_one_reply_component, defaults: scene_09_one_reply_defaults, durationInFrames: scene_09_one_reply_dur},
+  '02-bear-clip': {component: scene_02_bear_clip_component, defaults: scene_02_bear_clip_defaults, durationInFrames: scene_02_bear_clip_dur},
+  '03-post-clip': {component: scene_03_post_clip_component, defaults: scene_03_post_clip_defaults, durationInFrames: scene_03_post_clip_dur},
+  '05-explosion-clip': {component: scene_05_explosion_clip_component, defaults: scene_05_explosion_clip_defaults, durationInFrames: scene_05_explosion_clip_dur},
 } as const;

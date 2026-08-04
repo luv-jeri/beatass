@@ -7,7 +7,7 @@ export const schema = {
   labelAt: {type: 'number', label: 'Label reveal (s, scene-local)', default: 0.6, min: 0, max: 10, step: 0.1},
 } as const;
 
-export const durationInFrames = 243;
+export const durationInFrames = 147;
 
 // Plucked default values — the registry and Master consume these as props.
 export const defaults = Object.fromEntries(

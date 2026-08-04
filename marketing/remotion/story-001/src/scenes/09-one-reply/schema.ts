@@ -9,7 +9,7 @@ export const schema = {
   teaseAt: {type: 'number', label: 'Tease reveal (s, scene-local)', default: 1.6, min: 0, max: 10, step: 0.1},
 } as const;
 
-export const durationInFrames = 120;
+export const durationInFrames = 150;
 
 // Plucked default values — the registry and Master consume these as props.
 export const defaults = Object.fromEntries(
