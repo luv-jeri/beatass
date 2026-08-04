@@ -19,17 +19,29 @@ export async function connect(port = 9333) {
 // Download a page resource without exposing its signed URL outside the page:
 // in-page fetch -> base64 -> local file. Works where direct requests 403.
 export async function saveFromPage(page, url, outPath) {
-  const b64 = await page.evaluate(async (u) => {
-    const res = await fetch(u);
-    if (!res.ok) throw new Error(`fetch ${res.status}`);
-    const blob = await res.blob();
-    return await new Promise((ok, err) => {
-      const r = new FileReader();
-      r.onload = () => ok(r.result.split(',')[1]);
-      r.onerror = err;
-      r.readAsDataURL(blob);
-    });
-  }, url);
+  // In-page fetch flakes intermittently ("Failed to fetch", 2026-08-04) and a
+  // failed download must never trigger a paid regeneration - retry here.
+  let b64, lastErr;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      b64 = await page.evaluate(async (u) => {
+        const res = await fetch(u);
+        if (!res.ok) throw new Error(`fetch ${res.status}`);
+        const blob = await res.blob();
+        return await new Promise((ok, err) => {
+          const r = new FileReader();
+          r.onload = () => ok(r.result.split(',')[1]);
+          r.onerror = err;
+          r.readAsDataURL(blob);
+        });
+      }, url);
+      break;
+    } catch (e) {
+      lastErr = e;
+      await new Promise((r) => setTimeout(r, 3000 * (attempt + 1)));
+    }
+  }
+  if (!b64) throw lastErr;
   fs.writeFileSync(outPath, Buffer.from(b64, 'base64'));
   return fs.statSync(outPath).size;
 }

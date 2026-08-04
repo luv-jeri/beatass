@@ -49,6 +49,12 @@ async function typeInComposer(page, text) {
 }
 
 async function runJob(context, job) {
+  // Idempotency: an existing output means this job is DONE. Re-running a batch
+  // must never regenerate saved slides (duplicate spend, 2026-08-04).
+  if (fs.existsSync(path.join(outDir, `${job.name}.png`))) {
+    console.log(`  ${job.name}: exists, skipped`);
+    return {name: job.name, ok: true};
+  }
   const page = await context.newPage();
   try {
     await page.goto('https://chatgpt.com/', {waitUntil: 'domcontentloaded'});
