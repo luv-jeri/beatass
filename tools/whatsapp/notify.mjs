@@ -35,6 +35,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import crypto from 'crypto';
 import { spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
@@ -50,6 +51,13 @@ const SENT_LOG = path.join(SESSION, '.wa-notified.json');
 
 const SITE = 'https://beatass.com';
 const DAILY_CAP = 30;            // most unattended sends in one calendar day
+/* How many times a number that WhatsApp rejects is retried before we stop.
+   Learned the hard way on 2026-08-05: an undeliverable message was deliberately
+   never marked as sent (nothing was delivered, so saying "sent" would be a lie),
+   but with a 60-second timer that turned into a browser window opening every
+   minute, forever, for one wrong number. A few retries are worth it - WhatsApp
+   can answer slowly and a person can join later - unbounded retries are not. */
+const MAX_TRIES = 3;
 
 const args = process.argv.slice(2);
 const LOCAL = args.includes('--local');
@@ -172,6 +180,15 @@ if (args.includes('--selftest')) {
   eq('a number is masked in logs', mask('+919876543210'), '+9198****3210');
   eq('masking leaves nothing else alone', mask(''), '');
 
+  /* the retry rule - born from a real 60-second loop on 2026-08-05 */
+  eq('a message never tried is waiting', stillWaiting(undefined), true);
+  eq('a delivered message is never sent again', stillWaiting('2026-08-05T01:25:00.000Z'), false);
+  eq('one failed try is still waiting', stillWaiting({ attempts: 1 }), true);
+  eq('two failed tries are still waiting', stillWaiting({ attempts: 2 }), true);
+  eq('three failed tries is the end of it', stillWaiting({ attempts: 3 }), false);
+  eq('more than three is still the end', stillWaiting({ attempts: 9 }), false);
+  eq('a malformed entry does not loop forever', stillWaiting({}, 0), false);
+
   const long = 'x'.repeat(400);
   eq('short body is quoted whole', waPreview('you never called back').text, 'you never called back');
   eq('short body is not clipped', waPreview('hi').clipped, false);
@@ -254,6 +271,46 @@ function recordSent(sent, id) {
   fs.mkdirSync(path.dirname(SENT_LOG), { recursive: true });
   fs.writeFileSync(SENT_LOG, JSON.stringify(sent, null, 2));
 }
+/**
+ * Is this message still waiting to go out?
+ *
+ * The log holds one of three things per message id:
+ *   nothing            never attempted        -> waiting
+ *   a date string      delivered              -> done, never again
+ *   {attempts, ...}    tried and failed       -> waiting until MAX_TRIES is used up
+ *
+ * Pure on purpose, so the selftest can prove the retry rule without a database.
+ */
+export function stillWaiting(entry, maxTries = MAX_TRIES) {
+  if (!entry) return true;
+  if (typeof entry === 'string') return false;
+  return (entry.attempts || 0) < maxTries;
+}
+
+/**
+ * The log's key for a NUMBER rather than a message.
+ *
+ * Hashed, so the file stays a record of what happened and never becomes a list
+ * of real phone numbers sitting on the disk. We only ever need to ask "have we
+ * already proved this one is dead?", and a hash answers that perfectly well.
+ *
+ * Why by number at all: a wrong number gets typed into the site more than once
+ * (it did, within the hour, on 2026-08-05). Remembering only the message would
+ * make every fresh confession to the same dead number cost another three
+ * browser windows.
+ */
+const deadKey = (num) => 'num:' + crypto.createHash('sha256').update(String(num)).digest('hex').slice(0, 16);
+
+/** Record a failed attempt. Never records a delivery - nothing was delivered. */
+function recordFailure(sent, id, reason) {
+  const prev = (sent[id] && typeof sent[id] === 'object') ? sent[id] : { attempts: 0 };
+  const entry = { attempts: (prev.attempts || 0) + 1, reason, last: new Date().toISOString() };
+  sent[id] = entry;
+  fs.mkdirSync(path.dirname(SENT_LOG), { recursive: true });
+  fs.writeFileSync(SENT_LOG, JSON.stringify(sent, null, 2));
+  return entry;
+}
+
 function sentToday(sent) {
   const today = new Date().toISOString().slice(0, 10);
   return Object.values(sent).filter((v) => typeof v === 'string' && v.slice(0, 10) === today).length;
@@ -272,7 +329,10 @@ function pending() {
     "AND NOT EXISTS (SELECT 1 FROM blocklist b WHERE b.email = 'wa:' || m.to_whatsapp) " +
     "ORDER BY m.created_at"
   );
-  return { rows: rows.filter((r) => !sent[r.id]), sent };
+  return {
+    rows: rows.filter((r) => stillWaiting(sent[r.id]) && stillWaiting(sent[deadKey(r.to_whatsapp)])),
+    sent
+  };
 }
 
 function loadOne(id) {
@@ -428,10 +488,17 @@ if (AUTO) {
           done++;
           say(`    PARTIAL [${r.id}]: ${e.partsSent} of 3 sent, then: ${e.message.split('\n')[0]}`);
         } else if (e.undeliverable) {
-          /* Deliberately NOT recorded as sent: nothing was delivered, so the
-             log must not claim it was. It will be retried, and skipped again,
-             which is cheap and honest. */
-          say(`    undeliverable [${r.id}]: ${e.message}`);
+          /* Still not recorded as SENT - nothing was delivered, and the log must
+             never claim otherwise. Recorded as a failed ATTEMPT instead, so the
+             same wrong number cannot be retried every minute until the end of
+             time. After MAX_TRIES it drops out of the queue for good. */
+          const at = recordFailure(sent, r.id, 'not-on-whatsapp');
+          /* and against the number, so the NEXT message to it is skipped
+             without opening a browser at all */
+          recordFailure(sent, deadKey(r.to_whatsapp), 'not-on-whatsapp');
+          say(at.attempts >= MAX_TRIES
+            ? `    undeliverable [${r.id}]: ${e.message}. Giving up after ${at.attempts} tries - it will not be retried.`
+            : `    undeliverable [${r.id}]: ${e.message}. Try ${at.attempts} of ${MAX_TRIES}.`);
         } else {
           say(`    skipped [${r.id}]: ${e.message.split('\n')[0]}`);
         }
