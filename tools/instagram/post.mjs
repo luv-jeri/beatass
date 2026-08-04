@@ -202,14 +202,9 @@ async function post(page, filePath, caption) {
     await cropSvg.locator('xpath=ancestor::button[1]')
       .or(cropSvg.locator('xpath=ancestor::*[@role="button"][1]')).first().click();
     await page.waitForTimeout(1200);
-  const orig = page.getByText('Original', { exact: true }).first();
-  if (await orig.isVisible().catch(() => false)) {
-    await orig.click();
-    await page.waitForTimeout(900);
-  }
     const original = page.getByRole('button', { name: /original/i })
       .or(page.locator('span:text-is("Original")').locator('xpath=ancestor::*[@role="button"][1]'))
-      .or(page.locator('span:text-is("Original")'))
+      .or(page.getByText('Original', { exact: true }))
       .first();
     await original.waitFor({ state: 'visible', timeout: 10000 });
     await original.click();
