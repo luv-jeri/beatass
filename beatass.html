@@ -174,7 +174,10 @@ a{color:var(--red)}a:hover{color:var(--ink)}
 .wa-wrap{position:relative}
 .wa-cc{position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;
   font-weight:700;font-size:var(--fs-input);color:var(--ink-faint)}
-.wa-wrap input{padding-left:42px}
+/* Two class names on purpose. `.wa-wrap input` alone loses to the `.field
+   input` shorthand padding further down the file - same specificity, and the
+   later rule wins - which printed the +91 straight on top of the placeholder. */
+.field .wa-wrap input{padding-left:52px}
 .field label{display:block;font-weight:700;font-size:var(--fs-small);color:var(--ink-soft);
   line-height:1;margin-bottom:5px;transition:color var(--dur-err)}
 /* A box drawn in pen, not a bare underline. The underline version read as
