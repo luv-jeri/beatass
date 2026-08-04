@@ -43,6 +43,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
+import { logEvent } from '../events.mjs';
 import { runOutreach } from './outreach.mjs';
 import { dismissPopups, openThread, typeDm, clearBox, ensureAccount } from './ig-dm.mjs';
 
@@ -58,6 +59,12 @@ const SENT_LOG = path.join(ROOT, CONFIG.contentDir, '.notified.json');
 
 const SITE = 'https://beatass.com';
 const DAILY_CAP = 30;            // most auto-sends in one calendar day
+/* How many delivery attempts one message gets before we stop. Same lesson as
+   the WhatsApp lane (2026-08-05): an unbounded retry is a browser window every
+   two minutes forever; zero retries is Harsh getting bubble 1 of 3 - the intro
+   with no confession and no link - and nobody ever finishing the job. */
+const MAX_TRIES = 3;
+const evt = (step, extra) => logEvent('instagram', { lane: 'ig', step, ...extra });
 
 const args = process.argv.slice(2);
 const LOCAL = args.includes('--local');
@@ -88,6 +95,36 @@ const sq = (s) => "'" + String(s).replace(/'/g, "''") + "'";  // SQL string lite
 function loadSent() {
   return fs.existsSync(SENT_LOG) ? JSON.parse(fs.readFileSync(SENT_LOG, 'utf8')) : {};
 }
+/**
+ * What does the log say about this message?
+ *   nothing                      never attempted   -> waiting (start at bubble 0)
+ *   a date string                fully delivered   -> done, never again
+ *   {partial, attempts}          half-delivered    -> resume at the next bubble,
+ *                                                     until MAX_TRIES is spent
+ * Pure, so the selftest can prove the resume rule without a browser.
+ */
+export function entryState(entry, maxTries = MAX_TRIES) {
+  if (!entry) return { kind: 'waiting', startAt: 0 };
+  if (typeof entry === 'string') return { kind: 'done', startAt: 0 };
+  if ((entry.attempts || 0) >= maxTries) return { kind: 'gaveup', startAt: entry.partial || 0 };
+  return { kind: 'resume', startAt: entry.partial || 0 };
+}
+
+/** A failed or half-finished attempt. Never marks the message delivered. */
+function recordPartial(sent, id, bubbles, reason) {
+  const prev = (sent[id] && typeof sent[id] === 'object') ? sent[id] : { attempts: 0, partial: 0 };
+  const entry = {
+    partial: Math.max(bubbles, prev.partial || 0),   // bubbles never un-send
+    attempts: (prev.attempts || 0) + 1,
+    reason: String(reason).slice(0, 160),
+    last: new Date().toISOString()
+  };
+  sent[id] = entry;
+  fs.mkdirSync(path.dirname(SENT_LOG), { recursive: true });
+  fs.writeFileSync(SENT_LOG, JSON.stringify(sent, null, 2));
+  return entry;
+}
+
 function recordSent(sent, id) {
   sent[id] = new Date().toISOString();
   fs.mkdirSync(path.dirname(SENT_LOG), { recursive: true });
@@ -111,7 +148,7 @@ function pending() {
     "AND NOT EXISTS (SELECT 1 FROM blocklist b WHERE b.email = 'ig:' || m.to_handle) " +
     "ORDER BY m.created_at"
   );
-  return { rows: rows.filter((r) => !sent[r.id]), sent };
+  return { rows: rows.filter((r) => ['waiting', 'resume'].includes(entryState(sent[r.id]).kind)), sent };
 }
 
 function loadOne(id) {
@@ -181,9 +218,20 @@ function showParts(parts) {
 /* --selftest proves the preview logic before any DM is composed: no database,
    no browser, nothing outward. Runs in CI. */
 if (args.includes('--selftest')) {
+  let checks = 0;
   const eq = (label, got, want) => {
+    checks++;
     if (got !== want) { console.error(`✗ ${label}\n  got:  ${JSON.stringify(got)}\n  want: ${JSON.stringify(want)}`); process.exitCode = 1; }
   };
+
+  /* the resume rule - born from Harsh's half-delivered DM, 2026-08-05 */
+  eq('a fresh message is waiting', entryState(undefined).kind, 'waiting');
+  eq('a fresh message starts at bubble 1', entryState(undefined).startAt, 0);
+  eq('a delivered message is done forever', entryState('2026-08-04T19:55:11.955Z').kind, 'done');
+  eq('a partial resumes', entryState({ partial: 1, attempts: 1 }).kind, 'resume');
+  eq('a resume starts after the bubbles that landed', entryState({ partial: 1, attempts: 1 }).startAt, 1);
+  eq('three failed tries give up', entryState({ partial: 1, attempts: 3 }).kind, 'gaveup');
+  eq('a malformed entry cannot loop forever', entryState({ attempts: 99 }).kind, 'gaveup');
   const long = 'x'.repeat(400);
   eq('short body is quoted whole', dmPreview('you never called back').text, 'you never called back');
   eq('short body is not clipped', dmPreview('hi').clipped, false);
@@ -224,7 +272,7 @@ if (args.includes('--selftest')) {
   eq('every bubble fits an Instagram DM', p.every((x) => x.length <= 900), true);
   eq('no bubble is empty', p.every((x) => x.trim().length > 0), true);
 
-  console.log(process.exitCode ? '\ndm selftest FAILED' : 'dm selftest: 29/29 pass');
+  console.log(process.exitCode ? '\ndm selftest FAILED' : `dm selftest: ${checks}/${checks} pass`);
   process.exit(process.exitCode || 0);
 }
 
@@ -269,11 +317,40 @@ export async function ensureRightAccount(page) {
  *
  * Returns how many bubbles actually went out.
  */
-async function deliver(page, m, dry) {
+/**
+ * Press Send until the bubble PROVABLY leaves, or give up loudly.
+ *
+ * The proof is the box emptying: Instagram clears the composer when a message
+ * goes. That also catches the sneaky case where click() times out but the click
+ * actually registered - checking the box instead of trusting the click is what
+ * makes the count honest. Born from Harsh's DM (2026-08-05): one Send click
+ * timed out, bubble 1 of 3 was all he ever got, and the confession and link
+ * never arrived.
+ *
+ * Three clicks, then one plain Enter (which sends in Instagram's composer -
+ * typeDm avoids it with Shift+Enter for exactly that reason), then failure.
+ */
+async function sendBubble(page) {
+  const box = page.locator('div[role="textbox"][contenteditable="true"]').first();
+  const send = page.locator('div[role="button"][aria-label="Send"]').first();
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    await send.click({ timeout: 10000 }).catch(() => {});
+    await page.waitForTimeout(1500);
+    if (!(await box.innerText().catch(() => 'x')).trim()) return;
+    if (attempt < 3) await page.waitForTimeout(2500);
+  }
+  await box.click();
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1500);
+  if (!(await box.innerText().catch(() => 'x')).trim()) return;
+  throw new Error('the bubble would not send: 3 Send clicks + Enter and the box still holds the text');
+}
+
+async function deliver(page, m, dry, startAt = 0) {
   await openThread(page, m.to_handle);
   const parts = dmParts(m, linkFor(m));
-  let out = 0;
-  for (let i = 0; i < parts.length; i++) {
+  let out = startAt;                       // absolute count: bubbles 0..startAt-1 went in an earlier run
+  for (let i = startAt; i < parts.length; i++) {
     await typeDm(page, parts[i]);
     if (dry) {
       await page.screenshot({ path: path.join(HERE, `dm-dry-run-${i + 1}.png`) });
@@ -281,14 +358,15 @@ async function deliver(page, m, dry) {
       continue;
     }
     try {
-      await page.locator('div[role="button"][aria-label="Send"]').first().click({ timeout: 10000 });
+      await sendBubble(page);
     } catch (e) {
-      /* Half-delivered. Whoever catches this must still mark the message as
-         notified, or a retry re-sends the bubbles that already landed. */
+      /* Half-delivered. Whoever catches this must record the partial count, so
+         a resume starts at the right bubble instead of repeating what landed. */
       e.partsSent = out;
       throw e;
     }
     out++;
+    evt('bubble-sent', { id: m.id, handle: m.to_handle, bubble: i + 1, of: parts.length });
     /* Bubbles land a beat apart, the way a person types them - three in the
        same second is a spam signature. */
     if (i < parts.length - 1) await page.waitForTimeout(1800 + Math.floor(Math.random() * 1600));
@@ -324,31 +402,55 @@ if (AUTO) {
     await ensureRightAccount(page);
     for (const r of rows) {
       if (!DRY && done >= DAILY_CAP) { say(`auto: daily cap of ${DAILY_CAP} reached. Stopping.`); break; }
-      if (isBlocked(r.to_handle)) { say(`  skip @${r.to_handle}: blocked.`); continue; }
-      say(`  ${DRY ? 'walk' : 'send'} -> @${r.to_handle} for "${r.to_name}" [${r.id}]`);
+      if (isBlocked(r.to_handle)) { say(`  skip @${r.to_handle}: blocked.`); evt('skip-blocked', { id: r.id, handle: r.to_handle }); continue; }
+      const st = entryState(sent[r.id]);
+      say(`  ${DRY ? 'walk' : st.kind === 'resume' ? `resume at bubble ${st.startAt + 1}` : 'send'} -> @${r.to_handle} for "${r.to_name}" [${r.id}]`);
+      evt('attempt', { id: r.id, handle: r.to_handle, startAt: st.startAt, dry: DRY });
+      let landed = st.startAt;               // bubbles that are out, from this run or an earlier one
       try {
-        await deliver(page, r, DRY);
+        landed = await deliver(page, r, DRY, st.startAt);
         if (!DRY) { recordSent(sent, r.id); done++; }
-        /* The message is now sitting in their requests folder. Make them look
-           at it: follow them, comment on their latest post. Both of those
-           claim a message is waiting, so neither may run before it is. */
-        await page.waitForTimeout(6000 + Math.floor(Math.random() * 9000));
-        await runOutreach(page, r.to_handle, { dry: DRY, say });
-        if (!DRY) {
-          const pause = 25000 + Math.floor(Math.random() * 50000);   // 25-75s, no bursts
-          say(`    done. pausing ${Math.round(pause / 1000)}s.`);
-          await page.waitForTimeout(pause);
-        }
+        evt('delivered', { id: r.id, handle: r.to_handle, bubbles: 3, dry: DRY });
       } catch (e) {
-        if (e.partsSent) {
-          /* Some bubbles landed. Record it anyway - a retry would repeat them. */
-          recordSent(sent, r.id);
-          done++;
-          say(`    PARTIAL [${r.id}]: ${e.partsSent} of 3 messages sent, then: ${e.message.split('\n')[0]}`);
+        const line = e.message.split('\n')[0];
+        if (e.partsSent !== undefined && !DRY) {
+          /* Half-delivered. Recorded as a PARTIAL, not as sent: the resume rule
+             (entryState) brings it back next run, starting at the first bubble
+             that never went - so the confession and the link do arrive, and the
+             bubbles that already landed are never repeated. */
+          landed = e.partsSent;
+          const entry = recordPartial(sent, r.id, e.partsSent, line);
+          if (e.partsSent > st.startAt) done++;
+          const gaveUp = entry.attempts >= MAX_TRIES;
+          say(`    PARTIAL [${r.id}]: ${e.partsSent} of 3 bubbles out (try ${entry.attempts} of ${MAX_TRIES}${gaveUp ? ' - GIVING UP' : ', will resume'}): ${line}`);
+          evt(gaveUp ? 'gave-up' : 'partial', { id: r.id, handle: r.to_handle, bubbles: e.partsSent, attempts: entry.attempts, error: line });
         } else {
-          say(`    skipped [${r.id}]: ${e.message.split('\n')[0]}`);
+          say(`    skipped [${r.id}]: ${line}`);
+          evt('skip', { id: r.id, handle: r.to_handle, error: line });
         }
         await page.screenshot({ path: path.join(HERE, 'last-failure.png') }).catch(() => {});
+      }
+      /* Outreach - follow them, comment on their latest post - runs when ANY
+         bubble landed: bubble 1 already says a message is waiting, and that is
+         true. In its OWN try, because Harsh's run proved the old shape wrong: a
+         thrown send skipped outreach silently, so a half-DM'd person was never
+         followed and never commented. outreach.mjs keeps its own per-handle
+         record, so a resume can never double-comment. */
+      if (DRY || landed > 0) {
+        await page.waitForTimeout(6000 + Math.floor(Math.random() * 9000));
+        try {
+          const o = await runOutreach(page, r.to_handle, { dry: DRY, say });
+          evt('outreach', { handle: r.to_handle, result: o });
+        } catch (e) {
+          say(`    outreach failed for @${r.to_handle}: ${e.message.split('\n')[0]}`);
+          evt('outreach-failed', { handle: r.to_handle, error: e.message.split('\n')[0] });
+          await page.screenshot({ path: path.join(HERE, 'last-failure.png') }).catch(() => {});
+        }
+      }
+      if (!DRY) {
+        const pause = 25000 + Math.floor(Math.random() * 50000);   // 25-75s, no bursts
+        say(`    done. pausing ${Math.round(pause / 1000)}s.`);
+        await page.waitForTimeout(pause);
       }
     }
     say(DRY ? 'auto dry run done - nothing was sent.' : `auto done - ${done} sent today.`);
@@ -381,7 +483,10 @@ if (!DRY_ID && !SEND_ID) {
 const id = DRY_ID || SEND_ID;
 const m = loadOne(id);
 const sent = loadSent();
-if (SEND_ID && sent[m.id]) die(`message ${m.id} was already sent to @${m.to_handle} on ${sent[m.id]}. Not sending twice.`);
+const st0 = entryState(sent[m.id]);
+if (SEND_ID && st0.kind === 'done') die(`message ${m.id} was already sent to @${m.to_handle} on ${sent[m.id]}. Not sending twice.`);
+if (SEND_ID && st0.kind === 'gaveup') die(`message ${m.id} failed ${MAX_TRIES} times and was given up. Delete its entry from .notified.json to force one more try.`);
+if (SEND_ID && st0.kind === 'resume') say(`(resuming: ${st0.startAt} of 3 bubbles already went out - starting at bubble ${st0.startAt + 1})`);
 
 const parts = dmParts(m, linkFor(m));
 say(`\nmessage ${m.id} -> @${m.to_handle} (for "${m.to_name}")`);
@@ -392,7 +497,7 @@ const browser = await launch(CONFIG.headless === true);
 const page = browser.pages()[0] || await browser.newPage();
 try {
   await ensureRightAccount(page);
-  const out = await deliver(page, m, !!DRY_ID);
+  const out = await deliver(page, m, !!DRY_ID, st0.startAt);
   if (DRY_ID) {
     say(`- dry run: all ${parts.length} messages were typed and the Send button was NOT pressed.`);
     say(`  what each one would have looked like: tools/instagram/dm-dry-run-1..${parts.length}.png`);
@@ -406,10 +511,10 @@ try {
   await runOutreach(page, m.to_handle, { dry: !!DRY_ID, say });
   if (DRY_ID) say('\ndry run over: nothing was sent, nobody was followed, no comment was posted.');
 } catch (err) {
-  if (err.partsSent) {
-    recordSent(sent, m.id);
+  if (err.partsSent !== undefined) {
+    const entry = recordPartial(sent, m.id, err.partsSent, err.message.split('\n')[0]);
     say(`! PARTIAL: ${err.partsSent} of ${parts.length} messages reached @${m.to_handle} before this failed.`);
-    say('  Logged as sent so a retry cannot repeat them. Finish it by hand if it matters.');
+    say(`  Recorded as a partial (try ${entry.attempts} of ${MAX_TRIES}) - the next run resumes at bubble ${err.partsSent + 1}, never repeating what landed.`);
   }
   await page.screenshot({ path: path.join(HERE, 'last-failure.png') }).catch(() => {});
   console.error('\n✗ ' + err.message);

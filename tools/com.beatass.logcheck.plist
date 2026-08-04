@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Hourly check of both delivery lanes' logs. Read-only: it reports and
+     notifies, it never changes anything.
+     Install:  cp to ~/Library/LaunchAgents/ then launchctl load it. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.beatass.logcheck</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/sanjaykumar/Claude/Projects/banyan/ventures/beatass/tools/log-check.sh</string>
+  </array>
+  <key>StartInterval</key>
+  <integer>3600</integer>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/Users/sanjaykumar/.config/beatass-logs/launchd.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/sanjaykumar/.config/beatass-logs/launchd.log</string>
+</dict>
+</plist>

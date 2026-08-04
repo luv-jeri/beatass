@@ -36,6 +36,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import crypto from 'crypto';
+import { logEvent } from '../events.mjs';
 import { spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
@@ -58,6 +59,7 @@ const DAILY_CAP = 30;            // most unattended sends in one calendar day
    minute, forever, for one wrong number. A few retries are worth it - WhatsApp
    can answer slowly and a person can join later - unbounded retries are not. */
 const MAX_TRIES = 3;
+const evt = (step, extra) => logEvent('whatsapp', { lane: 'wa', step, ...extra });
 
 const args = process.argv.slice(2);
 const LOCAL = args.includes('--local');
@@ -472,10 +474,12 @@ if (AUTO) {
       if (!DRY && done >= DAILY_CAP) { say(`auto: daily cap of ${DAILY_CAP} reached. Stopping.`); break; }
       if (isBlocked(r.to_whatsapp)) { say(`  skip ${mask(r.to_whatsapp)}: blocked.`); continue; }
       say(`  ${DRY ? 'walk' : 'send'} -> ${mask(r.to_whatsapp)} for "${r.to_name}" [${r.id}]`);
+      evt('attempt', { id: r.id, to: mask(r.to_whatsapp), dry: DRY });
       try {
         await deliver(page, r, DRY);
         if (!DRY) {
           recordSent(sent, r.id);
+          evt('delivered', { id: r.id, to: mask(r.to_whatsapp), bubbles: 3 });
           done++;
           const pause = 25000 + Math.floor(Math.random() * 50000);   // 25-75s, no bursts
           say(`    done. pausing ${Math.round(pause / 1000)}s.`);
@@ -487,6 +491,7 @@ if (AUTO) {
           recordSent(sent, r.id);
           done++;
           say(`    PARTIAL [${r.id}]: ${e.partsSent} of 3 sent, then: ${e.message.split('\n')[0]}`);
+          evt('partial', { id: r.id, to: mask(r.to_whatsapp), bubbles: e.partsSent, error: e.message.split('\n')[0] });
         } else if (e.undeliverable) {
           /* Still not recorded as SENT - nothing was delivered, and the log must
              never claim otherwise. Recorded as a failed ATTEMPT instead, so the
@@ -496,11 +501,13 @@ if (AUTO) {
           /* and against the number, so the NEXT message to it is skipped
              without opening a browser at all */
           recordFailure(sent, deadKey(r.to_whatsapp), 'not-on-whatsapp');
+          evt(at.attempts >= MAX_TRIES ? 'gave-up' : 'undeliverable', { id: r.id, to: mask(r.to_whatsapp), attempts: at.attempts });
           say(at.attempts >= MAX_TRIES
             ? `    undeliverable [${r.id}]: ${e.message}. Giving up after ${at.attempts} tries - it will not be retried.`
             : `    undeliverable [${r.id}]: ${e.message}. Try ${at.attempts} of ${MAX_TRIES}.`);
         } else {
           say(`    skipped [${r.id}]: ${e.message.split('\n')[0]}`);
+          evt('skip', { id: r.id, to: mask(r.to_whatsapp), error: e.message.split('\n')[0] });
         }
         await page.screenshot({ path: path.join(HERE, 'last-failure.png') }).catch(() => {});
       }
