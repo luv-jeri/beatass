@@ -622,7 +622,7 @@ async function adminData(env, query) {
   const totalRow = await env.DB.prepare(`SELECT COUNT(*) c FROM messages ${clause}`).bind(...params).first();
   const total = (totalRow && totalRow.c) || 0;
   const rows = await env.DB.prepare(
-    `SELECT id, to_name, to_email, to_handle, to_whatsapp, body, has_gif, has_mp4, reports, sender_email, sender_hash, created_at
+    `SELECT id, to_name, to_email, to_handle, to_whatsapp, body, has_gif, has_mp4, reports, sender_email, sender_hash, sender_ua, sender_geo, created_at
      FROM messages ${clause} ORDER BY created_at DESC LIMIT ? OFFSET ?`
     // ponytail: OFFSET paging is fine into the tens of thousands here; switch to
     // keyset (WHERE created_at < last) only if an admin ever pages that deep.
@@ -771,10 +771,16 @@ function adminPage(data) {
       .filter(Boolean).join(', ');
     const media = [r.has_gif ? 'GIF' : '', r.has_mp4 ? 'MP4' : ''].filter(Boolean).join(' ') || '-';
     const sender = r.sender_email ? esc(r.sender_email) : 'anonymous';
-    const fp = r.sender_hash ? esc(String(r.sender_hash).slice(0, 8)) : '';
+    const fpFull = r.sender_hash ? esc(String(r.sender_hash)) : '';
+    const fp = fpFull.slice(0, 8);
+    const geo = r.sender_geo ? esc(r.sender_geo) : '';
+    const ua = r.sender_ua ? esc(r.sender_ua) : '';
+    /* the block button posts the full hashed IP; a blocked sender is refused at
+       /api/send before anything is stored. Confirm first - it is permanent. */
+    const blockBtn = fpFull ? `<form method="POST" action="/admin/block-sender" style="display:inline" onsubmit="return confirm('Block every future confession from this sender? This is permanent.')"><input type="hidden" name="hash" value="${fpFull}"><button type="submit" style="font:inherit;font-size:10px;color:${RED};background:none;border:0;padding:0;margin-left:6px;cursor:pointer;text-decoration:underline">block sender</button></form>` : '';
     return `<tr style="border-top:1px solid #e3d9bd">
       <td style="padding:8px 8px;color:${FAINT};white-space:nowrap;font-size:12px">${esc(when)}</td>
-      <td style="padding:8px 8px;color:${INK}">${sender}${fp ? `<div style="font-size:11px;color:${FAINT}" title="same sender fingerprint">${fp}</div>` : ''}</td>
+      <td style="padding:8px 8px;color:${INK};max-width:210px">${sender}${geo ? `<div style="font-size:11px;color:${SOFT}">${geo}</div>` : ''}${ua ? `<div style="font-size:10px;color:${FAINT};overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${ua}">${ua}</div>` : ''}${fp ? `<div style="font-size:11px;color:${FAINT}">#${fp}${blockBtn}</div>` : ''}</td>
       <td style="padding:8px 8px;color:${INK}">${esc(r.to_name)}<div style="font-size:11px;color:${FAINT}">${esc(dest)}</div></td>
       <td style="padding:8px 8px;color:${SOFT};white-space:nowrap">${esc(chan)}</td>
       <td style="padding:8px 8px;color:${SOFT};white-space:nowrap">${esc(media)}</td>
@@ -1181,6 +1187,24 @@ async function handle(request, env, ctx) {
         ).bind(move.to, mid, move.from).run();
       }
       return new Response(null, { status: 303, headers: { location: '/admin#queue', 'x-robots-tag': 'noindex' } });
+    }
+
+    /* Block a sender for good. The admin dashboard's "block sender" button posts
+       the message's hashed IP here; from now on /api/send refuses that sender
+       before storing anything. Permanent, like the recipient blocklist. */
+    if (path === '/admin/block-sender' && request.method === 'POST') {
+      if (!(await requireAdmin(request, env)))
+        return new Response(null, { status: 302, headers: { location: '/admin/login', 'x-robots-tag': 'noindex' } });
+      let form;
+      try { form = await request.formData(); } catch { form = null; }
+      const hash = String((form && form.get('hash')) || '').trim().toLowerCase();
+      if (/^[a-f0-9]{8,64}$/.test(hash)) {
+        await env.DB.prepare('INSERT OR IGNORE INTO sender_blocklist (sender_hash, reason, created_at) VALUES (?, ?, ?)')
+          .bind(hash, 'blocked from admin', Math.floor(Date.now() / 1000)).run();
+        if (ctx && ctx.waitUntil)
+          ctx.waitUntil(logEvent(env, { action: 'sender-blocked', outcome: 'ok', sender_hash: hash, detail: 'admin blocked this sender' }));
+      }
+      return new Response(null, { status: 303, headers: { location: '/admin', 'x-robots-tag': 'noindex' } });
     }
 
     /* ---------- media out of R2 ---------- */

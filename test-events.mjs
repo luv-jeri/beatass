@@ -122,9 +122,25 @@ try {
   check('a received event was logged', rcv.length, 1);
   check('the received event is tagged with the delivery channel', rcv[0] && rcv[0].channel, 'instagram');
 
-  /* 2. block that sender, then a fresh send from the same fingerprint is refused
-        (before the recipient-block and rate-limit checks) and the refusal logged. */
-  if (sh) d1(`INSERT OR IGNORE INTO sender_blocklist (sender_hash, reason, created_at) VALUES ('${sh}','spec test',1785000000)`);
+  /* 2. the admin dashboard shows this sender's fingerprint and a block button. */
+  const login = await req(BASE + '/admin/login', {
+    method: 'POST', redirect: 'manual',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ email: EMAIL, password: PASSWORD }).toString()
+  });
+  const cookie = (login.headers.get('set-cookie') || '').split(';')[0];
+  const admin = await (await req(BASE + '/admin', { headers: { cookie } })).text();
+  check("the admin page shows the sender's browser/device", admin.includes('SpecBrowser'), true);
+  check('the admin page offers a block-sender button', admin.includes('/admin/block-sender'), true);
+
+  /* 3. clicking block (the real admin route) then a fresh send from the same
+        fingerprint is refused before anything is stored, and the refusal logged. */
+  const blk = await req(BASE + '/admin/block-sender', {
+    method: 'POST', redirect: 'manual',
+    headers: { 'content-type': 'application/x-www-form-urlencoded', cookie },
+    body: new URLSearchParams({ hash: sh }).toString()
+  });
+  check('block-sender accepts the admin action', blk.status, 303);
   const r2 = await send('spectestuser2', 'this one should be refused');
   check('a blocked sender is refused with 403', r2.status, 403);
   const sb = sh ? d1(`SELECT action FROM events WHERE action='sender-blocked' AND sender_hash='${sh}'`, true) : [];
