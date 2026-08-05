@@ -5,6 +5,11 @@ WhatsApp) in a fresh session. The reels/marketing track has its own handoff
 (`HANDOFF-NEXT-SESSION.md`) and its own parallel session — do not confuse the
 two.
 
+> **This is the canonical handoff for this work.** A shorter draft the marketing
+> session left at `/tmp/beatass-observability-handoff-2026-08-05.md` is
+> superseded — its one unique piece (the full pipeline inventory) is folded into
+> the "ALL PIPELINES" section below. `/tmp` is wiped on reboot; trust this file.
+
 ---
 
 ## The one-line status
@@ -60,6 +65,31 @@ Translated into concrete work:
 The philosophy Sanjay is pushing: the machine should log enough, and retry
 reliably enough, that fixing an issue is reading a file and running a script —
 never "ask Claude to go look."
+
+---
+
+## ALL PIPELINES (mission item 3 says log EACH one — this is the full set)
+
+Delivery is only two of these. "Log each pipeline" means the structured
+log + retry backbone has to wrap all of them, not just the DM lanes:
+
+| Pipeline | Script | State file | Timer |
+|---|---|---|---|
+| Instagram DM notify | `tools/instagram/notify.mjs` | `.notified.json` | `com.beatass.notify` (2min) |
+| Instagram outreach (follow + comment + bio) | `tools/instagram/outreach.mjs` | `.outreach.json` | (runs inside notify) |
+| Instagram reel/carousel poster | `tools/instagram/post.mjs` | `.posted.json` | — (manual/marketing) |
+| Instagram health (selector checks) | `tools/instagram/health.mjs` | `health.json` | `com.beatass.health` |
+| Instagram insights scraper | `tools/instagram/insights.mjs` / `insights-loop.sh` | `marketing/insights/…` | `com.beatass.insights` |
+| WhatsApp notify | `tools/whatsapp/notify.mjs` | `.wa-notified.json` | `com.beatass.whatsapp` (60s) |
+| Email delivery | (in `src/index.js` / relay) | D1 | — |
+| Browser runners (Flow/ChatGPT) | `tools/browser/*` | — | — (marketing) |
+| Hourly log watchdog | `tools/log-check.mjs` | `~/.config/beatass-logs/` | `com.beatass.logcheck` |
+
+Only `notify` (both lanes) has the retry model wired today. `post`, `outreach`,
+`health`, `insights` log to their own files but have **no** shared structured
+log and **no** retry/fallback backbone — that is the session's real work.
+`insights`/`health`/`post`/`browser` are marketing-owned; coordinate before
+changing them, but they still need to feed the one log store.
 
 ---
 
