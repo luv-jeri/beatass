@@ -1,18 +1,17 @@
 ---
-project: story-006-hi
+project: story-008-en
 fps: 30
-vo: vo/story-006-vo-hi.mp3
+vo: vo/story-008-vo-en.mp3
 timing: locked
 ---
 
 | # | Time | VO | Scene | Assets |
 |---|------|----|-------|--------|
-| B01 | 00:00.0-00:03.4 | night in the burned cafe (hook) | 01-cold-open | |
-| B02 | 00:03.4-00:07.9 | car died, OPEN sign, warm booth | 02-bear-meme | |
-| B03 | 00:07.9-00:13.3 | waitress + eight silent customers | 03-silly-secrets | |
-| B04 | 00:13.3-00:16.8 | reflections never moved | 04-night-post | |
-| B05 | 00:16.8-00:19.4 | all eight heads snapped | 05-the-words | |
-| B06 | 00:19.4-00:22.0 | firefighters pulled me out | 06-ink-bleed | |
-| B07 | 00:22.0-00:24.7 | ash and twisted metal | 07-case-closed | |
-| B08 | 00:24.7-00:26.8 | cafe burned in 1986 | 08-explosion | |
-| B09 | 00:26.8-00:33.4 | eight never found + end card | 09-one-reply | |
+| B01 | 00:00.0-00:02.1 | empty house, warm dinner | 01-cold-open | |
+| B02 | 00:02.1-00:06.7 | ticking timer, locked rooms | 02-bear-meme | |
+| B03 | 00:06.7-00:10.7 | timer rang behind me | 03-silly-secrets | |
+| B04 | 00:10.7-00:14.4 | one covered plate | 04-night-post | |
+| B05 | 00:14.4-00:17.6 | the plate rattled | 05-the-words | |
+| B06 | 00:17.6-00:18.9 | so I lifted the cover | 06-ink-bleed | |
+| B07 | 00:18.9-00:21.5 | eyes shaped exactly like mine | 07-case-closed | |
+| B08 | 00:21.5-00:28.0 | it blinked, I did not + end card | 09-one-reply | |

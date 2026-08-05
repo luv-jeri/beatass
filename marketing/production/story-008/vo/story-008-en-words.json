@@ -1,0 +1,417 @@
+[
+ {
+  "word": "The",
+  "start": 0,
+  "end": 0.139
+ },
+ {
+  "word": "house",
+  "start": 0.186,
+  "end": 0.372
+ },
+ {
+  "word": "was",
+  "start": 0.406,
+  "end": 0.511
+ },
+ {
+  "word": "empty,",
+  "start": 0.58,
+  "end": 0.871
+ },
+ {
+  "word": "but",
+  "start": 0.906,
+  "end": 1.01
+ },
+ {
+  "word": "dinner",
+  "start": 1.057,
+  "end": 1.277
+ },
+ {
+  "word": "was",
+  "start": 1.324,
+  "end": 1.428
+ },
+ {
+  "word": "still",
+  "start": 1.463,
+  "end": 1.66
+ },
+ {
+  "word": "warm.",
+  "start": 1.707,
+  "end": 2.078
+ },
+ {
+  "word": "The",
+  "start": 2.415,
+  "end": 2.508
+ },
+ {
+  "word": "dinner",
+  "start": 2.554,
+  "end": 2.752
+ },
+ {
+  "word": "waited",
+  "start": 2.81,
+  "end": 3.019
+ },
+ {
+  "word": "on",
+  "start": 3.053,
+  "end": 3.123
+ },
+ {
+  "word": "my",
+  "start": 3.17,
+  "end": 3.262
+ },
+ {
+  "word": "kitchen",
+  "start": 3.332,
+  "end": 3.576
+ },
+ {
+  "word": "table",
+  "start": 3.611,
+  "end": 3.855
+ },
+ {
+  "word": "beside",
+  "start": 3.889,
+  "end": 4.145
+ },
+ {
+  "word": "a",
+  "start": 4.168,
+  "end": 4.203
+ },
+ {
+  "word": "ticking",
+  "start": 4.238,
+  "end": 4.47
+ },
+ {
+  "word": "timer,",
+  "start": 4.516,
+  "end": 4.981
+ },
+ {
+  "word": "so",
+  "start": 5.224,
+  "end": 5.329
+ },
+ {
+  "word": "I",
+  "start": 5.399,
+  "end": 5.422
+ },
+ {
+  "word": "checked",
+  "start": 5.492,
+  "end": 5.724
+ },
+ {
+  "word": "every",
+  "start": 5.793,
+  "end": 6.037
+ },
+ {
+  "word": "locked",
+  "start": 6.084,
+  "end": 6.304
+ },
+ {
+  "word": "room.",
+  "start": 6.339,
+  "end": 6.711
+ },
+ {
+  "word": "Every",
+  "start": 7.314,
+  "end": 7.593
+ },
+ {
+  "word": "room",
+  "start": 7.651,
+  "end": 7.802
+ },
+ {
+  "word": "was",
+  "start": 7.848,
+  "end": 7.941
+ },
+ {
+  "word": "silent,",
+  "start": 7.999,
+  "end": 8.533
+ },
+ {
+  "word": "then",
+  "start": 8.812,
+  "end": 8.94
+ },
+ {
+  "word": "the",
+  "start": 8.975,
+  "end": 9.044
+ },
+ {
+  "word": "timer",
+  "start": 9.079,
+  "end": 9.392
+ },
+ {
+  "word": "rang",
+  "start": 9.451,
+  "end": 9.613
+ },
+ {
+  "word": "from",
+  "start": 9.66,
+  "end": 9.787
+ },
+ {
+  "word": "the",
+  "start": 9.822,
+  "end": 9.892
+ },
+ {
+  "word": "table",
+  "start": 9.927,
+  "end": 10.159
+ },
+ {
+  "word": "behind",
+  "start": 10.194,
+  "end": 10.437
+ },
+ {
+  "word": "me.",
+  "start": 10.484,
+  "end": 10.728
+ },
+ {
+  "word": "The",
+  "start": 11.111,
+  "end": 11.227
+ },
+ {
+  "word": "table",
+  "start": 11.273,
+  "end": 11.575
+ },
+ {
+  "word": "held",
+  "start": 11.61,
+  "end": 11.772
+ },
+ {
+  "word": "one",
+  "start": 11.842,
+  "end": 12.063
+ },
+ {
+  "word": "covered",
+  "start": 12.098,
+  "end": 12.365
+ },
+ {
+  "word": "plate,",
+  "start": 12.399,
+  "end": 12.794
+ },
+ {
+  "word": "so",
+  "start": 12.945,
+  "end": 13.061
+ },
+ {
+  "word": "I",
+  "start": 13.119,
+  "end": 13.154
+ },
+ {
+  "word": "stepped",
+  "start": 13.212,
+  "end": 13.444
+ },
+ {
+  "word": "closer",
+  "start": 13.479,
+  "end": 13.746
+ },
+ {
+  "word": "through",
+  "start": 13.781,
+  "end": 13.955
+ },
+ {
+  "word": "the",
+  "start": 13.978,
+  "end": 14.048
+ },
+ {
+  "word": "kitchen.",
+  "start": 14.083,
+  "end": 14.431
+ },
+ {
+  "word": "The",
+  "start": 14.768,
+  "end": 14.872
+ },
+ {
+  "word": "covered",
+  "start": 14.907,
+  "end": 15.163
+ },
+ {
+  "word": "plate",
+  "start": 15.197,
+  "end": 15.43
+ },
+ {
+  "word": "rattled",
+  "start": 15.488,
+  "end": 15.789
+ },
+ {
+  "word": "because",
+  "start": 15.824,
+  "end": 16.068
+ },
+ {
+  "word": "the",
+  "start": 16.103,
+  "end": 16.173
+ },
+ {
+  "word": "meal",
+  "start": 16.207,
+  "end": 16.347
+ },
+ {
+  "word": "underneath",
+  "start": 16.405,
+  "end": 16.776
+ },
+ {
+  "word": "was",
+  "start": 16.811,
+  "end": 16.916
+ },
+ {
+  "word": "pushing",
+  "start": 16.962,
+  "end": 17.218
+ },
+ {
+  "word": "upward.",
+  "start": 17.264,
+  "end": 17.612
+ },
+ {
+  "word": "So",
+  "start": 17.949,
+  "end": 18.053
+ },
+ {
+  "word": "I",
+  "start": 18.1,
+  "end": 18.123
+ },
+ {
+  "word": "lifted",
+  "start": 18.181,
+  "end": 18.379
+ },
+ {
+  "word": "the",
+  "start": 18.402,
+  "end": 18.471
+ },
+ {
+  "word": "cover.",
+  "start": 18.506,
+  "end": 18.855
+ },
+ {
+  "word": "Then",
+  "start": 19.296,
+  "end": 19.447
+ },
+ {
+  "word": "the",
+  "start": 19.481,
+  "end": 19.551
+ },
+ {
+  "word": "meal",
+  "start": 19.586,
+  "end": 19.737
+ },
+ {
+  "word": "opened",
+  "start": 19.795,
+  "end": 19.992
+ },
+ {
+  "word": "eyes",
+  "start": 20.05,
+  "end": 20.213
+ },
+ {
+  "word": "shaped",
+  "start": 20.248,
+  "end": 20.48
+ },
+ {
+  "word": "exactly",
+  "start": 20.515,
+  "end": 20.909
+ },
+ {
+  "word": "like",
+  "start": 20.956,
+  "end": 21.095
+ },
+ {
+  "word": "mine.",
+  "start": 21.13,
+  "end": 21.455
+ },
+ {
+  "word": "My",
+  "start": 21.896,
+  "end": 22.012
+ },
+ {
+  "word": "eyes",
+  "start": 22.082,
+  "end": 22.233
+ },
+ {
+  "word": "blinked;",
+  "start": 22.291,
+  "end": 22.674
+ },
+ {
+  "word": "I",
+  "start": 22.86,
+  "end": 22.918
+ },
+ {
+  "word": "did",
+  "start": 23.023,
+  "end": 23.139
+ },
+ {
+  "word": "not.",
+  "start": 23.185,
+  "end": 23.684
+ }
+]

@@ -1,0 +1,407 @@
+[
+ {
+  "word": "I",
+  "start": 0,
+  "end": 0.081
+ },
+ {
+  "word": "deleted",
+  "start": 0.186,
+  "end": 0.499
+ },
+ {
+  "word": "the",
+  "start": 0.534,
+  "end": 0.604
+ },
+ {
+  "word": "text.",
+  "start": 0.639,
+  "end": 1.103
+ },
+ {
+  "word": "Then",
+  "start": 1.382,
+  "end": 1.521
+ },
+ {
+  "word": "it",
+  "start": 1.556,
+  "end": 1.625
+ },
+ {
+  "word": "replied.",
+  "start": 1.66,
+  "end": 2.218
+ },
+ {
+  "word": "It",
+  "start": 2.659,
+  "end": 2.775
+ },
+ {
+  "word": "showed",
+  "start": 2.821,
+  "end": 3.019
+ },
+ {
+  "word": "a",
+  "start": 3.042,
+  "end": 3.065
+ },
+ {
+  "word": "photo",
+  "start": 3.1,
+  "end": 3.286
+ },
+ {
+  "word": "of",
+  "start": 3.32,
+  "end": 3.379
+ },
+ {
+  "word": "me",
+  "start": 3.425,
+  "end": 3.495
+ },
+ {
+  "word": "holding",
+  "start": 3.529,
+  "end": 3.75
+ },
+ {
+  "word": "the",
+  "start": 3.785,
+  "end": 3.855
+ },
+ {
+  "word": "phone",
+  "start": 3.889,
+  "end": 4.075
+ },
+ {
+  "word": "beside",
+  "start": 4.11,
+  "end": 4.4
+ },
+ {
+  "word": "my",
+  "start": 4.435,
+  "end": 4.505
+ },
+ {
+  "word": "apartment",
+  "start": 4.551,
+  "end": 4.923
+ },
+ {
+  "word": "window.",
+  "start": 4.957,
+  "end": 5.399
+ },
+ {
+  "word": "The",
+  "start": 5.677,
+  "end": 5.782
+ },
+ {
+  "word": "window",
+  "start": 5.817,
+  "end": 6.037
+ },
+ {
+  "word": "was",
+  "start": 6.084,
+  "end": 6.177
+ },
+ {
+  "word": "black,",
+  "start": 6.235,
+  "end": 6.687
+ },
+ {
+  "word": "so",
+  "start": 6.896,
+  "end": 7.012
+ },
+ {
+  "word": "I",
+  "start": 7.094,
+  "end": 7.117
+ },
+ {
+  "word": "turned",
+  "start": 7.221,
+  "end": 7.465
+ },
+ {
+  "word": "and",
+  "start": 7.5,
+  "end": 7.57
+ },
+ {
+  "word": "saw",
+  "start": 7.605,
+  "end": 7.732
+ },
+ {
+  "word": "only",
+  "start": 7.814,
+  "end": 7.988
+ },
+ {
+  "word": "my",
+  "start": 8.046,
+  "end": 8.115
+ },
+ {
+  "word": "reflection",
+  "start": 8.185,
+  "end": 8.591
+ },
+ {
+  "word": "holding",
+  "start": 8.649,
+  "end": 8.87
+ },
+ {
+  "word": "that",
+  "start": 8.905,
+  "end": 9.009
+ },
+ {
+  "word": "phone.",
+  "start": 9.056,
+  "end": 9.451
+ },
+ {
+  "word": "That",
+  "start": 9.892,
+  "end": 10.077
+ },
+ {
+  "word": "reflection",
+  "start": 10.147,
+  "end": 10.553
+ },
+ {
+  "word": "raised",
+  "start": 10.623,
+  "end": 10.879
+ },
+ {
+  "word": "its",
+  "start": 10.913,
+  "end": 11.018
+ },
+ {
+  "word": "phone",
+  "start": 11.053,
+  "end": 11.447
+ },
+ {
+  "word": "while",
+  "start": 11.505,
+  "end": 11.703
+ },
+ {
+  "word": "my",
+  "start": 11.738,
+  "end": 11.807
+ },
+ {
+  "word": "hand",
+  "start": 11.877,
+  "end": 12.051
+ },
+ {
+  "word": "stayed",
+  "start": 12.109,
+  "end": 12.318
+ },
+ {
+  "word": "still,",
+  "start": 12.353,
+  "end": 12.736
+ },
+ {
+  "word": "so",
+  "start": 13.015,
+  "end": 13.143
+ },
+ {
+  "word": "my",
+  "start": 13.201,
+  "end": 13.282
+ },
+ {
+  "word": "phone",
+  "start": 13.34,
+  "end": 13.561
+ },
+ {
+  "word": "buzzed.",
+  "start": 13.595,
+  "end": 13.99
+ },
+ {
+  "word": "The",
+  "start": 14.269,
+  "end": 14.373
+ },
+ {
+  "word": "phone",
+  "start": 14.408,
+  "end": 14.594
+ },
+ {
+  "word": "displayed",
+  "start": 14.629,
+  "end": 14.907
+ },
+ {
+  "word": "another",
+  "start": 14.942,
+  "end": 15.163
+ },
+ {
+  "word": "text",
+  "start": 15.209,
+  "end": 15.453
+ },
+ {
+  "word": "because",
+  "start": 15.488,
+  "end": 15.697
+ },
+ {
+  "word": "the",
+  "start": 15.72,
+  "end": 15.79
+ },
+ {
+  "word": "reflection",
+  "start": 15.836,
+  "end": 16.243
+ },
+ {
+  "word": "had",
+  "start": 16.289,
+  "end": 16.382
+ },
+ {
+  "word": "typed,",
+  "start": 16.428,
+  "end": 16.8
+ },
+ {
+  "word": "\"Do",
+  "start": 16.846,
+  "end": 17.044
+ },
+ {
+  "word": "not",
+  "start": 17.113,
+  "end": 17.241
+ },
+ {
+  "word": "turn",
+  "start": 17.276,
+  "end": 17.415
+ },
+ {
+  "word": "around.\"",
+  "start": 17.45,
+  "end": 17.938
+ },
+ {
+  "word": "So",
+  "start": 18.321,
+  "end": 18.448
+ },
+ {
+  "word": "I",
+  "start": 18.53,
+  "end": 18.553
+ },
+ {
+  "word": "froze.",
+  "start": 18.623,
+  "end": 19.122
+ },
+ {
+  "word": "Then",
+  "start": 19.458,
+  "end": 19.598
+ },
+ {
+  "word": "the",
+  "start": 19.633,
+  "end": 19.702
+ },
+ {
+  "word": "reflection",
+  "start": 19.772,
+  "end": 20.167
+ },
+ {
+  "word": "smiled",
+  "start": 20.225,
+  "end": 20.492
+ },
+ {
+  "word": "at",
+  "start": 20.527,
+  "end": 20.573
+ },
+ {
+  "word": "my",
+  "start": 20.608,
+  "end": 20.678
+ },
+ {
+  "word": "phone.",
+  "start": 20.724,
+  "end": 21.119
+ },
+ {
+  "word": "The",
+  "start": 21.455,
+  "end": 21.548
+ },
+ {
+  "word": "phone",
+  "start": 21.583,
+  "end": 21.769
+ },
+ {
+  "word": "went",
+  "start": 21.804,
+  "end": 21.931
+ },
+ {
+  "word": "dark;",
+  "start": 21.966,
+  "end": 22.338
+ },
+ {
+  "word": "the",
+  "start": 22.616,
+  "end": 22.721
+ },
+ {
+  "word": "reflection",
+  "start": 22.791,
+  "end": 23.197
+ },
+ {
+  "word": "kept",
+  "start": 23.255,
+  "end": 23.417
+ },
+ {
+  "word": "typing.",
+  "start": 23.452,
+  "end": 24.056
+ }
+]
