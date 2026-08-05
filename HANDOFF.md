@@ -10,12 +10,20 @@ Written 2 August 2026. Everything a new session needs to pick this up.
 
 ## The one-line status
 
-*(updated 2 August 2026, second session)*
+*(updated 6 August 2026 — this file's body below is still the 2 August build
+notes and describes a pre-launch state. The status here is the current one.)*
 
-**The front end is finished, tested, and now wired to the API. The backend is
-written and its infrastructure is live. Nothing is deployed yet.** Pressing
-Send posts the confession and both files to `/api/send` — against the real
-Worker once it is deployed, and nothing at all until then.
+**beatass.com is LIVE and works end to end.** The Worker was deployed
+4 August 2026 (version `71f5b1fa`, 100% of traffic) and the site returns the
+real app, not a placeholder. Email sends from `someone@beatass.com` — Resend
+domain verification, Cloudflare nameservers, SPF, DKIM and DMARC are all in
+place — and delivery also runs over WhatsApp and Instagram, with an events
+action-log, sender fingerprinting, a block list, and retry/status/stuck
+tooling. Re-verified against the live system on 6 August, not read from notes.
+
+The open work is no longer "get it shipped" — it is getting the delivered
+messages actually opened. Start at `HANDOFF-TEMPLATES-OPENRATE.md`
+(the newest handoff), and see `VENTURE.md`'s "Open, in priority order".
 
 This project is now a Banyan venture and lives at
 `~/Claude/Projects/banyan/ventures/beatass`. Its passport is `VENTURE.md`.
