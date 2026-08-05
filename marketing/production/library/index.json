@@ -558,5 +558,31 @@
   ],
   "note": "Brian v2 spiked settings (stab .30 style .5 speed 1.15 sim .75) EN 26.7s + HI 29.1s, new free-tier ElevenLabs key",
   "date": "2026-08-05"
+ },
+ {
+  "type": "clip",
+  "path": "marketing/production/story-007",
+  "tags": [
+   "story-007",
+   "deleted-reply",
+   "marker-pop",
+   "horror",
+   "continuity"
+  ],
+  "note": "The Deleted Reply: 9 continuity-locked clips (apartment/reflection), posted EN Dbo20lqKHYD 2026-08-05",
+  "date": "2026-08-05"
+ },
+ {
+  "type": "clip",
+  "path": "marketing/production/story-008",
+  "tags": [
+   "story-008",
+   "dinner",
+   "marker-pop",
+   "horror",
+   "continuity"
+  ],
+  "note": "Dinner Was Waiting: 8 continuity-locked clips (kitchen/covered plate), posted EN Dbo3T52KdRB 2026-08-05",
+  "date": "2026-08-05"
  }
 ]

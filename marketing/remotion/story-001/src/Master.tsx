@@ -7,23 +7,23 @@ import {Grain} from './system/Grain';
 import {Captions} from './system/Captions';
 import {Letterbox} from './system/Letterbox';
 
-// STORY-008 EN (Dinner Was Waiting): no card scenes, captions never suppress.
+// STORY-008 HI (Dinner Was Waiting, Hindi): no card scenes, captions never suppress.
 const SUPPRESS: Array<[number, number]> = [];
 
 // Music arc: the music-box bed keeps the diner feeling almost safe until the
 // head-snap; the dread drone + heartbeat takes over at the snap (15.5s) and
 // end-fades under the missing-posters end card.
-const MUSIC_A_END = Math.round(13.2 * 30);
-const MUSIC_B_FROM = Math.round(10.7 * 30);
-const MUSIC_B_LEN = Math.round((28.0 - 10.7) * 30);
+const MUSIC_A_END = Math.round(14.0 * 30);
+const MUSIC_B_FROM = Math.round(11.5 * 30);
+const MUSIC_B_LEN = Math.round((30.4 - 11.5) * 30);
 // Audio law (Sanjay 2026-08-04): VO is the main character; bed gains are set
 // by MEASUREMENT. This VO means -24.4dB, both story-003 v3 beds mean -14.3dB,
 // so 0.044 puts the beds ~17dB under the voice (the approved margin).
 const SFX: Array<{file: string; from: number; volume: number}> = [
   {file: 'sfx/paper-whoosh-soft.mp3', from: 0, volume: 0.3},
-  {file: 'sfx/sub-pulse-soft.mp3', from: Math.round(8.6 * 30), volume: 0.32},
-  {file: 'sfx/horror-sting-soft.mp3', from: Math.round(21.5 * 30), volume: 0.32},
-  {file: 'sfx/music-box-note.mp3', from: Math.round(24.5 * 30), volume: 1.0},
+  {file: 'sfx/sub-pulse-soft.mp3', from: Math.round(9.4 * 30), volume: 0.32},
+  {file: 'sfx/horror-sting-soft.mp3', from: Math.round(23.4 * 30), volume: 0.32},
+  {file: 'sfx/music-box-note.mp3', from: Math.round(27.0 * 30), volume: 1.0},
 ];
 
 // Honesty label: every dark-story reel opens with its fiction disclosure in
