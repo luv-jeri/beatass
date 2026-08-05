@@ -538,6 +538,26 @@ async function logVisit(env, path, country) {
   }
 }
 
+/* One row per thing the Worker does, into the events table (migration 004): a
+   confession received, an email delivered or failed, a view, a report, a block,
+   a sender turned away. The laptop notifiers write the delivery side into the
+   same table, so a message's whole life reads back from one place. Like
+   logVisit: a defensive CREATE so it still works if the migration has not reached
+   this D1 yet, and always called under waitUntil so nobody waits on it. */
+async function logEvent(env, e) {
+  try {
+    await env.DB.prepare(
+      "CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, msg_id TEXT, channel TEXT NOT NULL DEFAULT '', action TEXT NOT NULL, outcome TEXT NOT NULL DEFAULT 'ok', detail TEXT NOT NULL DEFAULT '', sender_hash TEXT NOT NULL DEFAULT '')"
+    ).run();
+    await env.DB.prepare(
+      'INSERT INTO events (ts, msg_id, channel, action, outcome, detail, sender_hash) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).bind(Math.floor(Date.now() / 1000), e.msg_id || null, e.channel || '', e.action,
+           e.outcome || 'ok', String(e.detail || '').slice(0, 300), e.sender_hash || '').run();
+  } catch (err) {
+    console.error('event log', err && err.stack || String(err));
+  }
+}
+
 /* Everything the dashboard shows, in one gather. created_at is unix SECONDS
    (not an ISO string), so every window compares against strftime('%s', ...)
    cast to an integer - a text/date compare here would silently return nothing
@@ -1230,6 +1250,9 @@ async function handle(request, env, ctx) {
       await env.DB.prepare('INSERT OR IGNORE INTO blocklist (email, created_at) VALUES (?, ?)')
         .bind(blockVal, now)
         .run();
+      if (ctx && ctx.waitUntil)
+        ctx.waitUntil(logEvent(env, { channel: 'site', action: 'blocked',
+          detail: blockVal.startsWith('ig:') ? 'instagram' : blockVal.startsWith('wa:') ? 'whatsapp' : 'email' }));
 
       /* "Never again" has to mean every channel, not just the clicked one. A
          recipient reached by email AND Instagram AND WhatsApp would otherwise
@@ -1274,6 +1297,8 @@ async function handle(request, env, ctx) {
         );
 
       await env.DB.prepare('UPDATE messages SET reports = reports + 1 WHERE id = ?').bind(mid).run();
+      if (ctx && ctx.waitUntil)
+        ctx.waitUntil(logEvent(env, { msg_id: mid, channel: 'site', action: 'reported' }));
       return notice('Reported. Thank you.',
         'A human will look at this message. If you also want to stop all future mail, use the block link in the email.');
     }
@@ -1345,6 +1370,8 @@ async function handle(request, env, ctx) {
         'SELECT to_email, to_name, body, has_gif, has_mp4, sender_email, to_handle, to_whatsapp FROM messages WHERE id = ?'
       ).bind(mid).first();
       if (!row) return notice('That link has expired', 'Ask whoever sent it to share it again.');
+      if (ctx && ctx.waitUntil)
+        ctx.waitUntil(logEvent(env, { msg_id: mid, channel: 'site', action: 'viewed' }));
 
       const gifUrl = row.has_gif ? `${site}/media/${mid}.gif` : '';
       const mp4Url = row.has_mp4 ? `${site}/media/${mid}.mp4` : '';
@@ -1417,6 +1444,29 @@ async function handle(request, env, ctx) {
       if (!email && !toHandle && !toWa)
         return json({ error: 'Add their email, Instagram or WhatsApp so we can deliver it.' }, 400);
 
+      /* Who is sending this. sender_hash is the hashed IP (never the raw address);
+         the browser and rough place are non-identifying context a human reviews to
+         judge abuse. None of it ever reaches the recipient. Used for the rate limit
+         below, the sender-blocklist check, and stored beside the message. */
+      const ipHash = await hashIp(env.BLOCK_SECRET, ip);
+      const senderUa = String(request.headers.get('User-Agent') || '').slice(0, 400);
+      const cf = request.cf || {};
+      const senderGeo = ([cf.country, cf.region, cf.city].filter(Boolean).join('/') +
+        (cf.asOrganization ? ' . ' + cf.asOrganization : '')).slice(0, 200);
+
+      /* A sender we have already judged an abuser is turned away here, and the
+         attempt is logged so the pattern stays visible. Fail-open on a DB error
+         (e.g. the table not migrated yet) so a hiccup never blocks a real send. */
+      let senderBanned = null;
+      try {
+        senderBanned = await env.DB.prepare('SELECT 1 FROM sender_blocklist WHERE sender_hash = ?').bind(ipHash).first();
+      } catch { /* table may not exist yet - treat as not blocked */ }
+      if (senderBanned) {
+        if (ctx && ctx.waitUntil)
+          ctx.waitUntil(logEvent(env, { action: 'sender-blocked', outcome: 'skip', sender_hash: ipHash, detail: senderGeo }));
+        return json({ error: 'We could not send this. If you think this is a mistake, contact us.' }, 403);
+      }
+
       // never send to somebody who has already told us to stop - on any channel
       const blockKeys = [];
       if (email) blockKeys.push(email);
@@ -1428,8 +1478,7 @@ async function handle(request, env, ctx) {
       if (blocked)
         return json({ error: 'That person has asked never to receive these. We are honouring that.' }, 403);
 
-      // rate limit, per sender IP
-      const ipHash = await hashIp(env.BLOCK_SECRET, ip);
+      // rate limit, per sender IP (ipHash computed above)
       const rateKey = 'r:' + ipHash;
       const used = parseInt((await env.RATE.get(rateKey)) || '0', 10);
       if (used >= RATE_LIMIT)
@@ -1454,8 +1503,8 @@ async function handle(request, env, ctx) {
       await Promise.all(puts);
 
       await env.DB.prepare(
-        `INSERT INTO messages (id, to_email, to_name, body, stats, has_gif, has_mp4, created_at, sender_hash, sender_email, to_handle, to_whatsapp, view_token, share_ok)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO messages (id, to_email, to_name, body, stats, has_gif, has_mp4, created_at, sender_hash, sender_ua, sender_geo, sender_email, to_handle, to_whatsapp, view_token, share_ok)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
         // to_email is NOT NULL in the schema, so a handle-only message stores it
         // as '' (empty string). Every read treats '' as "no email" - it is falsy,
@@ -1469,10 +1518,18 @@ async function handle(request, env, ctx) {
         // row. It grants exactly what the message will contain anyway: the right
         // to view this one message.
         .bind(mid, email, name, body, stats, gif && gif.size ? 1 : 0, mp4 && mp4.size ? 1 : 0,
-              Math.floor(Date.now() / 1000), ipHash, senderEmail || null, toHandle || null,
+              Math.floor(Date.now() / 1000), ipHash, senderUa || null, senderGeo || null,
+              senderEmail || null, toHandle || null,
               toWa || null,
               toHandle || toWa ? await token(env.BLOCK_SECRET, 'view:' + mid) : null, shareOk)
         .run();
+
+      /* the confession is now stored - log it as received, tagged with the sender
+         fingerprint and the channel it will go out on, so its life starts in the
+         one action log the rest of the pipeline appends to. */
+      const channel = email ? 'email' : (toHandle ? 'instagram' : 'whatsapp');
+      if (ctx && ctx.waitUntil)
+        ctx.waitUntil(logEvent(env, { msg_id: mid, channel, action: 'received', sender_hash: ipHash, detail: senderGeo }));
 
       const gifUrl = gif && gif.size ? `${site}/media/${mid}.gif` : '';
       // The reply page link only exists when there is somebody to deliver to.
@@ -1507,8 +1564,13 @@ async function handle(request, env, ctx) {
           // positive signal, and it keeps us out of the spam folder
           headers: { 'List-Unsubscribe': `<${blockUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }
         });
-        if (!sent.ok)
+        if (!sent.ok) {
+          if (ctx && ctx.waitUntil)
+            ctx.waitUntil(logEvent(env, { msg_id: mid, channel: 'email', action: 'failed', outcome: 'error', detail: String(sent.ref || 'resend') }));
           return json({ error: "We couldn't deliver that. Try again in a minute.", ref: sent.ref }, 502);
+        }
+        if (ctx && ctx.waitUntil)
+          ctx.waitUntil(logEvent(env, { msg_id: mid, channel: 'email', action: 'delivered' }));
       }
 
       return json({ ok: true, id: mid });

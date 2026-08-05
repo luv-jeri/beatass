@@ -390,6 +390,11 @@ a{color:var(--red)}a:hover{color:var(--ink)}
   text-shadow:0 1px 4px rgba(0,0,0,.5)}
 /* the red pen doing what it always does here: annotating what went wrong */
 .ovnote.bad{color:var(--red);text-shadow:0 1px 4px rgba(0,0,0,.65)}
+/* the honest-disclosure line: fine print, one line, small enough to sit in the
+   slack the preview card leaves on the shortest phone. Keep the text short - it
+   is a signpost to Privacy, not the full disclosure. */
+.ovnote.ovfine{font-weight:500;font-size:calc(var(--fs-small) * .82);opacity:.72;line-height:1.3;margin-top:3px}
+.ovnote.ovfine a{color:inherit}
 .ovbtns{display:flex;gap:10px;justify-content:flex-end}
 
 /* The legal row. It sits in the send bar, under the button, so it is pinned on
@@ -708,6 +713,7 @@ a{color:var(--red)}a:hover{color:var(--ink)}
     </div>
     <div>
       <div class="ovnote">They'll get your exact words and the doll clip. Once it's sent it can't be taken back, and they'll never know it was you. Keep it funny, not cruel - no threats or private facts.</div>
+      <div class="ovnote ovfine">We log your device &amp; area to stop abuse. <a href="/privacy.html">Privacy</a></div>
       <div class="ovnote bad" id="send-err" hidden></div>
       <div class="ovbtns" style="margin-top:12px">
         <button class="btn ghost sm" id="dl" type="button">Save GIF</button>

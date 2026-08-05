@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS messages (
   has_mp4      INTEGER NOT NULL DEFAULT 0,
   created_at   INTEGER NOT NULL,          -- unix seconds
   sender_hash  TEXT NOT NULL DEFAULT '',  -- hashed IP. Never the raw address.
+  sender_ua    TEXT,                       -- sender's User-Agent (browser + device), for abuse review. Never shown.
+  sender_geo   TEXT,                       -- sender's country/region/city . ASN org (Cloudflare), for abuse review. Never shown.
   reports      INTEGER NOT NULL DEFAULT 0,
   sender_email TEXT,                       -- the sender's own address, if they want replies. Never shown.
   to_handle    TEXT,                       -- the recipient's Instagram handle, if given. Never shown.
@@ -39,4 +41,31 @@ CREATE INDEX IF NOT EXISTS idx_messages_to      ON messages (to_email);
 CREATE TABLE IF NOT EXISTS blocklist (
   email      TEXT PRIMARY KEY,
   created_at INTEGER NOT NULL
+);
+
+-- The single action log (migration 004). One row per thing the system does -
+-- a confession received, delivered, failed, retried, viewed, reported, blocked,
+-- a sender turned away - written by both the Worker and the laptop notifiers, so
+-- a message's whole life is readable from one place and a stuck one is findable.
+CREATE TABLE IF NOT EXISTS events (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts          INTEGER NOT NULL,           -- unix seconds
+  msg_id      TEXT,                        -- the message this is about, or NULL for site-wide
+  channel     TEXT NOT NULL DEFAULT '',    -- '' | 'email' | 'instagram' | 'whatsapp' | 'site'
+  action      TEXT NOT NULL,               -- 'received' | 'delivered' | 'failed' | 'retry' | 'viewed' | 'reported' | 'blocked' | 'sender-blocked'
+  outcome     TEXT NOT NULL DEFAULT 'ok',  -- 'ok' | 'error' | 'skip'
+  detail      TEXT NOT NULL DEFAULT '',    -- freeform: an error, a step, an attempt count, a place
+  sender_hash TEXT NOT NULL DEFAULT ''     -- ties an event to a sender fingerprint where one applies
+);
+CREATE INDEX IF NOT EXISTS idx_events_ts     ON events (ts);
+CREATE INDEX IF NOT EXISTS idx_events_msg    ON events (msg_id);
+CREATE INDEX IF NOT EXISTS idx_events_action ON events (action);
+CREATE INDEX IF NOT EXISTS idx_events_sender ON events (sender_hash);
+
+-- Senders judged to be abusing the service, checked before every /api/send.
+-- Keyed by the hashed IP (never a raw address, no cookie). Permanent by design.
+CREATE TABLE IF NOT EXISTS sender_blocklist (
+  sender_hash TEXT PRIMARY KEY,
+  reason      TEXT NOT NULL DEFAULT '',
+  created_at  INTEGER NOT NULL
 );

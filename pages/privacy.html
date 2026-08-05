@@ -1,7 +1,7 @@
 What beatass.com stores when you send a message, what it never stores, and how to make it stop.
 
     <h1>Privacy</h1>
-    <p class="updated">Last updated 3 August 2026.</p>
+    <p class="updated">Last updated 5 August 2026.</p>
 
     <p>This page describes exactly what beatass.com does with information. It is
       written to be checked against the code, not to be long.</p>
@@ -26,6 +26,10 @@ What beatass.com stores when you send a message, what it never stores, and how t
       <li>The GIF and the video, stored as files.</li>
       <li>The time it was sent.</li>
       <li>A one-way scrambled version of your IP address. Not the address itself.</li>
+      <li>The kind of browser and device you sent from, and the country, region and
+        network provider your connection came through, as reported to us by Cloudflare.
+        This is kept only to spot and stop abuse. It is never shown to the person you
+        wrote to.</li>
       <li>Your own email address, but only if you filled in the reply box, and only
         so a reply can reach you. Nothing at all if you left it blank.</li>
     </ul>
@@ -43,8 +47,9 @@ What beatass.com stores when you send a message, what it never stores, and how t
       is kept. We cannot look your address up from it. It can only be used to tell
       whether two messages came from the same place, which is there for two narrow
       reasons: to stop one person flooding the site, and so that a message reported
-      as abusive can be matched to others from the same source. We do not attempt to
-      reverse it, and we do not build any way to.</p>
+      as abusive can be matched to others from the same source. The browser, device
+      and rough location we keep serve that same purpose and nothing else. We do not
+      attempt to reverse the scrambled address, and we do not build any way to.</p>
     <p>Anonymity here is permanent. We do not reveal who sent a message, we do not
       hint at it, and we do not sell hints about it - not to the recipient, not to
       anyone. There is no paid tier that unmasks a sender, and there never will be.</p>
