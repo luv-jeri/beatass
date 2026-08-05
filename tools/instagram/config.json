@@ -1,49 +1,54 @@
 {
-  "_comment": "Change 'handle' to post from a different account. The script checks it is logged in as this exact handle before it posts anything, so a wrong handle stops the run instead of posting to the wrong account.",
-
-  "handle": "_beatAss_",
-
-  "contentDir": "content/instagram",
-
-  "_formats": "Which outputs a message's tone chip produces. fury earns the beating reel, soft stays a quiet story card; everything gets the feed post.",
-  "formats": {
-    "fury":  ["post", "reel"],
-    "petty": ["post", "story"],
-    "sad":   ["post", "story"],
-    "soft":  ["post", "story"],
-    "default": ["post"]
-  },
-
-  "caption": "say the thing you'd never say. anonymous, free, at beatass.com",
-
-  "hashtags": [
-    "beatass",
-    "anonymousmessage",
-    "confession",
-    "sendit",
-    "voodoodoll"
+ "_comment": "Change 'handle' to post from a different account. The script checks it is logged in as this exact handle before it posts anything, so a wrong handle stops the run instead of posting to the wrong account.",
+ "handle": "_beatAss_",
+ "contentDir": "content/instagram",
+ "_formats": "Which outputs a message's tone chip produces. fury earns the beating reel, soft stays a quiet story card; everything gets the feed post.",
+ "formats": {
+  "fury": [
+   "post",
+   "reel"
   ],
-
-  "_outreach": "A DM from an account you do not follow lands in Instagram's 'Message requests' folder, which most people never open. These three things point people at that folder: we follow them (so they get a notification and read our bio), our bio tells them a message is waiting, and we leave one comment on their latest post. Set follow or comment to false to switch either off without touching code. The per-day numbers are deliberately below what Instagram tolerates - follows and comments to strangers are what gets an account limited, and a limited account cannot DM anybody.",
-  "outreach": {
-    "follow": true,
-    "comment": true,
-    "followPerDay": 25,
-    "commentPerDay": 15,
-
-    "_comments": "One is picked per handle, so the same person always sees the same line and fifty different people do not all get an identical comment. Every line must say where the message actually is: the requests folder. The site itself uses no emoji on purpose (see CLAUDE.md) - these lines and the bio are the one deliberate exception, because a comment in a feed and a bio on a profile are competing for a glance, and plain text loses.",
-    "comments": [
-      "🔴 someone left you an ANONYMOUS message on beatass.com. instagram filed it under your DM requests",
-      "👀 we passed you an anonymous message and instagram hid it in your DM REQUESTS. worth a look",
-      "🔴 check your DM REQUESTS. somebody sent you an anonymous message through beatass.com",
-      "👉 there is an ANONYMOUS message waiting for you in your DM requests, from beatass.com",
-      "💀 you have an anonymous message from beatass.com sitting in your DM REQUESTS folder"
-    ],
-
-    "_bio": "Our own profile bio, 150 characters max. Someone we just followed clicks the notification, lands here, and this is the only thing that tells them why - so it leads with the instruction, not with the brand. Set it with: node tools/instagram/outreach.mjs --bio --apply",
-    "bio": "🔴 CHECK YOUR DM REQUESTS 🔴\nsomebody sent you an anonymous message. instagram hid it there.\n💀 say yours: beatass.com"
-  },
-
-  "_headless": "false lets you watch it work, which is what you want the first few times. true runs it invisibly.",
-  "headless": false
+  "petty": [
+   "post",
+   "story"
+  ],
+  "sad": [
+   "post",
+   "story"
+  ],
+  "soft": [
+   "post",
+   "story"
+  ],
+  "default": [
+   "post"
+  ]
+ },
+ "caption": "say the thing you'd never say. anonymous, free, at beatass.com",
+ "hashtags": [
+  "beatass",
+  "anonymousmessage",
+  "confession",
+  "sendit",
+  "voodoodoll"
+ ],
+ "_outreach": "A DM from an account you do not follow lands in Instagram's 'Message requests' folder, which most people never open. These three things point people at that folder: we follow them (so they get a notification and read our bio), our bio tells them a message is waiting, and we leave one comment on their latest post. Set follow or comment to false to switch either off without touching code. The per-day numbers are deliberately below what Instagram tolerates - follows and comments to strangers are what gets an account limited, and a limited account cannot DM anybody.",
+ "outreach": {
+  "follow": true,
+  "comment": true,
+  "followPerDay": 25,
+  "commentPerDay": 15,
+  "_comments": "One is picked per handle, so the same person always sees the same line and fifty different people do not all get an identical comment. Every line must say where the message actually is: the requests folder. The site itself uses no emoji on purpose (see CLAUDE.md) - these lines and the bio are the one deliberate exception, because a comment in a feed and a bio on a profile are competing for a glance, and plain text loses.",
+  "comments": [
+   "🔴 someone left you an ANONYMOUS message on beatass.com. instagram filed it under your DM requests",
+   "👀 we passed you an anonymous message and instagram hid it in your DM REQUESTS. worth a look",
+   "🔴 check your DM REQUESTS. somebody sent you an anonymous message through beatass.com",
+   "👉 there is an ANONYMOUS message waiting for you in your DM requests, from beatass.com",
+   "💀 you have an anonymous message from beatass.com sitting in your DM REQUESTS folder"
+  ],
+  "_bio": "Our own profile bio, 150 characters max. Someone we just followed clicks the notification, lands here, and this is the only thing that tells them why - so it leads with the instruction, not with the brand. Set it with: node tools/instagram/outreach.mjs --bio --apply",
+  "bio": "🔴 CHECK YOUR DM REQUESTS 🔴\nSecrets, unsent texts, and fictional twists. Say it anonymously at beatass.com."
+ },
+ "_headless": "false lets you watch it work, which is what you want the first few times. true runs it invisibly.",
+ "headless": false
 }
