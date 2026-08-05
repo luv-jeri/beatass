@@ -114,7 +114,7 @@ export function entryState(entry, maxTries = MAX_TRIES) {
 function recordPartial(sent, id, bubbles, reason) {
   const prev = (sent[id] && typeof sent[id] === 'object') ? sent[id] : { attempts: 0, partial: 0 };
   const entry = {
-    partial: Math.max(bubbles, prev.partial || 0),   // bubbles never un-send
+    partial: Math.max(bubbles || 0, prev.partial || 0),   // bubbles never un-send; 0/undefined = failed before any went
     attempts: (prev.attempts || 0) + 1,
     reason: String(reason).slice(0, 160),
     last: new Date().toISOString()
@@ -232,6 +232,10 @@ if (args.includes('--selftest')) {
   eq('a resume starts after the bubbles that landed', entryState({ partial: 1, attempts: 1 }).startAt, 1);
   eq('three failed tries give up', entryState({ partial: 1, attempts: 3 }).kind, 'gaveup');
   eq('a malformed entry cannot loop forever', entryState({ attempts: 99 }).kind, 'gaveup');
+  /* the bug found live: a failure before any bubble (bad handle) must still count
+     and give up, or it relaunches a browser every couple of minutes for good. */
+  eq('one pre-send failure still retries', entryState({ partial: 0, attempts: 1 }).kind, 'resume');
+  eq('a failure before any bubble gives up after MAX_TRIES', entryState({ partial: 0, attempts: 3 }).kind, 'gaveup');
   const long = 'x'.repeat(400);
   eq('short body is quoted whole', dmPreview('you never called back').text, 'you never called back');
   eq('short body is not clipped', dmPreview('hi').clipped, false);
@@ -413,19 +417,28 @@ if (AUTO) {
         evt('delivered', { id: r.id, handle: r.to_handle, bubbles: 3, dry: DRY });
       } catch (e) {
         const line = e.message.split('\n')[0];
-        if (e.partsSent !== undefined && !DRY) {
-          /* Half-delivered. Recorded as a PARTIAL, not as sent: the resume rule
-             (entryState) brings it back next run, starting at the first bubble
-             that never went - so the confession and the link do arrive, and the
-             bubbles that already landed are never repeated. */
-          landed = e.partsSent;
-          const entry = recordPartial(sent, r.id, e.partsSent, line);
-          if (e.partsSent > st.startAt) done++;
+        if (!DRY) {
+          /* Any real-run failure is recorded as an ATTEMPT, never as sent, so
+             entryState resumes the bubbles that landed and - crucially - GIVES UP
+             after MAX_TRIES instead of retrying forever. Two shapes land here:
+               - half-delivered (some bubbles out): partsSent > 0, resume the rest;
+               - failed before a single bubble (bad handle, thread won't open):
+                 partsSent is undefined -> treat as 0.
+             The wrong-handle case used to fall through recording NOTHING, so a
+             non-existent @handle relaunched a browser every couple of minutes
+             for good (found live: 454 attempts on one bad handle). If a give-up
+             was really a transient blip, `node tools/status.mjs retry <id>`
+             clears the state and the next run tries again. */
+          const outNow = e.partsSent || 0;
+          landed = outNow;
+          const entry = recordPartial(sent, r.id, outNow, line);
+          if (outNow > st.startAt) done++;
           const gaveUp = entry.attempts >= MAX_TRIES;
-          say(`    PARTIAL [${r.id}]: ${e.partsSent} of 3 bubbles out (try ${entry.attempts} of ${MAX_TRIES}${gaveUp ? ' - GIVING UP' : ', will resume'}): ${line}`);
-          evt(gaveUp ? 'gave-up' : 'partial', { id: r.id, handle: r.to_handle, bubbles: e.partsSent, attempts: entry.attempts, error: line });
+          const what = outNow > 0 ? `${outNow} of 3 bubbles out` : 'failed before any bubble';
+          say(`    ${gaveUp ? 'GIVING UP' : 'will retry'} [${r.id}]: ${what} (try ${entry.attempts} of ${MAX_TRIES}): ${line}`);
+          evt(gaveUp ? 'gave-up' : (outNow > 0 ? 'partial' : 'retry'), { id: r.id, handle: r.to_handle, bubbles: outNow, attempts: entry.attempts, error: line });
         } else {
-          say(`    skipped [${r.id}]: ${line}`);
+          say(`    walk skipped [${r.id}]: ${line}`);
           evt('skip', { id: r.id, handle: r.to_handle, error: line });
         }
         await page.screenshot({ path: path.join(HERE, 'last-failure.png') }).catch(() => {});
