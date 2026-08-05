@@ -486,28 +486,34 @@ if (AUTO) {
           await page.waitForTimeout(pause);
         }
       } catch (e) {
-        if (e.partsSent) {
-          /* Some bubbles landed. Record it anyway - a retry would repeat them. */
-          recordSent(sent, r.id);
-          done++;
-          say(`    PARTIAL [${r.id}]: ${e.partsSent} of 3 sent, then: ${e.message.split('\n')[0]}`);
-          evt('partial', { id: r.id, to: mask(r.to_whatsapp), bubbles: e.partsSent, error: e.message.split('\n')[0] });
-        } else if (e.undeliverable) {
-          /* Still not recorded as SENT - nothing was delivered, and the log must
-             never claim otherwise. Recorded as a failed ATTEMPT instead, so the
-             same wrong number cannot be retried every minute until the end of
-             time. After MAX_TRIES it drops out of the queue for good. */
+        if (e.undeliverable) {
+          /* Nothing was delivered - the number is not on WhatsApp. Recorded as a
+             failed ATTEMPT (never as sent), against the message AND the number, so
+             the same wrong number is not retried every minute. Drops out of the
+             queue after MAX_TRIES. */
           const at = recordFailure(sent, r.id, 'not-on-whatsapp');
-          /* and against the number, so the NEXT message to it is skipped
-             without opening a browser at all */
           recordFailure(sent, deadKey(r.to_whatsapp), 'not-on-whatsapp');
           evt(at.attempts >= MAX_TRIES ? 'gave-up' : 'undeliverable', { id: r.id, to: mask(r.to_whatsapp), attempts: at.attempts });
           say(at.attempts >= MAX_TRIES
             ? `    undeliverable [${r.id}]: ${e.message}. Giving up after ${at.attempts} tries - it will not be retried.`
             : `    undeliverable [${r.id}]: ${e.message}. Try ${at.attempts} of ${MAX_TRIES}.`);
         } else {
-          say(`    skipped [${r.id}]: ${e.message.split('\n')[0]}`);
-          evt('skip', { id: r.id, to: mask(r.to_whatsapp), error: e.message.split('\n')[0] });
+          /* A partial (some bubbles out) OR a failure before any went. NEVER mark
+             it delivered. A partial used to be recorded as SENT, which left the
+             recipient with only the intro bubble - no confession, no link - and no
+             retry ever fixed it (found live 2026-08-05: a message stuck 'delivered'
+             at 1 of 3). A 0-bubble failure used to fall through recording nothing
+             and retried forever. Both are now a failed ATTEMPT: the whole message
+             is re-sent next run (a repeated intro is a small price for the
+             confession and link actually arriving) and it gives up after
+             MAX_TRIES. A transient glitch clears on the retry; `status.mjs retry`
+             re-arms a false give-up. */
+          const outNow = e.partsSent || 0;
+          const first = e.message.split('\n')[0];
+          const at = recordFailure(sent, r.id, outNow ? `partial ${outNow}/3: ${first}` : first);
+          const gaveUp = at.attempts >= MAX_TRIES;
+          say(`    ${gaveUp ? 'GIVING UP' : 'will retry'} [${r.id}]: ${outNow} of 3 sent, ${first} (try ${at.attempts} of ${MAX_TRIES})`);
+          evt(gaveUp ? 'gave-up' : (outNow ? 'partial' : 'retry'), { id: r.id, to: mask(r.to_whatsapp), bubbles: outNow, attempts: at.attempts, error: first });
         }
         await page.screenshot({ path: path.join(HERE, 'last-failure.png') }).catch(() => {});
       }
