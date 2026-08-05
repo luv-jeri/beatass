@@ -1,0 +1,442 @@
+[
+ {
+  "word": "I",
+  "start": 0,
+  "end": 0.07
+ },
+ {
+  "word": "spent",
+  "start": 0.139,
+  "end": 0.313
+ },
+ {
+  "word": "the",
+  "start": 0.337,
+  "end": 0.406
+ },
+ {
+  "word": "night",
+  "start": 0.453,
+  "end": 0.604
+ },
+ {
+  "word": "in",
+  "start": 0.639,
+  "end": 0.708
+ },
+ {
+  "word": "a",
+  "start": 0.743,
+  "end": 0.766
+ },
+ {
+  "word": "diner",
+  "start": 0.824,
+  "end": 1.08
+ },
+ {
+  "word": "that",
+  "start": 1.115,
+  "end": 1.231
+ },
+ {
+  "word": "burned",
+  "start": 1.265,
+  "end": 1.474
+ },
+ {
+  "word": "down",
+  "start": 1.498,
+  "end": 1.649
+ },
+ {
+  "word": "forty",
+  "start": 1.753,
+  "end": 2.009
+ },
+ {
+  "word": "years",
+  "start": 2.043,
+  "end": 2.229
+ },
+ {
+  "word": "ago.",
+  "start": 2.264,
+  "end": 2.682
+ },
+ {
+  "word": "My",
+  "start": 3.286,
+  "end": 3.39
+ },
+ {
+  "word": "car",
+  "start": 3.448,
+  "end": 3.646
+ },
+ {
+  "word": "died",
+  "start": 3.692,
+  "end": 3.855
+ },
+ {
+  "word": "in",
+  "start": 3.889,
+  "end": 3.947
+ },
+ {
+  "word": "a",
+  "start": 3.982,
+  "end": 4.017
+ },
+ {
+  "word": "thunderstorm,",
+  "start": 4.063,
+  "end": 4.772
+ },
+ {
+  "word": "but",
+  "start": 4.923,
+  "end": 5.039
+ },
+ {
+  "word": "a",
+  "start": 5.074,
+  "end": 5.097
+ },
+ {
+  "word": "red",
+  "start": 5.155,
+  "end": 5.283
+ },
+ {
+  "word": "OPEN",
+  "start": 5.329,
+  "end": 5.515
+ },
+ {
+  "word": "sign",
+  "start": 5.561,
+  "end": 5.782
+ },
+ {
+  "word": "led",
+  "start": 5.828,
+  "end": 5.956
+ },
+ {
+  "word": "me",
+  "start": 5.991,
+  "end": 6.06
+ },
+ {
+  "word": "into",
+  "start": 6.095,
+  "end": 6.246
+ },
+ {
+  "word": "a",
+  "start": 6.281,
+  "end": 6.304
+ },
+ {
+  "word": "warm",
+  "start": 6.339,
+  "end": 6.513
+ },
+ {
+  "word": "booth.",
+  "start": 6.548,
+  "end": 6.92
+ },
+ {
+  "word": "A",
+  "start": 7.442,
+  "end": 7.512
+ },
+ {
+  "word": "smiling",
+  "start": 7.616,
+  "end": 8.011
+ },
+ {
+  "word": "waitress",
+  "start": 8.069,
+  "end": 8.371
+ },
+ {
+  "word": "poured",
+  "start": 8.406,
+  "end": 8.603
+ },
+ {
+  "word": "coffee",
+  "start": 8.638,
+  "end": 9.137
+ },
+ {
+  "word": "while",
+  "start": 9.288,
+  "end": 9.509
+ },
+ {
+  "word": "eight",
+  "start": 9.567,
+  "end": 9.752
+ },
+ {
+  "word": "silent",
+  "start": 9.799,
+  "end": 10.101
+ },
+ {
+  "word": "customers",
+  "start": 10.136,
+  "end": 10.53
+ },
+ {
+  "word": "sat",
+  "start": 10.565,
+  "end": 10.739
+ },
+ {
+  "word": "facing",
+  "start": 10.797,
+  "end": 11.076
+ },
+ {
+  "word": "the",
+  "start": 11.111,
+  "end": 11.18
+ },
+ {
+  "word": "windows.",
+  "start": 11.215,
+  "end": 11.68
+ },
+ {
+  "word": "Whenever",
+  "start": 12.388,
+  "end": 12.701
+ },
+ {
+  "word": "lightning",
+  "start": 12.748,
+  "end": 13.038
+ },
+ {
+  "word": "flashed,",
+  "start": 13.085,
+  "end": 13.595
+ },
+ {
+  "word": "their",
+  "start": 13.781,
+  "end": 13.944
+ },
+ {
+  "word": "reflections",
+  "start": 13.978,
+  "end": 14.42
+ },
+ {
+  "word": "stayed",
+  "start": 14.454,
+  "end": 14.663
+ },
+ {
+  "word": "perfectly",
+  "start": 14.698,
+  "end": 15.035
+ },
+ {
+  "word": "still.",
+  "start": 15.07,
+  "end": 15.476
+ },
+ {
+  "word": "Then",
+  "start": 15.755,
+  "end": 15.894
+ },
+ {
+  "word": "all",
+  "start": 15.941,
+  "end": 16.057
+ },
+ {
+  "word": "eight",
+  "start": 16.103,
+  "end": 16.242
+ },
+ {
+  "word": "heads",
+  "start": 16.277,
+  "end": 16.451
+ },
+ {
+  "word": "snapped",
+  "start": 16.486,
+  "end": 16.776
+ },
+ {
+  "word": "toward",
+  "start": 16.8,
+  "end": 16.985
+ },
+ {
+  "word": "me",
+  "start": 17.02,
+  "end": 17.078
+ },
+ {
+  "word": "at",
+  "start": 17.113,
+  "end": 17.183
+ },
+ {
+  "word": "once.",
+  "start": 17.229,
+  "end": 17.554
+ },
+ {
+  "word": "At",
+  "start": 17.937,
+  "end": 18.077
+ },
+ {
+  "word": "sunrise,",
+  "start": 18.146,
+  "end": 18.657
+ },
+ {
+  "word": "firefighters",
+  "start": 18.681,
+  "end": 19.191
+ },
+ {
+  "word": "dragged",
+  "start": 19.226,
+  "end": 19.482
+ },
+ {
+  "word": "me",
+  "start": 19.505,
+  "end": 19.563
+ },
+ {
+  "word": "from",
+  "start": 19.598,
+  "end": 19.725
+ },
+ {
+  "word": "beneath",
+  "start": 19.76,
+  "end": 19.992
+ },
+ {
+  "word": "the",
+  "start": 20.027,
+  "end": 20.097
+ },
+ {
+  "word": "table.",
+  "start": 20.132,
+  "end": 20.515
+ },
+ {
+  "word": "Around",
+  "start": 20.852,
+  "end": 21.235
+ },
+ {
+  "word": "us",
+  "start": 21.281,
+  "end": 21.351
+ },
+ {
+  "word": "lay",
+  "start": 21.42,
+  "end": 21.537
+ },
+ {
+  "word": "wet",
+  "start": 21.606,
+  "end": 21.792
+ },
+ {
+  "word": "ashes",
+  "start": 21.85,
+  "end": 22.175
+ },
+ {
+  "word": "and",
+  "start": 22.21,
+  "end": 22.291
+ },
+ {
+  "word": "twisted",
+  "start": 22.326,
+  "end": 22.628
+ },
+ {
+  "word": "metal.",
+  "start": 22.674,
+  "end": 23.011
+ },
+ {
+  "word": "The",
+  "start": 23.348,
+  "end": 23.441
+ },
+ {
+  "word": "diner",
+  "start": 23.487,
+  "end": 23.719
+ },
+ {
+  "word": "burned",
+  "start": 23.766,
+  "end": 23.975
+ },
+ {
+  "word": "down",
+  "start": 24.01,
+  "end": 24.149
+ },
+ {
+  "word": "in",
+  "start": 24.184,
+  "end": 24.253
+ },
+ {
+  "word": "1986.",
+  "start": 24.3,
+  "end": 25.078
+ },
+ {
+  "word": "Eight",
+  "start": 25.136,
+  "end": 25.321
+ },
+ {
+  "word": "customers",
+  "start": 25.368,
+  "end": 25.739
+ },
+ {
+  "word": "were",
+  "start": 25.774,
+  "end": 25.902
+ },
+ {
+  "word": "never",
+  "start": 25.96,
+  "end": 26.157
+ },
+ {
+  "word": "found.",
+  "start": 26.204,
+  "end": 26.749
+ }
+]

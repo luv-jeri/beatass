@@ -10,7 +10,7 @@ type Props = {[K in keyof typeof schema]: (typeof schema)[K]['default']};
 // The lone-reply clip; the cliffhanger text rises over it after the VO ends.
 export const Scene: React.FC<Props> = (p) => (
   <AbsoluteFill>
-    <ClipPlayer src={String(p.src)} clipSeconds={Number(p.clipSeconds)} sfxVolume={Number(p.sfxVolume)} />
+    <ClipPlayer src={String(p.src)} clipSeconds={Number(p.clipSeconds)} sfxVolume={Number(p.sfxVolume)} startFromSeconds={Number(p.startFromSeconds)} />
     <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', pointerEvents: 'none'}}>
       <div style={{display: 'flex', flexDirection: 'column', gap: 48, alignItems: 'center', maxWidth: '86%', textAlign: 'center'}}>
         <Reveal at={Number(p.quoteAt)}>

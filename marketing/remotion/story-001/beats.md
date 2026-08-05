@@ -1,18 +1,18 @@
 ---
-project: story-005-hi
+project: story-006-hi
 fps: 30
-vo: vo/story-005-vo-hi.mp3
+vo: vo/story-006-vo-hi.mp3
 timing: locked
 ---
 
 | # | Time | VO | Scene | Assets |
 |---|------|----|-------|--------|
-| B01 | 00:00.0-00:04.5 | ye shaadi rok do | 01-cold-open | |
-| B02 | 00:04.5-00:06.3 | maa ne thappad mara | 02-bear-meme | |
-| B03 | 00:06.3-00:10.2 | ghaseet kar bahar, hall chilla raha tha | 03-silly-secrets | |
-| B04 | 00:10.2-00:14.1 | chehra kabhi nahi dekhna chahti | 04-night-post | |
-| B05 | 00:14.1-00:17.6 | do saal jalne wali dost | 05-the-words | |
-| B06 | 00:17.6-00:22.4 | darwaze par aai, wahi mila | 06-ink-bleed | |
-| B07 | 00:22.4-00:28.0 | doosra phone, shehar, parivaar, beta | 07-case-closed | |
-| B08 | 00:28.0-00:32.2 | kisi ne yakeen nahi kiya | 08-explosion | |
-| B09 | 00:32.2-00:42.7 | villain sawaal + end card | 09-one-reply | |
+| B01 | 00:00.0-00:03.4 | night in the burned cafe (hook) | 01-cold-open | |
+| B02 | 00:03.4-00:07.9 | car died, OPEN sign, warm booth | 02-bear-meme | |
+| B03 | 00:07.9-00:13.3 | waitress + eight silent customers | 03-silly-secrets | |
+| B04 | 00:13.3-00:16.8 | reflections never moved | 04-night-post | |
+| B05 | 00:16.8-00:19.4 | all eight heads snapped | 05-the-words | |
+| B06 | 00:19.4-00:22.0 | firefighters pulled me out | 06-ink-bleed | |
+| B07 | 00:22.0-00:24.7 | ash and twisted metal | 07-case-closed | |
+| B08 | 00:24.7-00:26.8 | cafe burned in 1986 | 08-explosion | |
+| B09 | 00:26.8-00:33.4 | eight never found + end card | 09-one-reply | |
