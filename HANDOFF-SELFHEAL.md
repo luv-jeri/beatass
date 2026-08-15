@@ -203,15 +203,31 @@ gh api -X DELETE repos/luv-jeri/beatass/branches/main/protection
 
 Not part of this loop, but live problems on the product:
 
-- **Delivery is dead behind TWO locks, not one.** All six launchd jobs are disabled (six plists
-  exist in `~/Library/LaunchAgents/`, `launchctl list` shows zero of them loaded), *and*
-  wrangler's auth token has expired — so `wrangler d1 ... --remote` cannot reach the real
-  database at all. Both delivery jobs (`tools/instagram/notify.mjs:86`,
-  `tools/whatsapp/notify.mjs`) read the live database that way, so re-enabling the jobs on its
-  own would only produce six failing runs. Order: `npx wrangler login` in a real terminal first,
-  then load the jobs.
-  `node tools/status.mjs stuck` also hits `--remote` and fails for the same reason; add
-  `--local` and you are reading seeded dev data, not the real backlog.
+- **Delivery: three locks found, two cleared (2026-08-15).**
+  1. ~~Wrangler's auth token had expired~~ — Sanjay ran `npx wrangler login`. Everything
+     `--remote` works again. (`node tools/status.mjs stuck` needs this; without it you get an
+     unhelpful CLOUDFLARE_API_TOKEN error, and `--local` reads seeded dev data, not the real
+     backlog.)
+  2. ~~All six launchd jobs were disabled~~ — and not merely unloaded: they were explicitly
+     `launchctl disable`d, which is why `bootstrap` failed with "Input/output error" until each
+     was `launchctl enable gui/$(id -u)/com.beatass.<name>`d first. All six now load and run.
+  3. **STILL OPEN — the WhatsApp account guard refuses.** WhatsApp Web is signed in, but the
+     profile on the Settings panel is not "Beat Ass" (it shows a flower emoji and the default
+     "Hey there! I am using WhatsApp." status). `ensureAccount` in `wa-send.mjs:66` fails closed
+     and sends nothing. Sanjay: the account number has changed and the new one is the account
+     from now on; **details to be updated later, deferred by him on 2026-08-15.**
+     **Do not make this pass by editing `name` in `~/.config/beatass-whatsapp/config.json` to
+     match whatever is signed in.** That guard is the only thing standing between a stranger's
+     confession and the wrong WhatsApp account — WhatsApp Web prints the phone number nowhere,
+     so the profile name is the only identity signal there is. The right fix is to set the
+     profile name on the phone, or to update the config only after confirming the account.
+  Current state is safe: the lane retries on a 30/60/90/180-minute backoff, sends nothing, and
+  does not open a browser window on screen every minute.
+- **Instagram lane is healthy** and correctly finds nothing eligible.
+- **Three orphaned Instagram messages** (created 2026-08-02) have a handle but **no view token**,
+  and `pending()` requires one — so they have never been eligible and never will be. Bounded and
+  historical: 3 of 60 messages, and everything created since has a token. Minting tokens is a
+  production write with the signing secret, on 13-day-old messages. Sanjay's call, not a fix.
 - ~~`npm test` halts at the outreach selftest~~ **FIXED 2026-08-15.** The seven assertions were
   reading a business setting as if it were the logic under test: they called `outreachPlan` with
   no config, so they inherited the live one, and when outreach was switched off on 2026-08-07
