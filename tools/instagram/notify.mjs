@@ -182,25 +182,31 @@ export function dmPreview(body) {
   return { text: (space > DM_PREVIEW - 60 ? cut.slice(0, space) : cut).trimEnd() + '...', clipped: true };
 }
 
-/* Three bubbles, not one (Sanjay, 2026-08-03): "its very hard to know what is
-   the actual message as its buttered with the admin message". A single blob
-   buries the confession between a greeting and a legal footer. Sent as
-   separate messages, the middle bubble is nothing but their words - which is
-   the only part a stranger actually cares about. */
-export const dmParts = (m, link) => {
+/* One intro line, then their words (Sanjay, 2026-08-06): deliver the confession
+   and step back - no promo, no link, no disclaimer. Bubble 1 says what it is and
+   what can actually happen next; the confession is the LAST bubble,
+   so the phone's notification preview shows the hook - their own words.
+   No link on purpose (Sanjay's call): keep it dead simple and non-spammy - the
+   anyone who wants to send their own is
+   pointed at beatass.com in plain text (a bare brand mention, not a tracking
+   link). The link feature returns later; it just isn't in the message for now.
+   The `link` argument is kept so callers do not have to change when it returns.
+   Instagram DMs render emoji but NOT *bold*, so this stays plain text. */
+export const dmParts = (m, link) => {   // link intentionally unused for now
+  void link;
   const p = dmPreview(m.body);
   const parts = [];
-  if (p.text) {
-    parts.push('hey - someone left you an anonymous message on beatass.com. this is what they said:');
-    parts.push('"' + p.text + '"');
-  } else {
-    parts.push('hey - someone left you an anonymous message on beatass.com.');
-  }
-  parts.push(
-    (p.clipped ? 'read the rest' : 'see what they did to the doll') +
-    ' (and reply to them) here: ' + link + '\n\n' +
-    'this is an automated message from beatass.com. open the link to read it, ' +
-    'share it, report it, or block us so we never message you again.');
+  // 1. what it is + what can actually happen next - no link, no promo, no disclaimer
+  /* This used to say "reply right here if you want to answer them". Nothing on our side
+     ever read those replies (2026-08-15: there is no Instagram inbox reader anywhere in
+     this repo, only the email lane has an inbound handler), so anyone who answered was
+     typing into a void while being told it would reach the sender. That is the honesty
+     law, not a nice-to-have. The promise is removed until something can keep it. */
+  parts.push('hey - someone left you an anonymous confession. we cannot carry a reply ' +
+    'back to them, so there is nothing to answer here - ignore this and you will not ' +
+    'hear from us again. to send one of your own: beatass.com');
+  // 2. LAST, so it is what the notification shows: their own words
+  if (p.text) parts.push('"' + p.text + '"');
   return parts;
 };
 
@@ -251,28 +257,24 @@ if (args.includes('--selftest')) {
   const LINK = 'https://beatass.com/m?id=x&t=y';
   const t = dmText(m, LINK);
   eq('the words are in the DM', t.includes('"i still think about it"'), true);
-  eq('the link is in the DM', t.includes(LINK), true);
-  eq('the reply route is the page', t.includes('reply to them'), true);
-  eq('the opt-out line survives', t.includes('block us so we never message you again'), true);
-  eq('a clipped DM says so', dmText({ body: long }, 'L').includes('read the rest'), true);
-  eq('an empty body still sends a link', dmText({ body: '' }, 'L').includes('L'), true);
+  eq('it does not promise a reply route we do not have', /reply right here/.test(t), false);
+  eq('and it says plainly that a reply cannot be carried back', /cannot carry a reply/.test(t), true);
+  eq('there is no link in the DM', /https?:\/\//.test(t), false);
+  eq('it points to beatass.com for their own', t.includes('beatass.com'), true);
+  eq('an empty body still produces the intro', dmText({ body: '' }).length > 0, true);
 
-  /* The split is the whole point (Sanjay: the confession was "buttered with
-     the admin message"). Bubble 2 must be their words and NOTHING else - if a
-     greeting, a link, or the opt-out line ever creeps back into it, these go
-     red. */
+  /* Simple now (Sanjay, 2026-08-06): one intro line + their words, no link. The
+     LAST bubble must be their words (the notification hook); the intro must carry
+     NO link. If a link creeps into either, these go red. */
   const p = dmParts(m, LINK);
-  eq('a normal DM is three messages', p.length, 3);
-  eq('bubble 2 is only their words', p[1], '"i still think about it"');
-  eq('bubble 2 has no link', p[1].includes('beatass.com'), false);
-  eq('bubble 2 has no greeting', /hey /.test(p[1]), false);
-  eq('bubble 2 has no legal footer', p[1].includes('automated'), false);
-  eq('bubble 1 introduces it', p[0].includes('anonymous message'), true);
-  eq('bubble 1 carries no link', p[0].includes(LINK), false);
-  eq('bubble 3 carries the link', p[2].includes(LINK), true);
-  eq('bubble 3 carries the opt-out', p[2].includes('block us so we never message you again'), true);
-  eq('an empty body drops the quote bubble', dmParts({ body: '' }, 'L').length, 2);
-  eq('a clipped body still splits in three', dmParts({ body: long }, 'L').length, 3);
+  eq('a normal DM is two messages', p.length, 2);
+  eq('the confession is the LAST bubble', p[p.length - 1], '"i still think about it"');
+  eq('the confession bubble is only their words', p[1], '"i still think about it"');
+  eq('the intro carries no link', /https?:\/\//.test(p[0]), false);
+  eq('the intro says what actually happens next', /nothing to answer here/.test(p[0]), true);
+  eq('the intro points them to send their own', p[0].includes('beatass.com'), true);
+  eq('an empty body drops the confession bubble', dmParts({ body: '' }).length, 1);
+  eq('a clipped body still makes two', dmParts({ body: long }).length, 2);
   eq('every bubble fits an Instagram DM', p.every((x) => x.length <= 900), true);
   eq('no bubble is empty', p.every((x) => x.trim().length > 0), true);
 
