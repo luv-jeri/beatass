@@ -13,6 +13,28 @@
  */
 import { spawn, spawnSync } from 'child_process';
 
+/* Do not reuse HTTP connections in this test.
+ *
+ * This file spends most of its life idle: every d1() call spawns `npx wrangler`, which takes
+ * seconds. By the time the next fetch goes out, `wrangler dev` has often closed the pooled
+ * keep-alive socket - and fetch writes the request onto a socket the server already hung up,
+ * which surfaces as `UND_ERR_SOCKET: other side closed` and kills the run.
+ *
+ * It broke a deploy on 2026-08-15 while the identical commit had passed CI four minutes
+ * earlier, which is the signature of a timing flake rather than a defect.
+ *
+ * A fresh connection per request removes the race instead of papering over it. Deliberately NOT
+ * a retry: a retry has to guess whether the first attempt reached the Worker, and guessing wrong
+ * files the same bug report twice. This test counts rows, so a phantom duplicate would show up
+ * as an unrelated assertion failing, and we would be debugging the wrong thing.
+ *
+ * Wrapped because undici arrives here through wrangler rather than as our own dependency. If it
+ * is ever missing, the test still runs - it just runs with the old race. */
+try {
+  const { Agent, setGlobalDispatcher } = await import('undici');
+  setGlobalDispatcher(new Agent({ pipelining: 0, keepAliveTimeout: 1, keepAliveMaxTimeout: 1 }));
+} catch { /* no undici on the path: carry on, the race is rare */ }
+
 const PORT = 8791;
 const BASE = 'http://127.0.0.1:' + PORT;
 const SECRET = 'bug-intake-test-secret';
