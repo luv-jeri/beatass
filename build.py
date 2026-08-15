@@ -227,6 +227,37 @@ def build_pages(public: pathlib.Path, app_html: str) -> int:
         print(f"copied {n} sound effects into public/sfx/")
     else:
         print("!! no design/assets/sfx - the doll will fall back to synthesised sound")
+
+    # The bug reporter, copied rather than inlined. Everything else the page
+    # needs is baked in, because it has to work as one file. This is the
+    # deliberate exception: almost nobody opens the report sheet, so making
+    # every visitor download it would be a tax paid by the wrong people. The
+    # page carries a small stub instead and fetches these two on first click.
+    # bugreport.js ships with the screenshot library glued on the front, the
+    # same way vendor/gif.js is baked into the page: the library is committed
+    # pre-built, so a normal build stays "python3 build.py" with no bundler.
+    # Rebuild the vendored file only when the dependency changes:
+    #   npx esbuild <entry> --bundle --minify --format=iife \
+    #     --outfile=bugreport/vendor-screenshot.js
+    parts = []
+    for name in ("vendor-screenshot.js", "bugreport.js"):
+        src = HERE / "bugreport" / name
+        if not src.is_file():
+            raise SystemExit(
+                f"!! bugreport/{name} is missing - the report button would break. "
+                "It is a real file, not generated; restore it from git."
+            )
+        parts.append(src.read_text(encoding="utf-8"))
+    (public / "bugreport.js").write_text("\n;\n".join(parts), encoding="utf-8")
+
+    css = HERE / "bugreport" / "bugreport.css"
+    if not css.is_file():
+        raise SystemExit("!! bugreport/bugreport.css is missing")
+    (public / "bugreport.css").write_text(css.read_text(encoding="utf-8"), encoding="utf-8")
+
+    size = (public / "bugreport.js").stat().st_size / 1024
+    print(f"copied the bug reporter into public/ ({size:.0f} KB js + css, loaded on demand)")
+
     # Real favicon files: Google's favicon crawler cannot read the inline
     # data-URI icon, so search results show a grey globe without these.
     png = HERE / "design" / "assets" / "brand" / "png"

@@ -29,10 +29,20 @@ const RATE_WINDOW = 60 * 60;       // per hour, per IP
 const RELAY_LIMIT = 20;            // relayed mail-app replies (Sanjay's ceiling, 2026-08-02)
 const RELAY_WINDOW = 60 * 60 * 24; // per writer, per day
 
-const json = (obj, status = 200) =>
+/* Bug reports. Smaller ceilings than a confession on purpose: a report is
+   words plus a little evidence, and anything larger is either a mistake or
+   somebody probing. */
+const BUG_LIMIT = 6;               // reports
+const BUG_WINDOW = 60 * 60;        // per hour, per IP
+const BUG_MAX_TOTAL = 4 * 1024 * 1024;
+const BUG_MAX_SHOT = 1024 * 1024;
+const BUG_MAX_SHOTS = 5;    // Sanjay's ceiling, 2026-08-15
+const BUG_MAX_ELEMENTS = 20; // ditto
+
+const json = (obj, status = 200, extra) =>
   new Response(JSON.stringify(obj), {
     status,
-    headers: { 'content-type': 'application/json; charset=utf-8' }
+    headers: Object.assign({ 'content-type': 'application/json; charset=utf-8' }, extra || {})
   });
 
 const okEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s);
@@ -116,18 +126,10 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
         HL = '#ffe873';
   const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
 
-  // Let the recipient broadcast it. Email can't do a native share sheet, so
-  // these are plain links; "Open & share the clip" hands off to the /m page,
-  // which has the real Share button. The sender is never named in any of it.
-  const shareText = "someone said the thing they'd never say about me \u{1F440} beatass.com";
-  const xShare = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText) + '&url=' + encodeURIComponent('https://beatass.com');
-  const waShare = 'https://wa.me/?text=' + encodeURIComponent(shareText + ' https://beatass.com');
-  // Instagram has no link that can pre-fill a post from an email - it simply
-  // does not exist, and pretending otherwise would send people to a dead end.
-  // So this one opens the clip page, where the phone's own share sheet can
-  // hand the actual video to Instagram. ?to=ig lets that page lead with it.
-  const igShare = pageUrl + (pageUrl.includes('?') ? '&' : '?') + 'to=ig';
-
+  // Sharing lives on the clip page (viewPage), not in this first email. A cold
+  // first email with a pile of share links reads as marketing and hurts inbox
+  // placement (2026-08-05 research); once they open their clip they get a real
+  // share sheet there. So this email carries one job: read it and reply.
   return `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light only">
@@ -171,13 +173,13 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
              font, so the one thing that makes this product look like itself has
              to arrive as pixels or not at all. Drawn at 2x by
              tools/make-email-header.mjs from the same doll the site uses. -->
-        <a href="${pageUrl}" style="text-decoration:none"><img src="${pageUrl}/email-header.png" alt="beatass - say the thing you'd never say" width="536" style="display:block;width:100%;max-width:536px;height:auto;border:0"></a>
+        <img src="${pageUrl}/email-header.png" alt="beatass - say the thing you'd never say" width="536" style="display:block;width:100%;max-width:536px;height:auto;border:0">
 
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="pad" style="padding:4px 26px 22px">
 
         <!-- highlighter on the domain, as the site marks a word worth keeping.
              A flat background rather than a gradient: Outlook drops gradients. -->
-        <p class="greet" style="margin:0 0 22px;font-family:${SANS};font-size:16px;line-height:1.7;color:${SOFT}">Hi ${esc(name)}, someone used <a href="${pageUrl}" style="background:${HL};color:${INK};font-weight:700;text-decoration:underline;padding:2px 5px;border-radius:4px 6px 3px 5px">beatass.com</a> to say something to you. They chose to stay anonymous.</p>
+        <p class="greet" style="margin:0 0 22px;font-family:${SANS};font-size:16px;line-height:1.7;color:${SOFT}">Hi ${esc(name)}, someone used <span style="background:${HL};color:${INK};font-weight:700;padding:2px 5px;border-radius:4px 6px 3px 5px">beatass.com</span> to leave you an anonymous confession.</p>
 
         <!-- The message is the whole reason this email exists, so it gets to be
              the loudest thing in it. Everything above and below is deliberately
@@ -192,55 +194,30 @@ function emailHtml({ name, body, stats, caption, gifUrl, pageUrl, blockUrl, repo
         ${gifUrl ? `
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px">
           <tr><td align="center" style="padding:0">
-            <a href="${pageUrl}" style="text-decoration:none"><img src="${gifUrl}" alt="What they did to the doll" width="300" class="doll" style="display:block;max-width:100%;border:2px solid ${INK};border-radius:9px 12px 8px 11px"></a>
+            <img src="${gifUrl}" alt="What they did to the doll" width="300" class="doll" style="display:block;max-width:100%;border:2px solid ${INK};border-radius:9px 12px 8px 11px">
           </td></tr>
           ${line ? `<tr><td align="center" style="padding:11px 0 0;font-family:${SANS};font-size:14px;color:${RED}">${line}</td></tr>` : ''}
         </table>` : (line ? `<p style="margin:18px 0 0;text-align:center;font-family:${SANS};font-size:14px;color:${RED}">${line}</p>` : '')}
 
 ${replyUrl ? `
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px">
-          <tr><td align="center" style="padding:22px 0 0;border-top:2px dotted ${FAINT}">
-            <p style="margin:0 0 4px;font-family:${SANS};font-size:15px;line-height:1.5;color:${INK};font-weight:700">Want to answer them?</p>
-            <p style="margin:0 0 16px;font-family:${SANS};font-size:14px;line-height:1.5;color:${SOFT}">Whoever sent this left a way to hear back.<br>Hit reply, or use the button. They stay anonymous either way.</p>
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr>
-              <td align="center" style="background:${RED};border-radius:10px 13px 9px 12px">
-                <a href="${replyUrl}" class="cta" style="display:inline-block;color:#ffffff;font-family:${SANS};font-size:18px;font-weight:700;text-decoration:none;padding:15px 34px">Reply to them</a>
-              </td>
-            </tr></table>
-            <p style="margin:12px 0 0;font-family:${SANS};font-size:12px;color:${FAINT}"><a href="${pageUrl}" style="color:${SOFT}">or send a fresh one of your own</a></p>
+        <!-- Reply-in-place (Sanjay, 2026-08-06): no button, no link. The sender
+             left a way to hear back, so replying to this email relays to them
+             through reply+<id>@ and they stay anonymous. -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:28px">
+          <tr><td style="padding:20px 0 0;border-top:2px dotted ${FAINT}">
+            <p style="margin:0 0 4px;font-family:${SANS};font-size:15px;line-height:1.6;color:${INK};font-weight:700">Want to reply?</p>
+            <p style="margin:0;font-family:${SANS};font-size:14px;line-height:1.6;color:${SOFT}">Just reply to this email and we'll pass it back to them - you both stay anonymous. Want to send one of your own? Visit beatass.com. Not interested? Just ignore this and you won't hear from us again.</p>
           </td></tr>
         </table>` : `
-        <!-- The one thing people asked for and could not find: how to send one
-             back. Reply goes to us, not to them, so a button is the only honest
-             answer to "how do I respond to this?" -->
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px">
-          <tr><td align="center" style="padding:22px 0 0;border-top:2px dotted ${FAINT}">
-            <p style="margin:0 0 4px;font-family:${SANS};font-size:15px;line-height:1.5;color:${INK};font-weight:700">Want to say something back?</p>
-            <!-- Nothing here can say "him" or "her". The whole point is that the
-                 person reading this does not know who sent it, and guessing
-                 wrong is the one thing that would break the spell. -->
-            <p style="margin:0 0 16px;font-family:${SANS};font-size:14px;line-height:1.5;color:${SOFT}">Hitting reply reaches us, not them.<br>Send one of your own instead:</p>
-            <!-- a table around the button so Outlook gives it real edges -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto"><tr>
-              <td align="center" style="background:${RED};border-radius:10px 13px 9px 12px">
-                <a href="${pageUrl}" class="cta" style="display:inline-block;color:#ffffff;font-family:${SANS};font-size:18px;font-weight:700;text-decoration:none;padding:15px 34px">Send one back</a>
-              </td>
-            </tr></table>
-            <p style="margin:12px 0 0;font-family:${SANS};font-size:12px;color:${FAINT}">Free. Anonymous. No sign-up. Ten seconds.</p>
+        <!-- No reply address left, so a reply cannot reach the sender. We say so
+             honestly (nothing that guesses "him"/"her") and point them at the
+             site to send their own - as plain text, not a link. -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:28px">
+          <tr><td style="padding:20px 0 0;border-top:2px dotted ${FAINT}">
+            <p style="margin:0 0 4px;font-family:${SANS};font-size:15px;line-height:1.6;color:${INK};font-weight:700">Want to reply?</p>
+            <p style="margin:0;font-family:${SANS};font-size:14px;line-height:1.6;color:${SOFT}">Whoever sent this stayed fully anonymous, so a reply can't reach them - but you can send one of your own at beatass.com. Not interested? Just ignore this and you won't hear from us again.</p>
           </td></tr>
         </table>`}
-
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:26px">
-          <tr><td align="center" style="padding:18px 0 0;border-top:2px dotted ${FAINT}">
-            <p style="margin:0 0 14px;font-family:${SANS};font-size:16px;font-weight:700;line-height:1.4;color:${SOFT}">Someone put you on the doll. Show them you saw it.</p>
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto"><tr>
-              <td style="padding:0 5px"><a href="${igShare}" style="display:inline-block;background:${RED};color:#ffffff;font-family:${SANS};font-size:15px;font-weight:700;text-decoration:none;padding:13px 20px;border-radius:22px 8px 24px 7px/7px 25px 6px 23px">Instagram</a></td>
-              <td style="padding:0 5px"><a href="${waShare}" style="display:inline-block;background:${RED};color:#ffffff;font-family:${SANS};font-size:15px;font-weight:700;text-decoration:none;padding:13px 20px;border-radius:8px 24px 7px 22px/25px 6px 23px 7px">WhatsApp</a></td>
-              <td style="padding:0 5px"><a href="${xShare}" style="display:inline-block;background:${RED};color:#ffffff;font-family:${SANS};font-size:15px;font-weight:700;text-decoration:none;padding:13px 20px;border-radius:24px 7px 22px 8px/6px 23px 25px 7px">X</a></td>
-            </tr></table>
-            <p style="margin:12px 0 0;font-family:${SANS};font-size:13px;line-height:1.5;color:${FAINT}">Instagram opens your clip, then use your phone's share button. <a href="${pageUrl}" style="color:${RED};font-weight:700;text-decoration:none">Or just open it here.</a></p>
-          </td></tr>
-        </table>
 
         <p style="margin:28px 0 6px;font-family:${SANS};font-size:12px;line-height:1.5;color:${FAINT};border-top:1px solid ${FAINT};padding-top:16px">You're getting this because someone entered your address on beatass.com. We never share who sent it, and we never will.</p>
         <p style="margin:0;font-family:${SANS};font-size:12px;color:${FAINT}"><a href="${reportUrl}" style="color:${SOFT}">Report this</a> &nbsp;&middot;&nbsp; <a href="${blockUrl}" style="color:${SOFT}">Block my address forever</a></p>
@@ -1582,8 +1559,8 @@ async function handle(request, env, ctx) {
           subject: `${name}, someone finally said it`,
           html: emailHtml({ name, body, stats, caption, gifUrl, pageUrl: site, blockUrl, reportUrl, replyUrl }),
           text: senderEmail
-            ? `Hi ${name}, somebody used beatass.com to say something to you. They chose to stay anonymous.\n\n"${body}"\n\nThey left a way to hear back. Reply to this email and it reaches them (they stay anonymous), or write it here:\n${replyUrl}\n\nSend one of your own - free, anonymous, no sign-up:\n${site}\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`
-            : `Hi ${name}, somebody used beatass.com to say something to you. They chose to stay anonymous.\n\n"${body}"\n\nThey stayed anonymous, so a reply can't reach them - hit reply and we'll tell you so, we won't leave you hanging. To say something back, send your own - free, anonymous, no sign-up:\n${site}\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`,
+            ? `Hi ${name}, someone used beatass.com to leave you an anonymous confession.\n\n"${body}"\n\nWant to reply? Just reply to this email and we'll pass it back to them - you both stay anonymous. Want to send one of your own? Visit beatass.com. Not interested? Just ignore this and you won't hear from us again.\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`
+            : `Hi ${name}, someone used beatass.com to leave you an anonymous confession.\n\n"${body}"\n\nWhoever sent this stayed anonymous, so a reply can't reach them - but you can send one of your own at beatass.com. Not interested? Just ignore this and you won't hear from us again.\n\nBlock your address forever: ${blockUrl}\nReport this: ${reportUrl}`,
           // one-click unsubscribe: mail providers treat this as a strong
           // positive signal, and it keeps us out of the spam folder
           headers: { 'List-Unsubscribe': `<${blockUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }
@@ -1598,6 +1575,130 @@ async function handle(request, env, ctx) {
       }
 
       return json({ ok: true, id: mid });
+    }
+
+    /* ---------- POST /api/bug ----------
+       Where a bug report lands. It is the front door of the self-healing loop:
+       everything downstream - the triage, the issue, the fix, the reply to the
+       person who reported it - reads the row this route writes.
+
+       Three things this route is deliberately strict about:
+
+       1. It re-checks the browser's privacy work. The reporter in the page
+          scrubs the confession, the contacts and the ?t= tokens before sending,
+          but a route that TRUSTS a client to have done that is one stale cached
+          script away from storing the thing it promised never to store. So the
+          same rules run again here, server side, and anything still carrying a
+          token is refused outright rather than quietly cleaned - a bundle that
+          should have been scrubbed and was not means the client is wrong, and
+          we want to hear about that loudly.
+       2. It is cheap to refuse. The rate limit and the size check happen before
+          any parsing, because parsing a multipart body is the expensive part
+          and an abuser should not get to make us do it.
+       3. It stores, and stops. No email goes out from here, to anyone. */
+    if (path === '/api/bug' && request.method === 'POST') {
+      const ip = request.headers.get('CF-Connecting-IP') || '0.0.0.0';
+      const ipHash = await hashIp(env.BLOCK_SECRET, ip);
+
+      /* Same-origin only. A bug report is a thing our own page sends; nobody
+         else has any business posting one from a visitor's browser. */
+      const originOk = (() => {
+        /* Compared against the host this request actually arrived at, NOT the
+           configured SITE_URL. Tying it to config means a preview deploy, a
+           workers.dev address or a domain change silently refuses every report
+           and nobody finds out, because the failure looks like silence. The
+           host in front of us is right by construction. */
+        const o = request.headers.get('Origin');
+        if (o) { try { return new URL(o).host === url.host; } catch { return false; } }
+        /* No Origin header at all means a same-origin form post from an older
+           browser. Sec-Fetch-Site, where present, is the better signal. */
+        const sfs = request.headers.get('Sec-Fetch-Site');
+        return !sfs || sfs === 'same-origin' || sfs === 'none';
+      })();
+      if (!originOk) return json({ error: 'Not allowed from here.' }, 403);
+
+      const declared = parseInt(request.headers.get('content-length') || '0', 10);
+      if (declared > BUG_MAX_TOTAL) return json({ error: 'That report is too big.' }, 413);
+
+      const rateKey = 'b:' + ipHash;
+      const used = parseInt((await env.RATE.get(rateKey)) || '0', 10);
+      if (used >= BUG_LIMIT)
+        return json({ error: "That's enough reports for one hour. Come back later." }, 429, {
+          'retry-after': String(BUG_WINDOW)
+        });
+      await env.RATE.put(rateKey, String(used + 1), { expirationTtl: BUG_WINDOW });
+
+      let form;
+      try { form = await request.formData(); }
+      catch { return json({ error: 'Malformed report.' }, 400); }
+
+      const raw = form.get('bundle');
+      if (!raw) return json({ error: 'Nothing to report.' }, 400);
+
+      let bundle;
+      try { bundle = JSON.parse(typeof raw === 'string' ? raw : await raw.text()); }
+      catch { return json({ error: 'Malformed report.' }, 400); }
+      if (!bundle || typeof bundle !== 'object') return json({ error: 'Malformed report.' }, 400);
+
+      const note = String(bundle.note || '').trim().slice(0, 4000);
+      if (note.length < 5) return json({ error: 'Tell us a little more.' }, 400);
+
+      const replyEmail = String(bundle.replyEmail || '').trim().toLowerCase().slice(0, 200);
+      if (replyEmail && !okEmail(replyEmail))
+        return json({ error: 'That email looks wrong. Fix it or leave it empty.' }, 400);
+
+      /* The privacy re-check. A signed token or a /m link in here means the
+         browser-side scrubber did not run - refuse, and say so plainly. */
+      const flat = JSON.stringify(bundle);
+      if (/[?&]t=[a-f0-9]{8,}/i.test(flat) || /\b[a-f0-9]{32,}\b/i.test(flat))
+        return json({ error: 'That report carried something private and was not stored. Please reload the page and try again.' }, 422);
+
+      const kind = /^[a-z]{1,20}$/.test(String(bundle.kind || '')) ? bundle.kind : 'bug';
+      /* the browser already limits these; the server does not take its word for it */
+      if (Array.isArray(bundle.elements) && bundle.elements.length > BUG_MAX_ELEMENTS)
+        bundle.elements = bundle.elements.slice(0, BUG_MAX_ELEMENTS);
+      const route = String((bundle.page && bundle.page.route) || '').slice(0, 200).split('?')[0];
+
+      const bid = id16();
+
+      /* Images before the row, and the row records what actually landed - so a
+         half-finished upload can never leave the case pointing at a key that
+         does not exist. */
+      const shotKeys = [];
+      for (const [field, value] of form.entries()) {
+        if (!field.startsWith('shot-') || typeof value === 'string') continue;
+        if (shotKeys.length >= BUG_MAX_SHOTS) break;
+        if (!value.size || value.size > BUG_MAX_SHOT) continue;
+        const key = 'bug/' + bid + '-' + shotKeys.length + '.png';
+        try {
+          await env.MEDIA.put(key, value.stream(), { httpMetadata: { contentType: 'image/png' } });
+          shotKeys.push(key);
+        } catch (err) {
+          /* an image is evidence, not the report - losing one must not lose the words */
+          console.error('bug shot put failed', err && err.stack || String(err));
+        }
+      }
+
+      try {
+        await env.DB.prepare(
+          `INSERT INTO bug_reports (id, ts, kind, note, reply_email, route, bundle_json, shot_keys, truncated, sender_hash, state)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'received')`
+        ).bind(
+          bid, Math.floor(Date.now() / 1000), kind, note, replyEmail || '', route,
+          JSON.stringify(bundle).slice(0, 600000), JSON.stringify(shotKeys),
+          bundle.truncated ? 1 : 0, ipHash
+        ).run();
+      } catch (err) {
+        console.error('bug insert failed', err && err.stack || String(err));
+        /* Clean up what we just uploaded rather than leaving orphans behind. */
+        for (const k of shotKeys) { try { await env.MEDIA.delete(k); } catch { /* best effort */ } }
+        return json({ error: 'We could not store that. Try again in a minute.' }, 503);
+      }
+
+      if (ctx && ctx.waitUntil)
+        ctx.waitUntil(logEvent(env, { msg_id: bid, channel: 'bug', action: 'received', sender_hash: ipHash, detail: kind + ' ' + route }));
+
+      return json({ ok: true, id: bid });
     }
 
     /* Assets are configured with html_handling "none" so every file is served
