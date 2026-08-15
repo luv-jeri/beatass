@@ -635,10 +635,36 @@ async function adminData(env, query) {
   const vPaths = await env.DB.prepare("SELECT path, SUM(n) n FROM visits WHERE day >= date('now','-6 days') GROUP BY path ORDER BY n DESC LIMIT 5").all();
   const vCountries = await env.DB.prepare("SELECT country, SUM(n) n FROM visits WHERE day >= date('now','-6 days') GROUP BY country ORDER BY n DESC LIMIT 8").all();
 
+  /* Bug reports, for the panel. Wrapped because this table arrived later than the rest of the
+     admin page: on any database where the migration has not run, the whole control panel would
+     otherwise go down over a section that is only a list. A missing table means no bug section,
+     not no admin. The reporter's own address is deliberately NOT selected - the panel is for
+     seeing what is broken, and it is one more screen a shoulder could read. */
+  let bugs = { rows: [], counts: {} };
+  try {
+    const bugRows = await env.DB.prepare(
+      `SELECT id, ts, kind, state, verdict, confidence, route, substr(note,1,180) note,
+              (reply_email <> '') AS can_reply, notified_at, issue_url, shot_keys
+       FROM bug_reports ORDER BY ts DESC LIMIT 40`
+    ).all();
+    const bugCounts = await env.DB.prepare(
+      `SELECT COUNT(*) total,
+              SUM(CASE WHEN state = 'received' THEN 1 ELSE 0 END) waiting,
+              SUM(CASE WHEN verdict = 'real_bug' THEN 1 ELSE 0 END) real_bugs,
+              SUM(CASE WHEN verdict = 'needs_human' THEN 1 ELSE 0 END) needs_human,
+              SUM(CASE WHEN reply_email <> '' AND notified_at IS NULL THEN 1 ELSE 0 END) owed_a_reply
+       FROM bug_reports`
+    ).first();
+    bugs = { rows: bugRows.results || [], counts: bugCounts || {} };
+  } catch (err) {
+    console.error('admin: bug_reports unavailable', err && err.message);
+  }
+
   return {
     stats: stats || {},
     chart: chart.results || [],
     blocks: (blocks && blocks.c) || 0,
+    bugs,
     table: { rows: rows.results || [], total, page, pageSize: PAGE, query },
     queue: { rows: queueRows.results || [], counts: queueCounts || {} },
     visits: {
@@ -718,6 +744,72 @@ function adminPage(data) {
     (list && list.length)
       ? list.map((r) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:14px;color:${INK}"><span style="color:${SOFT};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.k)}</span><span style="font-weight:700">${n(r.n)}</span></div>`).join('')
       : `<div style="font-size:13px;color:${FAINT}">${esc(empty)}</div>`;
+
+  /* ---------- bug reports ----------
+     A window onto the loop, not a control for it. Nothing here has a button: triage, publishing
+     an issue and sending a reply are all deliberately commands a human runs at a keyboard, and
+     putting a "dismiss" button on a web page would quietly hand that power to whoever has this
+     URL. So it reads, and the "what to do about it" column tells you which command to go run.
+
+     The reporter's email is never printed - only whether we have one - because this page is a
+     screen somebody can be standing behind. */
+  const bugRows = (data.bugs && data.bugs.rows) || [];
+  const bugCounts = (data.bugs && data.bugs.counts) || {};
+  const VERDICT_WORDS = {
+    real_bug: ['a real bug', RED],
+    user_error: ['worked as built', SOFT],
+    cache_cookie: ['their browser', SOFT],
+    feature_request: ['an idea', SOFT],
+    duplicate: ['already known', SOFT],
+    abuse: ['abuse', FAINT],
+    unactionable: ['not enough to go on', SOFT],
+    needs_human: ['needs you', RED]
+  };
+  const NEXT_STEP = {
+    received: 'run triage',
+    triaged: 'draft the issue',
+    issue_ready: 'read it, then approve-issue',
+    issue_open: 'fix it',
+    fixing: 'in progress',
+    pr_open: 'merge it',
+    shipped: 'tell them',
+    dismissed: 'nothing'
+  };
+  const bugSection = card(
+    `bug reports (${n(bugCounts.total)} in all, ${n(bugCounts.waiting)} not yet looked at)`,
+    bugRows.length
+      ? `<div style="display:flex;gap:18px;flex-wrap:wrap;margin:0 0 14px;font-size:13px;color:${SOFT}">
+           <span><b style="color:${RED}">${n(bugCounts.real_bugs)}</b> real bug(s)</span>
+           <span><b style="color:${RED}">${n(bugCounts.needs_human)}</b> waiting on you</span>
+           <span><b style="color:${INK}">${n(bugCounts.owed_a_reply)}</b> owed a reply</span>
+         </div>
+         <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+         <tr style="text-align:left;color:${FAINT};font-size:11px;letter-spacing:.08em;text-transform:uppercase">
+           <th style="padding:6px 10px 6px 0">when</th><th style="padding:6px 10px 6px 0">what they said</th>
+           <th style="padding:6px 10px 6px 0">verdict</th><th style="padding:6px 10px 6px 0">reply</th>
+           <th style="padding:6px 0">next</th></tr>
+         ${bugRows.map((b) => {
+           const [word, colour] = VERDICT_WORDS[b.verdict] || ['not looked at yet', FAINT];
+           const replyState = !b.can_reply ? 'anonymous'
+             : b.notified_at ? 'told' : 'owed';
+           return `<tr style="border-top:1px solid #e3d9bd;vertical-align:top">
+             <td style="padding:9px 10px 9px 0;color:${FAINT};white-space:nowrap">${esc(new Date(b.ts * 1000).toISOString().slice(5, 16).replace('T', ' '))}</td>
+             <td style="padding:9px 10px 9px 0;max-width:420px">
+               <div style="color:${INK}">${esc(b.note || '')}</div>
+               <div style="color:${FAINT};font-size:11px;margin:3px 0 0">${esc(b.kind)} on ${esc(b.route || '/')}${b.shot_keys && b.shot_keys !== '[]' ? ' - with a screenshot' : ''}${b.issue_url ? ` - <a href="${esc(b.issue_url)}" style="color:${SOFT}">issue</a>` : ''}</div>
+             </td>
+             <td style="padding:9px 10px 9px 0;color:${colour};white-space:nowrap">${esc(word)}${b.confidence ? `<span style="color:${FAINT}"> ${b.confidence}</span>` : ''}</td>
+             <td style="padding:9px 10px 9px 0;color:${replyState === 'owed' ? RED : FAINT};white-space:nowrap">${replyState}</td>
+             <td style="padding:9px 0;color:${SOFT};white-space:nowrap">${esc(NEXT_STEP[b.state] || b.state)}</td>
+           </tr>`;
+         }).join('')}
+         </table></div>
+         <div style="font-size:12px;color:${FAINT};margin:12px 0 0">
+           Reading only. Deciding, publishing and replying are commands run by hand -
+           <code>tools/selfheal/</code>.
+         </div>`
+      : `<div style="font-size:14px;color:${FAINT}">Nothing reported yet. The button is at the bottom right of the site.</div>`
+  );
 
   const t = data.table || { rows: [], total: 0, page: 1, pageSize: 50, query: {} };
   const tq = t.query || {};
@@ -881,6 +973,8 @@ function adminPage(data) {
     ${stat('last 7 days', n(s.d7))}
     ${stat('last 30 days', n(s.d30))}
   </div>
+
+  ${bugSection}
 
   ${card('confessions per day (last 14 days)',
     `<div style="display:flex;align-items:flex-end;gap:5px;height:170px">${bars}</div>`)}

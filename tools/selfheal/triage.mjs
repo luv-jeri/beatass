@@ -21,21 +21,40 @@
  *   reporter nothing.
  */
 import { spawnSync } from 'child_process';
+import { pathToFileURL } from 'url';
 
-const args = process.argv.slice(2);
+/* Inert on import, a program only when run as one. notify.mjs imports VERDICTS from here so the
+   two files cannot disagree about who gets told what; without this guard that import would hit
+   the usage check at the bottom and kill the importing process. Same guard, same reason, as
+   prepare-issue.mjs. */
+const IS_MAIN = import.meta.url === pathToFileURL(process.argv[1] || '').href;
+const args = IS_MAIN ? process.argv.slice(2) : [];
 const LOCAL = args.includes('--local');
 const DRY = args.includes('--dry');
 const LIMIT = 25;
 
-/* ---------- the five verdicts, and what each one is allowed to do ---------- */
+/* ---------- the verdicts, and what each one is allowed to do ----------
+   `reply` is the SINGLE source of truth for who hears back. notify.mjs imports this table
+   rather than keeping its own copy, because it used to keep its own copy and the two drifted:
+   a real reporter wrote "I don't understand how this works", was filed unactionable, and the
+   product answered him with nothing at all — while the sheet he typed into had promised "we
+   will email you what we find" (2026-08-15, case 02b1a10e9f21e13b).
+
+   The rule now: everybody hears something back. The only silence is abuse, and that silence is
+   deliberate — an abusive report is often a stranger's address typed into the reply box, so
+   answering it would make this a machine for mailing strangers over our domain. */
 export const VERDICTS = {
   real_bug:        { dismissive: false, minConfidence: 60, next: 'triaged',   reply: 'analyzed_bug' },
   user_error:      { dismissive: true,  minConfidence: 85, next: 'dismissed', reply: 'analyzed_not_bug' },
   cache_cookie:    { dismissive: true,  minConfidence: 85, next: 'dismissed', reply: 'analyzed_not_bug' },
-  feature_request: { dismissive: false, minConfidence: 70, next: 'dismissed', reply: null },
-  duplicate:       { dismissive: false, minConfidence: 75, next: 'dismissed', reply: null },
+  feature_request: { dismissive: false, minConfidence: 70, next: 'dismissed', reply: 'noted_idea' },
+  /* A duplicate is a REAL bug that somebody else already reported. Telling this person nothing
+     would be the strangest outcome of all: the same defect, reported twice, and only the first
+     one hears that it is being worked on. */
+  duplicate:       { dismissive: false, minConfidence: 75, next: 'dismissed', reply: 'analyzed_bug' },
   abuse:           { dismissive: false, minConfidence: 80, next: 'dismissed', reply: null },
-  unactionable:    { dismissive: false, minConfidence: 70, next: 'dismissed', reply: null },
+  /* "We could not work out what went wrong from this" is not "go away". It is a question. */
+  unactionable:    { dismissive: false, minConfidence: 70, next: 'dismissed', reply: 'need_more' },
   needs_human:     { dismissive: false, minConfidence: 0,  next: 'triaged',   reply: null }
 };
 
@@ -285,8 +304,12 @@ if (args.includes('--selftest')) {
   eq('feature_request closes it (never auto-built)', VERDICTS.feature_request.next, 'dismissed');
   eq('needs_human parks it, not closes it', VERDICTS.needs_human.next, 'triaged');
   eq('abuse gets no reply', VERDICTS.abuse.reply, null);
-  eq('feature_request gets no promise', VERDICTS.feature_request.reply, null);
-  eq('only real_bug promises a fix', VERDICTS.real_bug.reply, 'analyzed_bug');
+  eq('a feature request is acknowledged but never promised', VERDICTS.feature_request.reply, 'noted_idea');
+  eq('a report we could not act on gets a question, not silence', VERDICTS.unactionable.reply, 'need_more');
+  eq('only real_bug and its duplicates promise a fix',
+    [VERDICTS.real_bug.reply, VERDICTS.duplicate.reply].join(','), 'analyzed_bug,analyzed_bug');
+  eq('abuse is the only verdict that answers a real address with nothing',
+    Object.entries(VERDICTS).filter(([k, v]) => !v.reply && k !== 'needs_human').map(([k]) => k).join(','), 'abuse');
 
   console.log('\nthe brief never carries the reporter back to the model');
   const text = brief(
@@ -321,9 +344,18 @@ if (args.includes('--selftest')) {
   process.exit(0);
 }
 
-if (args.includes('--help') || (!args.length && process.stdin.isTTY === undefined)) {
-  console.log('usage: node tools/selfheal/triage.mjs [--selftest|--dry] [--local]');
-  process.exit(1);
+/* Which database this touches is ALWAYS said out loud. The first version of this guard tried to
+   be clever - production was the default, and it printed usage instead when stdin was not a
+   terminal, on the theory that "not a terminal" meant "nobody meant to run this". That made the
+   documented command impossible to run from anything but a person's keyboard, and it made the
+   riskier target the one you got by typing less. Now --local and --remote are both explicit and
+   neither is a default, so nothing reaches the live database by omission. */
+if (IS_MAIN) {
+  if (args.includes('--help') || (!LOCAL && !args.includes('--remote'))) {
+    console.log('usage: node tools/selfheal/triage.mjs (--local | --remote) [--dry]');
+    console.log('       node tools/selfheal/triage.mjs --selftest');
+    console.log('\nsay which database you mean. --dry decides and prints, and writes nothing.');
+    process.exit(1);
+  }
+  run().catch((e) => { console.error(e.message || e); process.exit(1); });
 }
-
-run().catch((e) => { console.error(e.message || e); process.exit(1); });

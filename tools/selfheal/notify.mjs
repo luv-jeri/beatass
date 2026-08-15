@@ -22,14 +22,15 @@
  * was not copied for speed - it is the same product decision, so it should be the same words.
  */
 import { spawnSync } from 'child_process';
+import { VERDICTS } from './triage.mjs';
 
 const args = process.argv.slice(2);
 const LOCAL = args.includes('--local');
 const SEND = args.includes('--send') && args.includes('--i-mean-it');
 const SITE = 'https://beatass.com';
 
-/* ---------- the four messages ---------- */
-export const STAGES = ['received', 'analyzed_bug', 'analyzed_not_bug', 'fixed'];
+/* ---------- the messages ---------- */
+export const STAGES = ['received', 'analyzed_bug', 'analyzed_not_bug', 'need_more', 'noted_idea', 'fixed'];
 
 export function render(stage, opts = {}) {
   const body = {
@@ -42,6 +43,17 @@ export function render(stage, opts = {}) {
     analyzed_not_bug:
       'We looked into the problem you reported. It turned out not to be a fault on our side. ' +
       (opts.help || 'If it happens again, tell us and we will look properly.'),
+    /* For a report we could not act on. It asks a question rather than closing a door: the
+       person is not wrong for reporting, we just cannot see what they saw. */
+    need_more:
+      'We looked into this, and we could not work out what went wrong from what we have. That ' +
+      'is on us, not on you. If it happens again, tell us what you pressed and what you ' +
+      'expected to happen, and we will dig properly.',
+    /* For an idea. Honest on purpose: written down, read, and NOT promised. */
+    noted_idea:
+      'Thanks - we read this as a suggestion rather than something broken, and it is written ' +
+      'down where we go looking when we decide what to build next. We are not promising it, ' +
+      'because we would rather say nothing than promise something and not do it.',
     fixed:
       'The problem you reported has been fixed and the fix is live. Thank you for telling us. ' +
       'Reports like yours are the only reason we find these.'
@@ -53,6 +65,8 @@ export function render(stage, opts = {}) {
     received: 'We have your report',
     analyzed_bug: 'That is a real bug, and we are on it',
     analyzed_not_bug: 'About the problem you reported',
+    need_more: 'We looked, and we need a bit more',
+    noted_idea: 'Your idea is written down',
     fixed: 'The problem you reported is fixed'
   }[stage];
 
@@ -77,11 +91,14 @@ export function due(row) {
   if (!row.reply_email) return null;                      // they chose to stay anonymous
   if (row.notified_at) return null;                       // already told, never twice
   if (row.state === 'shipped' && row.shipped_sha) return 'fixed';
-  if (row.state === 'dismissed' && (row.verdict === 'user_error' || row.verdict === 'cache_cookie'))
-    return 'analyzed_not_bug';
-  if (row.verdict === 'real_bug' && ['triaged', 'issue_ready', 'issue_open', 'fixing', 'pr_open'].includes(row.state))
-    return 'analyzed_bug';
-  return null;
+
+  /* Which message a verdict earns is read from ONE table, in triage.mjs, and never restated
+     here. This function used to name the verdicts itself, and the two lists drifted: triage
+     grew `unactionable` and this file did not, so a person who wrote "I don't understand how
+     this works" was answered with silence by a product whose form had just promised to email
+     him. Two copies of one rule is one copy too many. */
+  const rule = VERDICTS[row.verdict];
+  return (rule && rule.reply) ? rule.reply : null;
 }
 
 /**
@@ -198,12 +215,36 @@ if (args.includes('--selftest')) {
   eq('a confirmed real bug gets the promise', due({ reply_email: 'a@b.com', verdict: 'real_bug', state: 'triaged' }), 'analyzed_bug');
   eq('a user error gets the explanation', due({ reply_email: 'a@b.com', verdict: 'user_error', state: 'dismissed' }), 'analyzed_not_bug');
   eq('a cache problem likewise', due({ reply_email: 'a@b.com', verdict: 'cache_cookie', state: 'dismissed' }), 'analyzed_not_bug');
+  eq('a report we could not act on gets a question, not silence',
+    due({ reply_email: 'a@b.com', verdict: 'unactionable', state: 'dismissed' }), 'need_more');
+  eq('an idea is acknowledged without being promised',
+    due({ reply_email: 'a@b.com', verdict: 'feature_request', state: 'dismissed' }), 'noted_idea');
+  eq('a duplicate hears the same thing the first reporter heard',
+    due({ reply_email: 'a@b.com', verdict: 'duplicate', state: 'dismissed' }), 'analyzed_bug');
   eq('abuse gets no reply at all', due({ reply_email: 'a@b.com', verdict: 'abuse', state: 'dismissed' }), null);
-  eq('a feature request gets no promise', due({ reply_email: 'a@b.com', verdict: 'feature_request', state: 'dismissed' }), null);
+  eq('a verdict still waiting on a human promises nothing yet',
+    due({ reply_email: 'a@b.com', verdict: 'needs_human', state: 'triaged' }), null);
+
+  console.log('\nnobody who left an address is met with silence, except abuse');
+  const silent = Object.entries(VERDICTS)
+    .filter(([, v]) => !v.reply)
+    .map(([k]) => k).sort();
+  eq('the only silent verdicts are abuse and needs_human', silent.join(','), 'abuse,needs_human');
+  for (const [name, rule] of Object.entries(VERDICTS))
+    rule.reply && !STAGES.includes(rule.reply)
+      ? no(`${name} promises a message that does not exist: ${rule.reply}`)
+      : ok(`${name} -> ${rule.reply || '(silence, on purpose)'}`);
 
   console.log('\n"fixed" means proven live, not merged');
   eq('merged but not deployed: no email', due({ reply_email: 'a@b.com', verdict: 'real_bug', state: 'pr_open' }), 'analyzed_bug');
-  eq('shipped WITHOUT proof: still no "fixed"', due({ reply_email: 'a@b.com', verdict: 'real_bug', state: 'shipped', shipped_sha: null }), null);
+  /* Shipped but unproven used to mean silence. It now means "we are on it" — accurate, because
+     the fix exists and has not been confirmed live. What must never happen is the word fixed. */
+  eq('shipped WITHOUT proof: never the word "fixed"',
+    due({ reply_email: 'a@b.com', verdict: 'real_bug', state: 'shipped', shipped_sha: null }) === 'fixed', false);
+  eq('shipped WITHOUT proof: they are told we are still on it',
+    due({ reply_email: 'a@b.com', verdict: 'real_bug', state: 'shipped', shipped_sha: null }), 'analyzed_bug');
+  eq('shipped WITHOUT proof: an empty sha is not proof either',
+    due({ reply_email: 'a@b.com', verdict: 'real_bug', state: 'shipped', shipped_sha: '' }) === 'fixed', false);
   eq('shipped WITH proof: now we may say it', due({ reply_email: 'a@b.com', verdict: 'real_bug', state: 'shipped', shipped_sha: 'deadbeef' }), 'fixed');
 
   console.log('\nsending is real now, and locked three ways');
