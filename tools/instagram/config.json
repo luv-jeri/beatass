@@ -2,6 +2,8 @@
  "_comment": "Change 'handle' to post from a different account. The script checks it is logged in as this exact handle before it posts anything, so a wrong handle stops the run instead of posting to the wrong account.",
  "handle": "_beatAss_",
  "contentDir": "content/instagram",
+ "_minHoursBetweenPosts": "Anti-burst throttle enforced by post.mjs. This account's reach was frozen after posting 6 reels in 9 min (see .posted.json 2026-08-05 burst). 20h ~= 1/day. Pass --force to override for a one-off.",
+ "minHoursBetweenPosts": 20,
  "_formats": "Which outputs a message's tone chip produces. fury earns the beating reel, soft stays a quiet story card; everything gets the feed post.",
  "formats": {
   "fury": [
@@ -33,9 +35,10 @@
   "voodoodoll"
  ],
  "_outreach": "A DM from an account you do not follow lands in Instagram's 'Message requests' folder, which most people never open. These three things point people at that folder: we follow them (so they get a notification and read our bio), our bio tells them a message is waiting, and we leave one comment on their latest post. Set follow or comment to false to switch either off without touching code. The per-day numbers are deliberately below what Instagram tolerates - follows and comments to strangers are what gets an account limited, and a limited account cannot DM anybody.",
+ "_outreach_disabled": "follow+comment turned OFF 2026-08-07: the account is reach-restricted (all reels frozen; linked WhatsApp shows 'account restricted'). Auto-following/commenting strangers is the #1 shadowban/action-block trigger and deepens an active restriction. Leave OFF while limited; re-enable at LOWER numbers (e.g. follow 5-8/day, comment 3-5/day) only after Account Status clears.",
  "outreach": {
-  "follow": true,
-  "comment": true,
+  "follow": false,
+  "comment": false,
   "followPerDay": 25,
   "commentPerDay": 15,
   "_comments": "One is picked per handle, so the same person always sees the same line and fifty different people do not all get an identical comment. Every line must say where the message actually is: the requests folder. The site itself uses no emoji on purpose (see CLAUDE.md) - these lines and the bio are the one deliberate exception, because a comment in a feed and a bio on a profile are competing for a glance, and plain text loses.",

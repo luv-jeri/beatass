@@ -492,28 +492,40 @@ if (IS_MAIN && args.includes('--selftest')) {
   eq('the bio tells them where the message is', /request/i.test(bio), true);
   eq('the bio has no AI-tell glyphs', AI_TELLS.test(bio), false);
 
+  /* Every decision test below runs against an EXPLICIT config, never the live one.
+
+     Outreach was switched off in config.json on 2026-08-07 after the account got
+     reach-restricted. Seven tests down there went red that day - not because the
+     deciding had changed, but because they were reading a business setting as if it
+     were the logic under test. A suite that breaks when somebody turns a feature off
+     is testing the wrong thing, and it took the six suites after it down with it.
+
+     So: the logic is tested with the switches held ON, and the live config gets its
+     own test at the bottom that stays true whichever way the switches are set. */
+  const ON = { ...OUT, follow: true, comment: true };
+
   /* the decision, which is the part that can quietly spam somebody */
   const day = '2026-08-03';
   const stamp = day + 'T10:00:00.000Z';
-  const fresh = outreachPlan({ handle: 'new', log: {}, day });
+  const fresh = outreachPlan({ cfg: ON, handle: 'new', log: {}, day });
   eq('a new person gets a follow', fresh.follow, true);
   eq('a new person gets a comment', fresh.comment, true);
 
   const followedAlready = { old: { followed: stamp } };
-  eq('nobody is followed twice', outreachPlan({ handle: 'old', log: followedAlready, day }).follow, false);
-  eq('a follow already done still allows the comment', outreachPlan({ handle: 'old', log: followedAlready, day }).comment, true);
+  eq('nobody is followed twice', outreachPlan({ cfg: ON, handle: 'old', log: followedAlready, day }).follow, false);
+  eq('a follow already done still allows the comment', outreachPlan({ cfg: ON, handle: 'old', log: followedAlready, day }).comment, true);
 
   const commentedAlready = { old: { followed: stamp, commented: stamp } };
-  eq('nobody is commented on twice', outreachPlan({ handle: 'old', log: commentedAlready, day }).comment, false);
-  eq('a second confession to the same person adds nothing', JSON.stringify(outreachPlan({ handle: 'old', log: commentedAlready, day })).includes('"follow":false'), true);
+  eq('nobody is commented on twice', outreachPlan({ cfg: ON, handle: 'old', log: commentedAlready, day }).comment, false);
+  eq('a second confession to the same person adds nothing', JSON.stringify(outreachPlan({ cfg: ON, handle: 'old', log: commentedAlready, day })).includes('"follow":false'), true);
 
   /* The opposite of what this said before, on purpose: @mayyankk_1 was private
      when we looked, so nothing could be commented on, and then he accepted the
      follow request. A permanent skip would have locked him out for ever. */
   eq('a private account is looked at again later, because they can accept the follow',
-    outreachPlan({ handle: 'p', log: { p: { commentSkipped: 'private account' } }, day }).comment, true);
+    outreachPlan({ cfg: ON, handle: 'p', log: { p: { commentSkipped: 'private account' } }, day }).comment, true);
   eq('an actual comment is still permanent',
-    outreachPlan({ handle: 'p', log: { p: { commented: stamp, commentSkipped: 'private account' } }, day }).comment, false);
+    outreachPlan({ cfg: ON, handle: 'p', log: { p: { commented: stamp, commentSkipped: 'private account' } }, day }).comment, false);
 
   /* Instagram's real wording. Getting this wrong made a private profile look
      like a public one with nothing posted. */
@@ -525,24 +537,24 @@ if (IS_MAIN && args.includes('--selftest')) {
   /* caps */
   const many = {};
   for (let i = 0; i < 40; i++) many['h' + i] = { followed: stamp, commented: stamp };
-  const capped = outreachPlan({ handle: 'next', log: many, day });
+  const capped = outreachPlan({ cfg: ON, handle: 'next', log: many, day });
   eq('the daily follow cap stops it', capped.follow, false);
   eq('the daily comment cap stops it', capped.comment, false);
   eq('the cap says so in words', /limit/.test(capped.why.follow || ''), true);
   eq('yesterday does not count against today', countToday({ a: { followed: '2026-08-02T10:00:00.000Z' } }, 'followed', day), 0);
   eq('today does count', countToday({ a: { followed: stamp } }, 'followed', day), 1);
-  eq('a cap of 0 turns it off', outreachPlan({ handle: 'n', log: {}, cfg: { ...OUT, followPerDay: 0 }, day }).follow, false);
+  eq('a cap of 0 turns it off', outreachPlan({ handle: 'n', log: {}, cfg: { ...ON, followPerDay: 0 }, day }).follow, false);
 
   /* the brake. Instagram refusing us once means stop, for everybody. */
   const soon = '2026-08-03T23:00:00.000Z';
   const nowIs = '2026-08-03T20:00:00.000Z';
   const paused = { [STATE_KEY]: { coolOffUntil: soon, coolOffReason: 'comment refused' } };
-  eq('a refusal stops every follow', outreachPlan({ handle: 'anyone', log: paused, now: nowIs, day }).follow, false);
-  eq('a refusal stops every comment', outreachPlan({ handle: 'anyone', log: paused, now: nowIs, day }).comment, false);
-  eq('it stops people it never even touched', outreachPlan({ handle: 'brand-new', log: paused, now: nowIs, day }).comment, false);
-  eq('the pause says when it lifts', /paused until/.test(outreachPlan({ handle: 'x', log: paused, now: nowIs, day }).why.follow), true);
+  eq('a refusal stops every follow', outreachPlan({ cfg: ON, handle: 'anyone', log: paused, now: nowIs, day }).follow, false);
+  eq('a refusal stops every comment', outreachPlan({ cfg: ON, handle: 'anyone', log: paused, now: nowIs, day }).comment, false);
+  eq('it stops people it never even touched', outreachPlan({ cfg: ON, handle: 'brand-new', log: paused, now: nowIs, day }).comment, false);
+  eq('the pause says when it lifts', /paused until/.test(outreachPlan({ cfg: ON, handle: 'x', log: paused, now: nowIs, day }).why.follow), true);
   eq('the pause lifts by itself once it expires',
-    outreachPlan({ handle: 'anyone', log: paused, now: '2026-08-04T00:00:00.000Z', day: '2026-08-04' }).follow, true);
+    outreachPlan({ cfg: ON, handle: 'anyone', log: paused, now: '2026-08-04T00:00:00.000Z', day: '2026-08-04' }).follow, true);
   eq('the pause entry is not counted as a person we followed',
     countToday({ ...paused, real: { followed: stamp } }, 'followed', day), 1);
 
@@ -554,9 +566,19 @@ if (IS_MAIN && args.includes('--selftest')) {
   eq('locked comments are NOT a limit', looksLikeLimiting('comments are turned off on all 12 of their posts'), false);
 
   /* the switches */
-  eq('follow can be switched off', outreachPlan({ handle: 'n', log: {}, cfg: { ...OUT, follow: false }, day }).follow, false);
-  eq('comment can be switched off', outreachPlan({ handle: 'n', log: {}, cfg: { ...OUT, comment: false }, day }).comment, false);
-  eq('switching off the comment leaves the follow alone', outreachPlan({ handle: 'n', log: {}, cfg: { ...OUT, comment: false }, day }).follow, true);
+  eq('follow can be switched off', outreachPlan({ handle: 'n', log: {}, cfg: { ...ON, follow: false }, day }).follow, false);
+  eq('comment can be switched off', outreachPlan({ handle: 'n', log: {}, cfg: { ...ON, comment: false }, day }).comment, false);
+  eq('switching off the comment leaves the follow alone', outreachPlan({ handle: 'n', log: {}, cfg: { ...ON, comment: false }, day }).follow, true);
+
+  /* The live config, whichever way it happens to be set today. This is the only test here
+     that reads config.json, and it cannot go stale, because it asserts that the switches
+     are OBEYED rather than asserting what they are set to. */
+  eq('the live follow switch is obeyed',
+    outreachPlan({ handle: 'live', log: {}, cfg: OUT, day }).follow, OUT.follow !== false);
+  eq('the live comment switch is obeyed',
+    outreachPlan({ handle: 'live', log: {}, cfg: OUT, day }).comment, OUT.comment !== false);
+  if (OUT.follow === false || OUT.comment === false)
+    console.log('  note: outreach is switched OFF in config.json — that is a setting, not a failure.');
 
   console.log(bad ? `\noutreach selftest FAILED (${bad})` : 'outreach selftest: all checks pass');
   process.exit(bad ? 1 : 0);
