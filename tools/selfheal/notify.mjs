@@ -21,6 +21,9 @@
  * The four messages are the same four the Tool Factory already wrote for Game Night Owl. That
  * was not copied for speed - it is the same product decision, so it should be the same words.
  */
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { spawnSync } from 'child_process';
 import { VERDICTS } from './triage.mjs';
 
@@ -115,12 +118,32 @@ export function due(row) {
  * uses (src/index.js:434), because a mistyped key should fail loudly here rather than produce a
  * 401 that looks like a network blip.
  */
+/**
+ * Where the key is allowed to come from. The environment first, so a one-off run can pass it
+ * without leaving anything behind; then a file outside the repo, so the launchd job has a
+ * source too - launchd carries no shell environment, and it cannot read Cloudflare's secrets.
+ *
+ * Never from the repo. `~/.config/beatass-mail/config.json`, mode 600, written by
+ * set-mail-key.sh straight off the clipboard.
+ */
+export function mailCreds(env = process.env, home = os.homedir()) {
+  let key = String(env.RESEND_API_KEY || '').replace(/\s+/g, '');
+  let from = env.MAIL_FROM || '';
+  if (!key || !from) {
+    try {
+      const c = JSON.parse(fs.readFileSync(path.join(home, '.config', 'beatass-mail', 'config.json'), 'utf8'));
+      key = key || String(c.resendApiKey || '').replace(/\s+/g, '');
+      from = from || c.mailFrom || '';
+    } catch { /* no file: the checks below say so in words */ }
+  }
+  return { key, from };
+}
+
 async function send(to, mail) {
-  const key = String(process.env.RESEND_API_KEY || '').replace(/\s+/g, '');
+  const { key, from } = mailCreds();
   if (!/^re_[A-Za-z0-9_]+$/.test(key))
-    return { ok: false, why: 'RESEND_API_KEY is not set in this shell, or does not look like a Resend key' };
-  const from = process.env.MAIL_FROM;
-  if (!from) return { ok: false, why: 'MAIL_FROM is not set in this shell' };
+    return { ok: false, why: 'no Resend key here. Run: bash tools/selfheal/set-mail-key.sh' };
+  if (!from) return { ok: false, why: 'no MAIL_FROM. Run: bash tools/selfheal/set-mail-key.sh' };
 
   let res;
   try {
@@ -254,10 +277,25 @@ if (args.includes('--selftest')) {
     .split('\n').filter((l) => !/^\s*[*\/]/.test(l)).join('\n');
   /args\.includes\('--send'\) && args\.includes\('--i-mean-it'\)/.test(code)
     ? ok('two separate flags are required, in different words') : no('sending is too easy');
-  /process\.env\.RESEND_API_KEY/.test(code)
-    ? ok('the key comes from the environment, never from this repo') : no('key is not read from env');
+  /env\.RESEND_API_KEY/.test(code)
+    ? ok('the key comes from the environment first') : no('key is not read from env');
+  /\.config', 'beatass-mail'/.test(code)
+    ? ok('or from one file OUTSIDE the repo, for the timer') : no('no file fallback for launchd');
   !/re_[A-Za-z0-9]{8,}/.test(code)
     ? ok('and no key is written down anywhere in the file') : no('a key is hard-coded');
+
+  console.log('\nwhere the key may come from, and where it may not');
+  const noKey = mailCreds({}, '/nonexistent-home');
+  eq('with nothing set, there is no key', noKey.key, '');
+  const fromEnv = mailCreds({ RESEND_API_KEY: 're_abc123', MAIL_FROM: 'a@b.com' }, '/nonexistent-home');
+  eq('the environment is used when it has one', fromEnv.key, 're_abc123');
+  eq('and its from address too', fromEnv.from, 'a@b.com');
+  eq('whitespace from a paste is stripped',
+    mailCreds({ RESEND_API_KEY: ' re_abc123\n', MAIL_FROM: 'a@b.com' }, '/nonexistent-home').key, 're_abc123');
+  const repoFiles = (await import('child_process')).spawnSync(
+    'bash', ['-lc', 'git ls-files | xargs grep -l "re_[A-Za-z0-9]\\{20,\\}" 2>/dev/null | head -3'],
+    { encoding: 'utf8' }).stdout.trim();
+  eq('no committed file in this repo contains a Resend key', repoFiles, '');
   /^\s*if \(!SEND\)/m.test(code)
     ? ok('the default path prints and stops') : no('the default path can send');
 
