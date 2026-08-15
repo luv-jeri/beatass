@@ -264,8 +264,10 @@ function pr(id) {
   console.log('Nothing was pushed and no pull request exists.');
   console.log('\nIf you want it, you open it yourself:');
   console.log(`  cd ${dir} && git push -u origin fix/bug-${id} && gh pr create --draft --body-file PR-DRAFT.md`);
-  console.log('\nNOTE: main has no branch protection and a push to main auto-deploys.');
-  console.log('Turn branch protection on before merging anything from this lane.');
+  console.log('\nmain has branch protection ON since 2026-08-15, so this cannot land by accident:');
+  console.log('a pull request is required, build-test-deploy must be green, and that applies to');
+  console.log('admins too. Merging is still a human pressing the button, and the merge is what');
+  console.log('deploys to the live site.');
 }
 
 /* ---------- --selftest ---------- */
@@ -322,7 +324,8 @@ if (args.includes('--selftest')) {
 
   console.log('\nand it tells the truth about what it produced');
   src.includes('DRAFT ONLY') ? ok('the PR step says draft only') : no('no draft warning');
-  src.includes('branch protection') ? ok('and warns that main auto-deploys') : no('no deploy warning');
+  src.includes('branch protection ON') && src.includes('deploys to the live site')
+    ? ok('and says what merging actually does — it ships') : no('no deploy warning');
   src.includes('No proof on file') ? ok('no proof means no PR body at all') : no('PR can be rendered without proof');
 
   console.log('');

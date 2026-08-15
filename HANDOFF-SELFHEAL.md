@@ -17,7 +17,7 @@ Directed approval: `evolution/approved/2026-08-15-selfheal-poc-directed.md`.
 | Decision | Answer | Consequence |
 |---|---|---|
 | Which product | **beatass**, this venture only | Costs ~2h extra privacy hardening, already paid |
-| Branch protection on `main` | **Deferred, explicitly last** | Safe now (drafts only). **Hard precondition before the fixer may open a real PR** — `main` auto-deploys on push |
+| Branch protection on `main` | **ON since 2026-08-15** | A pull request is required, `build-test-deploy` must be green, and it applies to admins too. Nothing reaches the live site except by merging a green PR |
 | Two human gates | **Confirmed** | Publish issue, open PR. Both wait for him |
 
 ## Read these, in this order
@@ -170,22 +170,33 @@ node tools/selfheal/notify.mjs --dry --local
 ## Where to pick up
 
 The loop is complete: every stage runs, and the thinking at both stages that need it runs on the
-Claude Code already installed here. Two things are still open, and both are deliberate.
+Claude Code already installed here. One thing is still open, deliberately.
 
-1. **Branch protection on `main` is still off.** Sanjay deferred it as the last step. It is a
-   hard precondition before the fixer's lane may open a real PR, because a push to `main`
-   auto-deploys. Until it is on, `--pr` renders a draft and prints the command rather than
-   running it.
-2. **`shipped_sha` is never set by anything.** So no case can reach `fixed`, and no reporter can
+1. **`shipped_sha` is never set by anything.** So no case can reach `fixed`, and no reporter can
    be told their bug is live. That is correct as it stands — it should only be set by something
    that has confirmed the deployed commit actually answering on the real site, and nothing does
    that yet. This is the last honest gap in the loop.
 
-Two commands that need a human, and cannot be run from an agent session:
+One command still needs a human, and cannot be run from an agent session:
 
 ```bash
 npx wrangler login            # the auth token has expired; nothing --remote works without it
-gh api -X PUT repos/luv-jeri/beatass/branches/main/protection ...   # only when Sanjay says so
+```
+
+### Landing work on main, now that protection is on
+
+Direct pushes to `main` are refused, for admins too. Everything goes:
+
+```bash
+git switch -c some-branch && git push -u origin some-branch
+gh pr create --fill && gh pr merge --squash        # merge is what deploys
+```
+
+If protection ever gets in the way, Sanjay owns the repo and can lift it in one command —
+this is not a lock he can be trapped behind:
+
+```bash
+gh api -X DELETE repos/luv-jeri/beatass/branches/main/protection
 ```
 
 ## Outstanding, from the separate stability audit
