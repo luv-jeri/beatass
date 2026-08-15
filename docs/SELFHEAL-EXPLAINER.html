@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How the self-healing bug loop works - beatass</title>
+<style>
+  @font-face { font-family:'Patrick'; src:url('../fonts/PatrickHand.woff2') format('woff2'); font-display:swap }
+  @font-face { font-family:'Caveat';  src:url('../fonts/Caveat.woff2') format('woff2');  font-display:swap }
+  @font-face { font-family:'Marker';  src:url('../fonts/Marker.woff2') format('woff2');  font-display:swap }
+
+  :root{
+    --desk:#e8e0cc; --paper:#fbf7ea; --paper-2:#fffdf5;
+    --ink:#26356e; --ink-soft:#5b6a9c; --ink-faint:#93a0c2;
+    --red:#cf3a2d; --hl:#ffe873; --sticky:#ffe9a3; --pencil:#8d8778;
+    --green:#2f7d4f; --amber:#c98a1b;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--desk); color:var(--ink);
+    font-family:'Patrick',ui-rounded,system-ui,sans-serif; font-size:17px; line-height:1.62;
+  }
+  .sheet{
+    max-width:1080px; margin:0 auto; background:var(--paper); min-height:100vh;
+    padding:38px 46px 90px; border-left:1px solid var(--ink-faint); border-right:1px solid var(--ink-faint);
+    background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 29px,#dfe6f5 29px,#dfe6f5 30px);
+    background-position:0 4px;
+  }
+  h1{font-family:'Marker',sans-serif; font-size:38px; margin:0 0 4px; line-height:1.1}
+  .sub{font-family:'Caveat',cursive; font-size:23px; color:var(--red); margin:0 0 28px}
+  h2{font-family:'Marker',sans-serif; font-size:25px; margin:52px 0 6px; line-height:1.2}
+  h2 .n{color:var(--red)}
+  h3{font-family:'Caveat',cursive; font-size:22px; margin:26px 0 6px; color:var(--red); font-weight:normal}
+  p{margin:0 0 14px; max-width:76ch}
+  code{font-family:ui-monospace,Menlo,monospace; font-size:14px; background:var(--sticky); padding:1px 5px; border-radius:4px}
+  .lede{font-size:18.5px; border-left:3px solid var(--hl); padding-left:14px; margin-bottom:26px}
+
+  .card{
+    background:var(--paper-2); border:1.5px solid var(--ink-faint);
+    border-radius:14px 9px 16px 8px; padding:18px 22px; margin:20px 0;
+  }
+  .card.warn{border-color:var(--red); background:#fff7f5}
+  .card.good{border-color:var(--green); background:#f5fbf6}
+
+  .badge{display:inline-block; font-size:12.5px; font-family:ui-monospace,monospace;
+    padding:2px 8px; border-radius:20px; vertical-align:middle; margin-left:8px; letter-spacing:.02em}
+  .built{background:#dff0e4; color:var(--green); border:1px solid var(--green)}
+  .todo{background:#fdf0d8; color:var(--amber); border:1px solid var(--amber)}
+
+  table{border-collapse:collapse; width:100%; margin:16px 0; font-size:15.5px; background:var(--paper-2)}
+  th,td{border:1px solid var(--ink-faint); padding:8px 11px; text-align:left; vertical-align:top}
+  th{background:var(--sticky); font-family:'Caveat',cursive; font-size:18px; font-weight:normal}
+  td.mono{font-family:ui-monospace,monospace; font-size:13.5px}
+
+  figure{margin:22px 0}
+  figcaption{font-family:'Caveat',cursive; font-size:18px; color:var(--ink-soft); margin-top:6px; text-align:center}
+  svg{display:block; max-width:100%; height:auto; margin:0 auto}
+  .stxt{font-family:'Patrick',sans-serif; font-size:13px; fill:var(--ink)}
+  .stxt.sm{font-size:11.5px; fill:var(--ink-soft)}
+  .stxt.lb{font-family:'Caveat',cursive; font-size:15px; fill:var(--red)}
+  .box{fill:var(--paper-2); stroke:var(--ink); stroke-width:1.6}
+  .box.dim{stroke:var(--ink-faint); stroke-dasharray:5 4; fill:#f6f3e6}
+  .box.hot{fill:#fff3f1; stroke:var(--red)}
+  .box.ok{fill:#f2faf4; stroke:var(--green)}
+  .box.gate{fill:var(--hl); stroke:var(--ink); stroke-width:2}
+  .arrow{stroke:var(--ink); stroke-width:1.6; fill:none; marker-end:url(#a)}
+  .arrow.soft{stroke:var(--ink-faint); stroke-dasharray:4 4}
+  .arrow.red{stroke:var(--red); marker-end:url(#ar)}
+
+  .legend{display:flex; gap:22px; flex-wrap:wrap; font-size:14.5px; margin:10px 0 0; justify-content:center}
+  .legend i{display:inline-block; width:15px; height:11px; border-radius:3px; margin-right:5px; vertical-align:middle}
+  .foot{margin-top:60px; padding-top:16px; border-top:1.5px dashed var(--ink-faint); color:var(--ink-soft); font-size:14.5px}
+  ol li,ul li{margin-bottom:7px; max-width:76ch}
+  .arch{margin-top:70px; padding-top:34px; border-top:4px double var(--ink-faint)}
+  .arch h1{font-size:33px}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<h1>How the self-healing bug loop works</h1>
+<p class="sub">beatass &middot; written 15 August 2026</p>
+
+<p class="lede">Somebody hits a bug. Without anybody being woken up, that turns into a written case,
+a verdict, a GitHub issue, a fix with proof it works, and an email telling that person it is
+fixed. This page explains every step, what is real today, and where a human still has to say yes.</p>
+
+<div class="card warn">
+  <strong>Read this first.</strong> Roughly half of what follows is running code you can use right now;
+  the other half is designed and specified but not yet built. Every section is marked
+  <span class="badge built">BUILT</span> or <span class="badge todo">NOT YET</span>.
+  Nothing on this page sends an email, opens a GitHub issue, or changes any code today.
+</div>
+
+<!-- ============================================ -->
+<h2><span class="n">The whole loop</span> at a glance</h2>
+
+<figure>
+<svg viewBox="0 0 1000 470" role="img" aria-label="End to end flow from a person hitting a bug to being told it is fixed">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#26356e"/></marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#cf3a2d"/></marker>
+  </defs>
+
+  <!-- lanes -->
+  <text class="stxt lb" x="14" y="26">BROWSER</text>
+  <text class="stxt lb" x="14" y="150">CLOUDFLARE</text>
+  <text class="stxt lb" x="14" y="288">YOUR LAPTOP</text>
+  <text class="stxt lb" x="14" y="424">GITHUB</text>
+  <line x1="0" y1="88" x2="1000" y2="88" stroke="#93a0c2" stroke-dasharray="3 5"/>
+  <line x1="0" y1="212" x2="1000" y2="212" stroke="#93a0c2" stroke-dasharray="3 5"/>
+  <line x1="0" y1="348" x2="1000" y2="348" stroke="#93a0c2" stroke-dasharray="3 5"/>
+
+  <!-- browser row -->
+  <rect class="box" x="120" y="18" width="150" height="52" rx="9"/>
+  <text class="stxt" x="146" y="40">1. Person hits</text><text class="stxt" x="146" y="57">a bug</text>
+  <rect class="box" x="320" y="18" width="165" height="52" rx="9"/>
+  <text class="stxt" x="341" y="40">2. Opens the sheet,</text><text class="stxt" x="341" y="57">points, screenshots</text>
+  <rect class="box ok" x="535" y="18" width="175" height="52" rx="9"/>
+  <text class="stxt" x="556" y="40">3. SCRUBBED here</text>
+  <text class="stxt sm" x="556" y="57">confession never leaves</text>
+
+  <path class="arrow" d="M270 44 H318"/>
+  <path class="arrow" d="M485 44 H533"/>
+  <path class="arrow" d="M622 72 V112"/>
+
+  <!-- cloudflare row -->
+  <rect class="box" x="535" y="112" width="175" height="54" rx="9"/>
+  <text class="stxt" x="556" y="134">4. POST /api/bug</text>
+  <text class="stxt sm" x="556" y="151">re-checks the scrubbing</text>
+  <rect class="box" x="760" y="112" width="150" height="54" rx="9"/>
+  <text class="stxt" x="781" y="134">5. Case opens</text>
+  <text class="stxt sm" x="781" y="151">D1 + R2 evidence</text>
+  <path class="arrow" d="M710 139 H758"/>
+  <path class="arrow" d="M835 166 V250"/>
+
+  <!-- laptop row -->
+  <rect class="box dim" x="740" y="250" width="190" height="56" rx="9"/>
+  <text class="stxt" x="761" y="272">6. Watcher + AI triage</text>
+  <text class="stxt sm" x="761" y="289">reads it, decides what it is</text>
+
+  <rect class="box dim" x="470" y="250" width="215" height="56" rx="9"/>
+  <text class="stxt" x="491" y="272">7. Reproduce &amp; prove</text>
+  <text class="stxt sm" x="491" y="289">a test that fails BEFORE the fix</text>
+  <path class="arrow soft" d="M740 278 H688"/>
+
+  <rect class="box gate" x="285" y="250" width="150" height="56" rx="9"/>
+  <text class="stxt" x="303" y="272">8. YOU say yes</text>
+  <text class="stxt sm" x="303" y="289">gate 1 of 2</text>
+  <path class="arrow soft" d="M470 278 H438"/>
+
+  <!-- github row -->
+  <path class="arrow soft" d="M360 306 V386"/>
+  <rect class="box dim" x="285" y="386" width="150" height="52" rx="9"/>
+  <text class="stxt" x="304" y="408">9. Issue opened</text>
+  <text class="stxt sm" x="304" y="425">publicly, sanitised</text>
+
+  <rect class="box dim" x="470" y="386" width="175" height="52" rx="9"/>
+  <text class="stxt" x="491" y="408">10. Fixer writes it</text>
+  <text class="stxt sm" x="491" y="425">isolated, no secrets</text>
+  <path class="arrow soft" d="M435 412 H468"/>
+
+  <rect class="box gate" x="690" y="386" width="150" height="52" rx="9"/>
+  <text class="stxt" x="708" y="408">11. YOU say yes</text>
+  <text class="stxt sm" x="708" y="425">gate 2 of 2 &rarr; PR</text>
+  <path class="arrow soft" d="M645 412 H688"/>
+
+  <!-- back to person -->
+  <path class="arrow red" d="M880 386 V330 H960 V44 H716"/>
+  <text class="stxt lb" x="905" y="220">12. "it is</text>
+  <text class="stxt lb" x="905" y="238">fixed"</text>
+</svg>
+<figcaption>Solid boxes are built and running. Dashed boxes are designed, not yet written.
+Yellow boxes are the two places a human must click.</figcaption>
+</figure>
+
+<div class="legend">
+  <span><i style="background:#fffdf5;border:1.6px solid #26356e"></i>built &amp; running</span>
+  <span><i style="background:#f6f3e6;border:1.6px dashed #93a0c2"></i>designed, not built</span>
+  <span><i style="background:#ffe873;border:2px solid #26356e"></i>human gate</span>
+  <span><i style="background:#f2faf4;border:1.6px solid #2f7d4f"></i>privacy step</span>
+</div>
+
+<!-- ============================================ -->
+<h2><span class="n">Step 1.</span> How the report is sent <span class="badge built">BUILT</span></h2>
+
+<p>The page carries a 3 KB stub that is always awake. It does two things and nothing else: it keeps
+the last 40 error messages in an array, and it draws the <em>Report a problem</em> button. The real
+reporter &mdash; the sheet, the picker, the screenshot tool &mdash; is a separate 52 KB file that is only
+downloaded the first time somebody actually presses that button.</p>
+
+<p>That split exists for a specific reason. If the reporter only started listening when you opened
+it, it would have already missed the error you opened it about. And if it were baked into the page,
+every visitor would pay for a panel that almost nobody opens.</p>
+
+<h3>What gets collected, and what never does</h3>
+<table>
+  <tr><th>Collected</th><th>Never collected</th></tr>
+  <tr>
+    <td>
+      Console errors and warnings (last 60 seconds)<br>
+      Which requests were made, their status and speed<br>
+      Which buttons were pressed, by name<br>
+      Browser, screen size, language, online or not<br>
+      A coarse memory bucket, e.g. <code>&lt;32MB</code><br>
+      Screenshots, only ones the person took on purpose
+    </td>
+    <td>
+      The confession<br>
+      The recipient's email, instagram or number<br>
+      The <code>?t=</code> token that opens a private message<br>
+      Cookie values &mdash; or cookie <em>names</em><br>
+      localStorage, sessionStorage, IndexedDB<br>
+      Any DOM recording or keystroke replay
+    </td>
+  </tr>
+</table>
+
+<h3>The scrubbing pipeline</h3>
+<figure>
+<svg viewBox="0 0 960 250" role="img" aria-label="How a raw log line is scrubbed before it can leave the browser">
+  <rect class="box hot" x="10" y="30" width="250" height="66" rx="8"/>
+  <text class="stxt sm" x="26" y="52">raw, inside the tab:</text>
+  <text class="stxt" x="26" y="72">"send failed for I HAVE</text>
+  <text class="stxt" x="26" y="88">LOVED YOU to priya@..."</text>
+
+  <path class="arrow" d="M262 63 H320"/>
+  <rect class="box ok" x="322" y="18" width="200" height="42" rx="8"/>
+  <text class="stxt" x="338" y="35">A. exact values scrubbed</text>
+  <text class="stxt sm" x="338" y="51">whatever is in the 6 fields</text>
+
+  <rect class="box ok" x="322" y="70" width="200" height="42" rx="8"/>
+  <text class="stxt" x="338" y="87">B. patterns scrubbed</text>
+  <text class="stxt sm" x="338" y="103">emails, phones, tokens, ids</text>
+
+  <path class="arrow" d="M524 63 H582"/>
+  <rect class="box ok" x="584" y="30" width="240" height="66" rx="8"/>
+  <text class="stxt sm" x="600" y="52">what leaves the browser:</text>
+  <text class="stxt" x="600" y="72">"send failed for [typed]</text>
+  <text class="stxt" x="600" y="88">to [typed]"</text>
+
+  <text class="stxt lb" x="322" y="150">Why both? A is the important one.</text>
+  <text class="stxt sm" x="322" y="172">An email has a shape a pattern can find. A confession does not &mdash;</text>
+  <text class="stxt sm" x="322" y="189">it is ordinary prose. So we do not try to RECOGNISE the secret;</text>
+  <text class="stxt sm" x="322" y="206">we already know it is whatever sits in those six boxes right now.</text>
+  <text class="stxt sm" x="322" y="230">The browser test caught this. Patterns alone let a confession straight through.</text>
+</svg>
+<figcaption>Both passes run at capture time, not at send time.</figcaption>
+</figure>
+
+<div class="card good">
+  <strong>Screenshots are a special case.</strong> Once the page is pixels, no text scrubber can reach
+  into it. So the masking happens to the <em>page</em>: <code>data-capturing</code> goes on
+  <code>&lt;html&gt;</code>, the stylesheet hatches out every private field, we wait two animation
+  frames for that to actually paint, and only then rasterise. The wait is not fussiness &mdash; rasterising
+  in the same frame photographs the page as it looked before the mask landed.
+</div>
+
+<!-- ============================================ -->
+<h2><span class="n">Step 2.</span> How it is received and stored <span class="badge built">BUILT</span></h2>
+
+<p>The browser posts to <code>/api/bug</code> on the existing Cloudflare Worker. That route is
+deliberately suspicious of its own client.</p>
+
+<figure>
+<svg viewBox="0 0 960 300" role="img" aria-label="The checks the intake route runs, in order">
+  <rect class="box" x="20" y="20" width="140" height="44" rx="8"/>
+  <text class="stxt" x="40" y="40">POST arrives</text><text class="stxt sm" x="40" y="56">multipart</text>
+
+  <g>
+    <rect class="box hot" x="205" y="14" width="175" height="38" rx="8"/>
+    <text class="stxt" x="221" y="32">1. same origin?</text><text class="stxt sm" x="221" y="46">else 403</text>
+    <rect class="box hot" x="205" y="60" width="175" height="38" rx="8"/>
+    <text class="stxt" x="221" y="78">2. under 4 MB?</text><text class="stxt sm" x="221" y="92">else 413</text>
+    <rect class="box hot" x="205" y="106" width="175" height="38" rx="8"/>
+    <text class="stxt" x="221" y="124">3. under 6 per hour?</text><text class="stxt sm" x="221" y="138">else 429 + Retry-After</text>
+    <rect class="box hot" x="205" y="152" width="175" height="38" rx="8"/>
+    <text class="stxt" x="221" y="170">4. words &gt; 5 chars?</text><text class="stxt sm" x="221" y="184">else 400</text>
+    <rect class="box hot" x="205" y="198" width="175" height="46" rx="8"/>
+    <text class="stxt" x="221" y="216">5. any token left in it?</text>
+    <text class="stxt sm" x="221" y="232">then 422 &mdash; REFUSE, do not clean</text>
+  </g>
+  <path class="arrow" d="M162 42 H203"/>
+
+  <path class="arrow" d="M382 120 H440"/>
+  <rect class="box" x="442" y="60" width="165" height="46" rx="8"/>
+  <text class="stxt" x="458" y="80">images &rarr; R2</text><text class="stxt sm" x="458" y="96">max 5, 1 MB each</text>
+  <rect class="box" x="442" y="132" width="165" height="46" rx="8"/>
+  <text class="stxt" x="458" y="152">case row &rarr; D1</text><text class="stxt sm" x="458" y="168">state = received</text>
+  <path class="arrow" d="M524 108 V130"/>
+
+  <path class="arrow" d="M609 155 H665"/>
+  <rect class="box ok" x="667" y="132" width="180" height="46" rx="8"/>
+  <text class="stxt" x="683" y="152">reference returned</text>
+  <text class="stxt sm" x="683" y="168">the person sees a code</text>
+
+  <text class="stxt lb" x="442" y="215">If the D1 write fails, the images</text>
+  <text class="stxt lb" x="442" y="233">just uploaded are DELETED again.</text>
+  <text class="stxt sm" x="442" y="255">No case may ever point at evidence that is not there,</text>
+  <text class="stxt sm" x="442" y="271">and nothing may sit in storage that no case owns.</text>
+</svg>
+<figcaption>Order matters: the cheap refusals run before the expensive parsing.</figcaption>
+</figure>
+
+<p><strong>Why check 5 refuses instead of cleaning.</strong> The browser already scrubbed everything.
+If a signed token still shows up here, that means the client-side scrubber did not run &mdash; probably a
+stale cached script. Quietly cleaning it would hide a broken safety net. Refusing it, loudly, means
+we find out.</p>
+
+<h3>The case file</h3>
+<p>One row in a new <code>bug_reports</code> table <em>is</em> the case. It carries the report, the
+verdict, the issue, the pull request and whether the reporter has been told. So "what happened to
+report X" is one query, never a hunt through logs.</p>
+
+<table>
+  <tr><th>Column</th><th>Holds</th></tr>
+  <tr><td class="mono">state</td><td>where the case has got to &mdash; the spine of the whole loop</td></tr>
+  <tr><td class="mono">note, kind, route</td><td>what they said, which sort of problem, which page</td></tr>
+  <tr><td class="mono">bundle_json</td><td>the sanitised capture: logs, request shapes, steps, environment</td></tr>
+  <tr><td class="mono">shot_keys</td><td>where the screenshots live in R2</td></tr>
+  <tr><td class="mono">verdict, verdict_why, confidence</td><td>what triage decided, in words, and how sure it was</td></tr>
+  <tr><td class="mono">issue_url, pr_url, shipped_sha</td><td>filled in only after a human said yes</td></tr>
+  <tr><td class="mono">reply_email, notified_at</td><td>who to tell, and whether we told them</td></tr>
+</table>
+
+<!-- ============================================ -->
+<h2><span class="n">Step 3.</span> How it is read <span class="badge todo">NOT YET</span></h2>
+
+<p>A small script on your laptop wakes on a timer, picks up cases in <code>received</code>, and asks a
+model to classify each one. It runs <strong>read-only</strong>: no GitHub, no email, no ability to
+change a single file. Reading and doing are separate jobs held by separate processes.</p>
+
+<figure>
+<svg viewBox="0 0 960 330" role="img" aria-label="The five verdicts triage can reach and what each one causes">
+  <rect class="box" x="20" y="130" width="150" height="50" rx="8"/>
+  <text class="stxt" x="38" y="152">a case, plus its</text><text class="stxt" x="38" y="169">sanitised evidence</text>
+  <path class="arrow" d="M172 155 H228"/>
+  <rect class="box gate" x="230" y="126" width="130" height="58" rx="8"/>
+  <text class="stxt" x="252" y="150">AI reads it</text><text class="stxt sm" x="252" y="167">against a fixed schema</text>
+
+  <g>
+    <rect class="box ok" x="440" y="8" width="200" height="42" rx="8"/>
+    <text class="stxt" x="456" y="26">real_bug</text>
+    <text class="stxt sm" x="456" y="42">&rarr; "noted, we are on it"</text>
+
+    <rect class="box" x="440" y="60" width="200" height="42" rx="8"/>
+    <text class="stxt" x="456" y="78">user_error</text>
+    <text class="stxt sm" x="456" y="94">&rarr; reply explaining how</text>
+
+    <rect class="box" x="440" y="112" width="200" height="42" rx="8"/>
+    <text class="stxt" x="456" y="130">cache_cookie</text>
+    <text class="stxt sm" x="456" y="146">&rarr; "try a hard refresh"</text>
+
+    <rect class="box" x="440" y="164" width="200" height="42" rx="8"/>
+    <text class="stxt" x="456" y="182">feature_request</text>
+    <text class="stxt sm" x="456" y="198">&rarr; your review queue</text>
+
+    <rect class="box" x="440" y="216" width="200" height="42" rx="8"/>
+    <text class="stxt" x="456" y="234">abuse / unactionable</text>
+    <text class="stxt sm" x="456" y="250">&rarr; closed, no reply</text>
+
+    <rect class="box gate" x="440" y="268" width="200" height="46" rx="8"/>
+    <text class="stxt" x="456" y="288">needs_human</text>
+    <text class="stxt sm" x="456" y="304">&rarr; waits for you</text>
+  </g>
+
+  <path class="arrow" d="M362 148 C 400 140, 405 30, 438 29"/>
+  <path class="arrow" d="M362 152 C 400 150, 405 82, 438 81"/>
+  <path class="arrow" d="M362 155 H438"/>
+  <path class="arrow" d="M362 160 C 400 165, 405 184, 438 185"/>
+  <path class="arrow" d="M362 165 C 400 190, 405 236, 438 237"/>
+  <path class="arrow red" d="M362 172 C 400 230, 405 290, 438 291"/>
+
+  <path class="arrow" d="M540 50 V58" />
+  <text class="stxt lb" x="676" y="30">only this one</text>
+  <text class="stxt lb" x="676" y="48">can reach the fixer</text>
+  <text class="stxt sm" x="676" y="76">a feature request is never</text>
+  <text class="stxt sm" x="676" y="93">implemented automatically</text>
+  <text class="stxt sm" x="676" y="118">anything the model is not</text>
+  <text class="stxt sm" x="676" y="135">sure about falls to the bottom</text>
+  <text class="stxt sm" x="676" y="152">box, which costs you 30 seconds</text>
+  <text class="stxt sm" x="676" y="169">and costs the reporter nothing</text>
+</svg>
+<figcaption>Five verdicts, one escape hatch. Malformed model output is not a guess &mdash; it becomes needs_human.</figcaption>
+</figure>
+
+<div class="card warn">
+  <strong>The failure that actually hurts</strong> is a confident <code>user_error</code> on a real bug.
+  You tell somebody "that is not a bug", close it, and they never report anything again. So the two
+  verdicts that produce a dismissive reply carry the highest confidence bar, and every one of them is
+  logged for you to skim. When in doubt the machine is required to be unsure.
+</div>
+
+<!-- ============================================ -->
+<h2><span class="n">Step 4.</span> How the GitHub issue is created <span class="badge todo">NOT YET</span></h2>
+
+<p>This is where the two hard constraints live.</p>
+
+<ol>
+  <li><strong>Your repository is public.</strong> <code>github.com/luv-jeri/beatass</code> is open to the
+  internet. So the issue body can only ever contain a sanitised summary: what broke, on which page,
+  which error, which browser. Never the raw capture, never a screenshot of somebody's screen, never
+  the reporter's address, never a <code>/m</code> link.</li>
+  <li><strong>Opening an issue is an outward action.</strong> Under your own rules, nothing leaves the
+  system without your yes. So the machine writes the issue as a <em>draft</em> and stops.</li>
+</ol>
+
+<figure>
+<svg viewBox="0 0 960 190" role="img" aria-label="Issue creation, showing the human gate in the middle">
+  <rect class="box dim" x="20" y="60" width="165" height="52" rx="8"/>
+  <text class="stxt" x="36" y="82">verdict: real_bug</text>
+  <text class="stxt sm" x="36" y="99">with its evidence</text>
+  <path class="arrow soft" d="M187 86 H235"/>
+  <rect class="box dim" x="237" y="60" width="175" height="52" rx="8"/>
+  <text class="stxt" x="253" y="82">draft issue written</text>
+  <text class="stxt sm" x="253" y="99">to a file on your laptop</text>
+  <path class="arrow soft" d="M414 86 H462"/>
+  <rect class="box gate" x="464" y="52" width="160" height="68" rx="8"/>
+  <text class="stxt" x="484" y="78">YOU read it</text>
+  <text class="stxt" x="484" y="96">and say yes</text>
+  <text class="stxt sm" x="484" y="112">one click</text>
+  <path class="arrow" d="M626 86 H674"/>
+  <rect class="box" x="676" y="60" width="175" height="52" rx="8"/>
+  <text class="stxt" x="692" y="82">gh issue create</text>
+  <text class="stxt sm" x="692" y="99">now it is public</text>
+
+  <text class="stxt lb" x="237" y="150">nothing before this point has touched the outside world</text>
+  <path class="arrow red" d="M420 140 H540 V126"/>
+</svg>
+<figcaption>The agent does all the work. You do one click. Nothing about a user is ever published in your name without you seeing it.</figcaption>
+</figure>
+
+<!-- ============================================ -->
+<h2><span class="n">Step 5.</span> How the fix and the PR are made <span class="badge todo">NOT YET</span></h2>
+
+<p>An agent that writes patches from bug reports with no proof is a machine for producing
+plausible-looking wrong code at scale. So the fixer is not allowed to open a pull request on
+confidence. It has to show its working.</p>
+
+<h3>The gate: no pre-fix failure evidence, no PR</h3>
+<figure>
+<svg viewBox="0 0 960 300" role="img" aria-label="The red to green gate the fixer must pass">
+  <rect class="box dim" x="20" y="20" width="160" height="46" rx="8"/>
+  <text class="stxt" x="36" y="40">issue picked up</text>
+  <text class="stxt sm" x="36" y="56">isolated worktree</text>
+
+  <path class="arrow soft" d="M182 43 H236"/>
+  <rect class="box gate" x="238" y="14" width="210" height="58" rx="8"/>
+  <text class="stxt" x="256" y="36">can it make a test that</text>
+  <text class="stxt" x="256" y="54">FAILS on today's code?</text>
+
+  <path class="arrow red" d="M343 74 V118"/>
+  <text class="stxt lb" x="352" y="100">no</text>
+  <rect class="box hot" x="238" y="120" width="210" height="46" rx="8"/>
+  <text class="stxt" x="254" y="140">STOP. Write a note.</text>
+  <text class="stxt sm" x="254" y="156">A human looks. No PR.</text>
+
+  <path class="arrow" d="M450 43 H504"/>
+  <text class="stxt lb" x="462" y="32">yes</text>
+  <rect class="box dim" x="506" y="20" width="170" height="46" rx="8"/>
+  <text class="stxt" x="522" y="40">write the fix</text>
+  <text class="stxt sm" x="522" y="56">smallest change</text>
+
+  <path class="arrow soft" d="M678 43 H722"/>
+  <rect class="box gate" x="724" y="14" width="215" height="58" rx="8"/>
+  <text class="stxt" x="742" y="36">that same test now passes</text>
+  <text class="stxt" x="742" y="54">AND the whole suite is green</text>
+
+  <path class="arrow soft" d="M831 74 V116"/>
+  <rect class="box gate" x="724" y="118" width="215" height="56" rx="8"/>
+  <text class="stxt" x="742" y="140">YOU say yes</text>
+  <text class="stxt sm" x="742" y="157">gate 2 of 2</text>
+
+  <path class="arrow soft" d="M831 176 V214"/>
+  <rect class="box" x="724" y="216" width="215" height="46" rx="8"/>
+  <text class="stxt" x="742" y="236">draft PR opened</text>
+  <text class="stxt sm" x="742" y="252">you review, you merge</text>
+
+  <text class="stxt lb" x="30" y="200">What the fixer can NEVER do:</text>
+  <text class="stxt sm" x="30" y="224">merge &middot; push to main &middot; deploy &middot; send email</text>
+  <text class="stxt sm" x="30" y="242">read a production secret &middot; touch the live database</text>
+  <text class="stxt sm" x="30" y="266">It works in a throwaway copy of the repo with none of those powers,</text>
+  <text class="stxt sm" x="30" y="283">so the worst thing a bad run can produce is a bad draft nobody merges.</text>
+</svg>
+<figcaption>The proof is red-then-green on the same test. Confidence is not evidence.</figcaption>
+</figure>
+
+<div class="card">
+  <strong>Why a path allowlist would not work here.</strong> The obvious cage is "the agent may only
+  edit these files". It is useless in this codebase: <code>src/index.js</code> is one file containing
+  sending, inbound mail, admin login, private message views and blocking. Allow it and the agent can
+  change anything that matters; forbid it and almost no real bug is fixable. So the cage is
+  <em>capability</em>, not path &mdash; the fixer simply does not hold the powers listed above.
+</div>
+
+<h3>One more thing that has to be true first</h3>
+<div class="card warn">
+  <code>main</code> has no branch protection today, and a push to <code>main</code> deploys to the live
+  site automatically. So a merged agent PR would ship the same minute. Turning on branch protection is
+  a five minute change and it must happen before the fixer is ever allowed to open a real PR.
+  You have chosen to do it last &mdash; that is fine, as long as it lands before that switch.
+</div>
+
+<!-- ============================================ -->
+<h2><span class="n">Step 6.</span> How the person finds out <span class="badge todo">NOT YET</span></h2>
+
+<p>Being told "it is fixed" has to mean it is actually live, not merely merged. So the case only
+reaches <code>shipped</code> when the deployed commit is confirmed in production &mdash; not when the PR
+closes. Then, and only then, the reporter gets the last of the four emails.</p>
+
+<table>
+  <tr><th>When</th><th>What they get</th></tr>
+  <tr><td>the moment it arrives</td><td>"Thank you, we have it" plus a reference code</td></tr>
+  <tr><td>triage says real bug</td><td>"It is a real issue, we are working on it"</td></tr>
+  <tr><td>triage says not a bug</td><td>an actual explanation of how to do the thing</td></tr>
+  <tr><td>proven live</td><td>"The problem you reported is fixed"</td></tr>
+</table>
+
+<p>An attacker must not be able to type a stranger's address into the reply box and make your product
+email them. So replies are rate limited, carry only fixed product copy, and never contain a word the
+reporter wrote.</p>
+
+<!-- ============================================ -->
+<h2><span class="n">Where it stands</span> today</h2>
+
+<figure>
+<svg viewBox="0 0 900 260" role="img" aria-label="Progress bar chart across the seven phases">
+  <g class="stxt">
+    <text x="0" y="24">1. Capture, privacy-safe</text>
+    <rect x="250" y="10" width="420" height="18" rx="4" fill="#e6e2d4"/>
+    <rect x="250" y="10" width="420" height="18" rx="4" fill="#2f7d4f"/>
+    <text x="686" y="24" class="stxt sm">done &middot; 28 checks</text>
+
+    <text x="0" y="58">2. The side sheet</text>
+    <rect x="250" y="44" width="420" height="18" rx="4" fill="#e6e2d4"/>
+    <rect x="250" y="44" width="420" height="18" rx="4" fill="#2f7d4f"/>
+    <text x="686" y="58" class="stxt sm">done</text>
+
+    <text x="0" y="92">3. Wired into the page</text>
+    <rect x="250" y="78" width="420" height="18" rx="4" fill="#e6e2d4"/>
+    <rect x="250" y="78" width="420" height="18" rx="4" fill="#2f7d4f"/>
+    <text x="686" y="92" class="stxt sm">done &middot; 29 checks</text>
+
+    <text x="0" y="126">4. Intake and the case file</text>
+    <rect x="250" y="112" width="420" height="18" rx="4" fill="#e6e2d4"/>
+    <rect x="250" y="112" width="420" height="18" rx="4" fill="#2f7d4f"/>
+    <text x="686" y="126" class="stxt sm">done &middot; 23 checks</text>
+
+    <text x="0" y="160">5. AI triage</text>
+    <rect x="250" y="146" width="420" height="18" rx="4" fill="#e6e2d4"/>
+    <rect x="250" y="146" width="0" height="18" rx="4" fill="#c98a1b"/>
+    <text x="686" y="160" class="stxt sm">next</text>
+
+    <text x="0" y="194">6. Issue, fixer, PR</text>
+    <rect x="250" y="180" width="420" height="18" rx="4" fill="#e6e2d4"/>
+    <text x="686" y="194" class="stxt sm">designed</text>
+
+    <text x="0" y="228">7. Ship proof and notify</text>
+    <rect x="250" y="214" width="420" height="18" rx="4" fill="#e6e2d4"/>
+    <text x="686" y="228" class="stxt sm">designed</text>
+  </g>
+</svg>
+<figcaption>Four of seven phases built, with 80 automated checks holding them in place.</figcaption>
+</figure>
+
+<h3>What you can do right now</h3>
+<p>Run <code>npx wrangler dev --local --port 8899</code> from the project, open
+<code>http://127.0.0.1:8899</code>, and file a report. Then read it back:</p>
+<p><code>npx wrangler d1 execute beatass-db --local --command "SELECT id, state, kind, note FROM bug_reports ORDER BY ts DESC LIMIT 5"</code></p>
+
+<div class="foot">
+  <p>Every claim on this page about built behaviour is backed by a test in <code>bugreport/</code>.
+  The design behind the unbuilt half, including the argument that shaped it, is in
+  <code>PLAN-SELFHEAL.md</code> and <code>PLAN-SELFHEAL-SOL.md</code>.</p>
+</div>
+
+<!-- ============================================================= -->
+<!-- ARCHITECTURE REPORT                                            -->
+<!-- ============================================================= -->
+
+<div class="arch">
+<h1 style="margin-top:70px">The architecture, in full</h1>
+<p class="sub">Every moving part, what it may do, and what happens when it breaks</p>
+
+<p class="lede">The section above explains the loop as a story. This one is the reference: every
+component, every table, every route, every trust boundary, and the failure behaviour of each. It
+covers the product as it exists on 15 August 2026 &mdash; the confession pipeline that was already
+here, and the bug loop being added to it.</p>
+
+<h2><span class="n">A.</span> The system in one picture</h2>
+
+<figure>
+<svg viewBox="0 0 1000 520" role="img" aria-label="Full system architecture across browser, edge, storage and laptop">
+  <!-- browser -->
+  <rect x="14" y="14" width="290" height="196" rx="10" fill="#fffdf5" stroke="#26356e" stroke-width="1.6"/>
+  <text class="stxt lb" x="30" y="36">THE BROWSER (one static page)</text>
+  <rect class="box" x="30" y="48" width="120" height="38" rx="6"/>
+  <text class="stxt sm" x="42" y="64">confession form</text><text class="stxt sm" x="42" y="78">+ doll canvas</text>
+  <rect class="box" x="164" y="48" width="124" height="38" rx="6"/>
+  <text class="stxt sm" x="176" y="64">gif.js encoder</text><text class="stxt sm" x="176" y="78">inlined, 29 KB</text>
+  <rect class="box ok" x="30" y="96" width="120" height="42" rx="6"/>
+  <text class="stxt sm" x="42" y="112">bug stub 3 KB</text><text class="stxt sm" x="42" y="126">always awake</text>
+  <rect class="box ok" x="164" y="96" width="124" height="42" rx="6"/>
+  <text class="stxt sm" x="176" y="112">bugreport.js 51 KB</text><text class="stxt sm" x="176" y="126">on demand only</text>
+  <text class="stxt sm" x="30" y="160">286 KB page, built from template.html</text>
+  <text class="stxt sm" x="30" y="176">by build.py. Fonts base64 inline;</text>
+  <text class="stxt sm" x="30" y="192">no framework, no bundler.</text>
+
+  <!-- edge -->
+  <rect x="330" y="14" width="330" height="300" rx="10" fill="#fffdf5" stroke="#26356e" stroke-width="1.6"/>
+  <text class="stxt lb" x="346" y="36">CLOUDFLARE WORKER &mdash; src/index.js</text>
+  <text class="stxt sm" x="346" y="52">1,724 lines, one file, 12 routes</text>
+
+  <rect class="box" x="346" y="62" width="140" height="30" rx="5"/><text class="stxt sm" x="356" y="81">/ and /404</text>
+  <rect class="box" x="496" y="62" width="148" height="30" rx="5"/><text class="stxt sm" x="506" y="81">/api/send</text>
+  <rect class="box" x="346" y="98" width="140" height="30" rx="5"/><text class="stxt sm" x="356" y="117">/m private view</text>
+  <rect class="box" x="496" y="98" width="148" height="30" rx="5"/><text class="stxt sm" x="506" y="117">/media/:id</text>
+  <rect class="box" x="346" y="134" width="140" height="30" rx="5"/><text class="stxt sm" x="356" y="153">/block /report</text>
+  <rect class="box" x="496" y="134" width="148" height="30" rx="5"/><text class="stxt sm" x="506" y="153">/reply</text>
+  <rect class="box hot" x="346" y="170" width="140" height="30" rx="5"/><text class="stxt sm" x="356" y="189">/admin/*</text>
+  <rect class="box ok" x="496" y="170" width="148" height="30" rx="5"/><text class="stxt sm" x="506" y="189">/api/bug NEW</text>
+  <rect class="box" x="346" y="212" width="298" height="34" rx="5"/>
+  <text class="stxt sm" x="356" y="233">email() &mdash; inbound reply relay (reply+id@)</text>
+  <text class="stxt sm" x="346" y="266">Global try/catch. One shared HMAC secret</text>
+  <text class="stxt sm" x="346" y="282">signs admin sessions, block, report, reply</text>
+  <text class="stxt sm" x="346" y="298">and view tokens, domain-separated by prefix.</text>
+
+  <!-- storage -->
+  <rect x="686" y="14" width="300" height="196" rx="10" fill="#fffdf5" stroke="#26356e" stroke-width="1.6"/>
+  <text class="stxt lb" x="702" y="36">STATE</text>
+  <rect class="box" x="702" y="48" width="130" height="52" rx="6"/>
+  <text class="stxt sm" x="712" y="66">D1 (SQLite)</text>
+  <text class="stxt sm" x="712" y="82">messages, events,</text><text class="stxt sm" x="712" y="95">blocklist, bug_reports</text>
+  <rect class="box" x="844" y="48" width="126" height="52" rx="6"/>
+  <text class="stxt sm" x="854" y="66">R2 (objects)</text>
+  <text class="stxt sm" x="854" y="82">doll gif/mp4,</text><text class="stxt sm" x="854" y="95">bug screenshots</text>
+  <rect class="box" x="702" y="110" width="130" height="44" rx="6"/>
+  <text class="stxt sm" x="712" y="128">KV (RATE)</text><text class="stxt sm" x="712" y="143">counters, TTL'd</text>
+  <rect class="box" x="844" y="110" width="126" height="44" rx="6"/>
+  <text class="stxt sm" x="854" y="128">Resend</text><text class="stxt sm" x="854" y="143">outbound email</text>
+  <text class="stxt sm" x="702" y="176">Nothing here is a queue. The case row's</text>
+  <text class="stxt sm" x="702" y="192">state column IS the work queue.</text>
+
+  <!-- laptop -->
+  <rect x="330" y="336" width="656" height="170" rx="10" fill="#f6f3e6" stroke="#93a0c2" stroke-width="1.6" stroke-dasharray="6 4"/>
+  <text class="stxt lb" x="346" y="358">YOUR LAPTOP &mdash; scheduled jobs (launchd)</text>
+  <rect class="box" x="346" y="370" width="145" height="44" rx="6"/>
+  <text class="stxt sm" x="356" y="388">EXISTING today:</text><text class="stxt sm" x="356" y="403">instagram + whatsapp</text>
+  <rect class="box dim" x="502" y="370" width="145" height="44" rx="6"/>
+  <text class="stxt sm" x="512" y="388">triage (read only)</text><text class="stxt sm" x="512" y="403">no write powers</text>
+  <rect class="box dim" x="658" y="370" width="145" height="44" rx="6"/>
+  <text class="stxt sm" x="668" y="388">fixer (on demand)</text><text class="stxt sm" x="668" y="403">isolated worktree</text>
+  <rect class="box dim" x="814" y="370" width="156" height="44" rx="6"/>
+  <text class="stxt sm" x="824" y="388">notifier</text><text class="stxt sm" x="824" y="403">tells the reporter</text>
+  <text class="stxt sm" x="346" y="440">All four share tools/lib/backoff.sh: three consecutive failures open a breaker and back off up to 6 hours.</text>
+  <text class="stxt sm" x="346" y="462">None of them may deploy, merge, push, or spend money. The two that can act outward wait for a human click.</text>
+  <text class="stxt sm" x="346" y="490">Solid box = running today. Dashed = designed.</text>
+
+  <path class="arrow" d="M304 112 H328"/>
+  <path class="arrow" d="M660 100 H684"/>
+  <path class="arrow soft" d="M836 210 V336"/>
+</svg>
+<figcaption>Four tiers. The browser is dumb and careful; the Worker is the only thing that touches state; the laptop does slow work and holds no power to publish.</figcaption>
+</figure>
+
+<h2><span class="n">B.</span> Component inventory</h2>
+<table>
+  <tr><th>Component</th><th>Size</th><th>Job</th><th>Status</th></tr>
+  <tr><td class="mono">template.html</td><td class="mono">2,167 ln</td><td>The hand-authored page. The only file you edit; <code>beatass.html</code> is generated</td><td>existing</td></tr>
+  <tr><td class="mono">build.py</td><td class="mono">285 ln</td><td>Inlines fonts + gif.js, writes the page, side pages, sitemap, and now copies the reporter</td><td>extended</td></tr>
+  <tr><td class="mono">src/index.js</td><td class="mono">1,724 ln</td><td>The entire backend: 12 routes, inbound mail, admin, abuse controls</td><td>extended</td></tr>
+  <tr><td class="mono">bugreport/bugreport.js</td><td class="mono">707 ln</td><td>Capture, scrubbing, picker, screenshot mode, the sheet, submit</td><td>new</td></tr>
+  <tr><td class="mono">bugreport/bugreport.css</td><td class="mono">263 ln</td><td>Sheet styling and, critically, the capture-time masking rules</td><td>new</td></tr>
+  <tr><td class="mono">bugreport/vendor-screenshot.js</td><td class="mono">21 KB</td><td>Pre-built DOM rasteriser, committed like gif.js so the build needs no bundler</td><td>new</td></tr>
+  <tr><td class="mono">migrations/005-bug-reports.sql</td><td class="mono">55 ln</td><td>The case-file table and its three indexes</td><td>new</td></tr>
+  <tr><td class="mono">bugreport/test-*.mjs</td><td class="mono">587 ln</td><td>80 checks: redaction, in-browser leak hunt, intake behaviour</td><td>new</td></tr>
+</table>
+
+<h2><span class="n">C.</span> The case state machine</h2>
+<figure>
+<svg viewBox="0 0 1000 250" role="img" aria-label="States a bug report moves through">
+  <g>
+    <rect class="box ok" x="10" y="90" width="104" height="42" rx="7"/><text class="stxt sm" x="26" y="116">received</text>
+    <rect class="box dim" x="146" y="90" width="104" height="42" rx="7"/><text class="stxt sm" x="164" y="116">triaged</text>
+    <rect class="box dim" x="282" y="90" width="112" height="42" rx="7"/><text class="stxt sm" x="296" y="116">issue_ready</text>
+    <rect class="box dim" x="426" y="90" width="108" height="42" rx="7"/><text class="stxt sm" x="440" y="116">issue_open</text>
+    <rect class="box dim" x="566" y="90" width="96" height="42" rx="7"/><text class="stxt sm" x="582" y="116">fixing</text>
+    <rect class="box dim" x="694" y="90" width="104" height="42" rx="7"/><text class="stxt sm" x="710" y="116">pr_open</text>
+    <rect class="box dim" x="830" y="90" width="104" height="42" rx="7"/><text class="stxt sm" x="848" y="116">shipped</text>
+  </g>
+  <path class="arrow" d="M116 111 H144"/>
+  <path class="arrow soft" d="M252 111 H280"/>
+  <path class="arrow soft" d="M396 111 H424"/>
+  <path class="arrow soft" d="M536 111 H564"/>
+  <path class="arrow soft" d="M664 111 H692"/>
+  <path class="arrow soft" d="M800 111 H828"/>
+
+  <rect class="box gate" x="282" y="24" width="112" height="34" rx="7"/><text class="stxt sm" x="300" y="46">YOU: publish</text>
+  <path class="arrow" d="M338 60 V88"/>
+  <rect class="box gate" x="694" y="24" width="104" height="34" rx="7"/><text class="stxt sm" x="712" y="46">YOU: open PR</text>
+  <path class="arrow" d="M746 60 V88"/>
+
+  <rect class="box hot" x="146" y="176" width="130" height="42" rx="7"/>
+  <text class="stxt sm" x="162" y="194">dismissed</text><text class="stxt sm" x="162" y="209">not a defect</text>
+  <path class="arrow red" d="M198 134 V174"/>
+  <rect class="box hot" x="308" y="176" width="140" height="42" rx="7"/>
+  <text class="stxt sm" x="324" y="194">needs_human</text><text class="stxt sm" x="324" y="209">parked, waiting</text>
+  <path class="arrow red" d="M240 132 C 280 150, 330 156, 360 174"/>
+
+  <text class="stxt sm" x="500" y="196">Every move is a conditional UPDATE naming the state it is allowed to move FROM,</text>
+  <text class="stxt sm" x="500" y="213">the same trick the confession queue already uses. Two runs cannot both claim one case,</text>
+  <text class="stxt sm" x="500" y="230">and a crafted request naming the wrong state simply matches no row.</text>
+</svg>
+<figcaption>Only <code>received</code> exists today. The rest is the designed spine.</figcaption>
+</figure>
+
+<h2><span class="n">D.</span> Trust boundaries</h2>
+<p>Four boundaries, each with a different assumption about who is lying.</p>
+<table>
+  <tr><th>Boundary</th><th>Assumption</th><th>Enforcement</th></tr>
+  <tr><td>Browser &rarr; Worker</td><td>The client may be stale, modified, or hostile</td>
+      <td>Same-origin check, size cap before parsing, rate limit before parsing, and a second scrub check that <em>refuses</em> rather than cleans</td></tr>
+  <tr><td>Public &rarr; /admin</td><td>Anyone may knock</td>
+      <td>HMAC-signed cookie, constant-time compare, HttpOnly + Secure + SameSite=Lax, 10 attempts per 15 min, fails closed when the secret is absent</td></tr>
+  <tr><td>Case store &rarr; GitHub</td><td>The repository is public and permanent</td>
+      <td>Only a sanitised summary may cross. Never the raw capture, a screenshot, a reporter address, or a <code>/m</code> link. A human clicks</td></tr>
+  <tr><td>Agent &rarr; production</td><td>An agent will eventually be confidently wrong</td>
+      <td>No merge, no push, no deploy, no secrets, no live database. Worst case is a draft nobody merges</td></tr>
+</table>
+
+<h2><span class="n">E.</span> Privacy, as layers</h2>
+<p>No single mechanism is trusted. Five independent things must all fail before a confession escapes.</p>
+<figure>
+<svg viewBox="0 0 900 260" role="img" aria-label="Five layers of privacy defence">
+  <g>
+    <rect class="box ok" x="20" y="14" width="860" height="38" rx="6"/>
+    <text class="stxt" x="36" y="32">1. NOT OFFERED &mdash; the reporter does not exist on /m or /admin, the two pages that render other people's messages</text>
+    <text class="stxt sm" x="36" y="46">a button that is not there cannot be misused</text>
+
+    <rect class="box ok" x="20" y="60" width="860" height="38" rx="6"/>
+    <text class="stxt" x="36" y="78">2. SCRUBBED AT CAPTURE &mdash; exact field values, then patterns, applied as text enters a buffer</text>
+    <text class="stxt sm" x="36" y="92">not before sending: before storing, so a bug in the sender cannot leak what was never held</text>
+
+    <rect class="box ok" x="20" y="106" width="860" height="38" rx="6"/>
+    <text class="stxt" x="36" y="124">3. MASKED BEFORE RASTERISING &mdash; private fields are hatched out of the page, then the screenshot is taken</text>
+    <text class="stxt sm" x="36" y="138">the only defence that works once something is pixels</text>
+
+    <rect class="box ok" x="20" y="152" width="860" height="38" rx="6"/>
+    <text class="stxt" x="36" y="170">4. REFUSED AT THE DOOR &mdash; the Worker re-runs the check and rejects anything still carrying a token with 422</text>
+    <text class="stxt sm" x="36" y="184">a stale cached script becomes a loud failure instead of a silent leak</text>
+
+    <rect class="box ok" x="20" y="198" width="860" height="38" rx="6"/>
+    <text class="stxt" x="36" y="216">5. PROVEN BY CANARY &mdash; tests type a real confession and hunt for it in the bytes that actually leave a browser</text>
+    <text class="stxt sm" x="36" y="230">this layer is what found the leak the other four were missing</text>
+  </g>
+</svg>
+<figcaption>Layer 5 is the one that matters most. It is the only layer that can tell you the other four are wrong.</figcaption>
+</figure>
+
+<div class="card warn">
+  <strong>What is deliberately NOT protected.</strong> The character counter stays visible in a
+  screenshot, so the <em>length</em> of a confession leaks. Left alone on purpose: it is harmless and it
+  is genuinely useful when a bug turns out to be length-related. Named here so it is a decision on the
+  record, not an oversight.
+</div>
+
+<h2><span class="n">F.</span> Failure behaviour</h2>
+<p>What each failure does, and which direction it fails in. Failing <em>closed</em> means it stops;
+failing <em>open</em> means it carries on.</p>
+<table>
+  <tr><th>If this breaks</th><th>What happens</th><th>Direction</th></tr>
+  <tr><td>The screenshot library will not load</td><td>The report still sends, without a picture, and says so</td><td>open, correctly</td></tr>
+  <tr><td>R2 rejects a screenshot</td><td>The words are still stored; the case simply has less evidence</td><td>open, correctly</td></tr>
+  <tr><td>The D1 insert fails</td><td>Images just uploaded are deleted again, and the person is told to retry</td><td>closed, correctly</td></tr>
+  <tr><td>The scrubber did not run</td><td>422, nothing stored, the person is asked to reload</td><td>closed, correctly</td></tr>
+  <tr><td>The model returns nonsense</td><td>Verdict becomes <code>needs_human</code>. Never a guess</td><td>closed, correctly</td></tr>
+  <tr><td>The fixer cannot reproduce</td><td>It writes a note and stops. No PR</td><td>closed, correctly</td></tr>
+  <tr><td>A laptop job dies</td><td>Backoff opens after 3 failures, up to 6 hours between tries</td><td>closed</td></tr>
+  <tr><td class="mono">BLOCK_SECRET</td><td>Every signed route returns 500. Nothing is forgeable, but nothing works either</td><td>closed, expensively</td></tr>
+</table>
+
+<h2><span class="n">G.</span> Test architecture</h2>
+<table>
+  <tr><th>Suite</th><th>Runs against</th><th>Proves</th><th>Checks</th></tr>
+  <tr><td class="mono">test-privacy.mjs</td><td>the module in plain node</td><td>the redaction rules are individually correct</td><td>28</td></tr>
+  <tr><td class="mono">test-browser.mjs</td><td>a real Chromium on the built page</td><td>nothing private is in the bytes that leave; the screenshot mask holds</td><td>29</td></tr>
+  <tr><td class="mono">test-intake.mjs</td><td>a real Worker on a real local D1</td><td>the door refuses what it should and stores what it should</td><td>23</td></tr>
+</table>
+<p>The layering is deliberate. The unit suite was fully green at the moment the browser suite found a
+confession leaving in a log line &mdash; because the rules were right and the wiring was not. A test that
+cannot see the real bytes cannot tell you that.</p>
+
+<div class="card">
+  <strong>Every non-trivial rule here has a mutation control.</strong> Redaction was deliberately
+  disabled to confirm the suite went red (9 failures), then restored to confirm it went green again. A
+  check that cannot fail is not a check.
+</div>
+
+<h2><span class="n">H.</span> Open risks</h2>
+<table>
+  <tr><th>Risk</th><th>Standing</th></tr>
+  <tr><td><code>main</code> has no branch protection and push-to-main auto-deploys</td>
+      <td>Accepted for now by decision; must land before the fixer may open a real PR</td></tr>
+  <tr><td>The repository is public, so issues are public</td>
+      <td>Handled by design: only sanitised summaries cross, behind a human click</td></tr>
+  <tr><td>Rate limits are read-then-write on KV, so they race</td>
+      <td>Known. A soft ceiling, not a hard one. Open decision in the stability report</td></tr>
+  <tr><td>One secret signs everything; rotating it kills every block link ever sent</td>
+      <td>Known. Splitting it is unstarted work</td></tr>
+  <tr><td>A confident wrong <code>user_error</code> silences a real reporter</td>
+      <td>Mitigated by a higher confidence bar on dismissive verdicts, and every one logged for review</td></tr>
+</table>
+
+<div class="foot">
+  <p><strong>Companion documents.</strong> <code>STABILITY-REPORT.md</code> &mdash; the audit of the
+  existing product, including four P0 findings. <code>PLAN-SELFHEAL.md</code> &mdash; the design and the
+  argument behind it. <code>AUDIT-SOL.md</code> and <code>PLAN-SELFHEAL-SOL.md</code> &mdash; the
+  second opinion from GPT-5.6 Sol, including the three points where it changed the design.</p>
+  <p>Written 15 August 2026. Numbers in this report were measured, not estimated.</p>
+</div>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,263 @@
+/* The bug reporter's side sheet.
+ *
+ * Loaded on demand with bugreport.js, so this costs nothing until somebody
+ * asks for it. House rules apply: nothing is a perfect rectangle, three inks
+ * doing three jobs, no emoji anywhere, icons are inline SVG. It has to look
+ * like the rest of the notebook or it reads as a third-party widget bolted on.
+ */
+
+.br-open {
+  position: fixed; right: 14px; bottom: 14px; z-index: 60;
+  font-family: var(--font-ui); font-size: 13px; color: var(--ink);
+  background: var(--paper-2);
+  border: var(--bw-pen, 1.5px) solid var(--ink-faint);
+  border-radius: 11px 7px 13px 8px;
+  padding: 7px 12px 8px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px;
+  box-shadow: 1px 2px 0 rgba(38, 53, 110, .13);
+}
+.br-open:hover { border-color: var(--red); color: var(--red); }
+.br-open svg { width: 14px; height: 14px; }
+
+/* the sheet itself */
+.br-scrim {
+  position: fixed; inset: 0; z-index: 70;
+  background: rgba(38, 53, 110, .22);
+  opacity: 0; pointer-events: none; transition: opacity .18s ease;
+}
+.br-scrim.on { opacity: 1; pointer-events: auto; }
+
+.br-sheet {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 71;
+  width: min(420px, 100vw);
+  background: var(--paper);
+  background-image: var(--bg-ruled);
+  background-position: 0 var(--rule-offset, 4px);
+  border-left: var(--bw-pen, 1.5px) solid var(--ink-faint);
+  transform: translateX(102%); transition: transform .22s cubic-bezier(.3, .8, .4, 1);
+  display: flex; flex-direction: column;
+  font-family: var(--font-ui); color: var(--ink);
+  overflow: hidden;
+}
+.br-sheet.on { transform: none; }
+
+.br-head {
+  padding: 14px 16px 10px; border-bottom: var(--bw-pen, 1.5px) dashed var(--ink-faint);
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex: none;
+}
+.br-head h2 { font-family: var(--font-hand, inherit); font-size: 20px; margin: 0; font-weight: normal; }
+.br-head p { margin: 3px 0 0; font-size: 12px; color: var(--ink-soft); }
+.br-x {
+  background: none; border: 0; font-size: 20px; line-height: 1; cursor: pointer;
+  color: var(--ink-soft); padding: 0 2px;
+}
+.br-x:hover { color: var(--red); }
+
+.br-body { padding: 12px 16px 16px; overflow-y: auto; flex: 1; }
+
+.br-field { margin-bottom: 13px; }
+.br-field > label {
+  display: block; font-family: var(--font-hand, inherit); color: var(--red);
+  font-size: 14px; margin-bottom: 4px;
+}
+.br-field .br-hint { font-size: 11.5px; color: var(--ink-soft); margin: 3px 0 0; }
+
+.br-sheet select, .br-sheet textarea, .br-sheet input[type="email"] {
+  width: 100%; font-family: var(--font-ui); font-size: 14px; color: var(--ink);
+  background: var(--paper-2);
+  border: var(--bw-pen, 1.5px) solid var(--ink-faint);
+  border-radius: 9px 6px 11px 7px;
+  padding: 7px 9px; outline: none; box-sizing: border-box;
+}
+.br-sheet textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
+.br-sheet select:focus, .br-sheet textarea:focus, .br-sheet input:focus { border-color: var(--ink); }
+
+/* the two collect buttons */
+.br-tools { display: flex; gap: 8px; flex-wrap: wrap; }
+.br-tool {
+  font-family: var(--font-ui); font-size: 12.5px; color: var(--ink);
+  background: var(--paper-2);
+  border: var(--bw-pen, 1.5px) solid var(--ink-faint);
+  border-radius: 10px 7px 12px 6px;
+  padding: 6px 10px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.br-tool:hover { border-color: var(--red); color: var(--red); }
+.br-tool svg { width: 13px; height: 13px; }
+.br-tool[aria-pressed="true"] { background: var(--hl); border-color: var(--ink); }
+.br-tool[disabled] { opacity: .45; cursor: default; }
+.br-tool[disabled]:hover { border-color: var(--ink-faint); color: var(--ink); }
+
+/* what has been attached so far */
+.br-chips { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.br-chips li {
+  font-size: 11.5px; background: var(--sticky); color: var(--ink);
+  border-radius: 7px 5px 8px 4px; padding: 3px 7px;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.br-chips button { background: none; border: 0; cursor: pointer; color: var(--ink-soft); padding: 0; font-size: 13px; }
+.br-chips button:hover { color: var(--red); }
+
+/* a picture chip shows the picture, because "picture 1" tells you nothing
+   about whether you caught the right part of the screen */
+.br-chips li.br-shotchip {
+  flex-direction: column; align-items: stretch; gap: 4px;
+  padding: 4px; background: var(--paper-2);
+  border: var(--bw-pen, 1.5px) solid var(--ink-faint);
+  border-radius: 9px 6px 10px 7px;
+  position: relative; width: 104px;
+}
+.br-shotchip img {
+  display: block; width: 96px; height: 62px; object-fit: cover; object-position: top left;
+  border-radius: 5px; cursor: zoom-in;
+  background: var(--paper);
+  border: 1px solid var(--ink-faint);
+}
+.br-shotchip span { font-size: 10.5px; color: var(--ink-soft); text-align: center; }
+.br-shotchip button {
+  position: absolute; top: -6px; right: -6px;
+  width: 19px; height: 19px; line-height: 1;
+  background: var(--paper-2); color: var(--ink);
+  border: var(--bw-pen, 1.5px) solid var(--ink-faint) !important;
+  border-radius: 50%; font-size: 13px;
+}
+.br-shotchip button:hover { border-color: var(--red) !important; color: var(--red); }
+
+/* full-size look before sending */
+.br-zoom {
+  position: fixed; inset: 0; z-index: 100; cursor: zoom-out;
+  background: rgba(38, 53, 110, .82);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; padding: 20px;
+}
+.br-zoom img {
+  max-width: 94vw; max-height: 80vh; object-fit: contain;
+  background: var(--paper); border-radius: 6px;
+  box-shadow: 0 4px 22px rgba(0, 0, 0, .3);
+}
+.br-zoom p {
+  margin: 0; color: var(--paper); font-family: var(--font-ui); font-size: 13px; text-align: center;
+}
+
+/* the promise, which is the most important text in the sheet */
+.br-promise {
+  font-size: 11.5px; line-height: 1.55; color: var(--ink-soft);
+  border: var(--bw-pen, 1.5px) dashed var(--ink-faint);
+  border-radius: 10px 13px 8px 12px;
+  padding: 9px 11px; margin: 4px 0 13px;
+  background: var(--paper-2);
+}
+.br-promise b { color: var(--ink); font-weight: normal; border-bottom: 1.5px solid var(--hl); }
+
+.br-foot {
+  padding: 11px 16px 14px; border-top: var(--bw-pen, 1.5px) dashed var(--ink-faint);
+  display: flex; gap: 9px; align-items: center; flex: none;
+}
+.br-send {
+  font-family: var(--font-marker, var(--font-ui)); font-size: 15px;
+  background: var(--hl); color: var(--ink);
+  border: var(--bw-pen, 1.5px) solid var(--ink);
+  border-radius: 12px 8px 14px 7px;
+  padding: 8px 18px 9px; cursor: pointer;
+}
+.br-send:hover { background: var(--hl-pink); }
+.br-send[disabled] { opacity: .55; cursor: default; }
+.br-cancel { background: none; border: 0; color: var(--ink-soft); font-size: 13px; cursor: pointer; }
+.br-cancel:hover { color: var(--red); }
+.br-msg { font-size: 12px; margin-left: auto; text-align: right; }
+.br-msg.bad { color: var(--red); }
+
+/* ---------- screenshot mode ----------
+   The toolbar and the drag box. Both are torn down before the page is
+   rasterised, so our own chrome never ends up in the picture. */
+.br-shoot, .br-shoot * { cursor: crosshair !important; }
+
+.br-bar {
+  position: fixed; left: 50%; top: 14px; transform: translateX(-50%);
+  z-index: 90; display: flex; align-items: center; gap: 10px;
+  background: var(--paper-2); color: var(--ink);
+  border: var(--bw-pen, 1.5px) solid var(--ink);
+  border-radius: 12px 8px 13px 7px;
+  padding: 7px 12px; font-family: var(--font-ui); font-size: 13px;
+  box-shadow: 1px 2px 0 rgba(38, 53, 110, .16);
+}
+.br-bar button {
+  font-family: var(--font-ui); font-size: 12.5px; cursor: pointer;
+  background: var(--paper); color: var(--ink);
+  border: var(--bw-pen, 1.5px) solid var(--ink-faint);
+  border-radius: 9px 6px 10px 7px; padding: 4px 9px;
+}
+.br-bar button:hover { border-color: var(--red); color: var(--red); }
+.br-bar button.go { background: var(--hl); border-color: var(--ink); }
+
+.br-rect {
+  position: fixed; z-index: 89; pointer-events: none;
+  border: 2px dashed var(--red);
+  background: rgba(255, 232, 115, .16);
+  border-radius: 3px;
+}
+.br-busy {
+  position: fixed; inset: 0; z-index: 95;
+  display: grid; place-items: center;
+  background: rgba(251, 247, 234, .72);
+  font-family: var(--font-ui); font-size: 14px; color: var(--ink);
+}
+
+/* ---------- what a screenshot is NOT allowed to show ----------
+   Set on <html> for the instant the page is being rasterised, and removed
+   straight after. Everything here is something the person typed, or something
+   that identifies who they are writing to.
+
+   This is the difference between a screenshot being a useful bug report and a
+   screenshot being a confession leaving the building as pixels. Text redaction
+   cannot help here - by the time it is an image, it is just shapes. So the
+   masking has to happen to the PAGE, before the picture is taken. */
+[data-capturing] #i-msg,
+[data-capturing] #i-email,
+[data-capturing] #i-name,
+[data-capturing] #i-handle,
+[data-capturing] #i-wa,
+[data-capturing] #i-sender,
+[data-capturing] .msg-out,
+[data-capturing] [data-private] {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  text-shadow: none !important;
+  background-image: repeating-linear-gradient(
+    45deg, var(--ink-faint) 0 6px, transparent 6px 12px) !important;
+  background-color: var(--paper-2) !important;
+  caret-color: transparent !important;
+}
+/* the toolbar and the drag box are ours, and must never be in the picture */
+[data-capturing] .br-bar,
+[data-capturing] .br-rect,
+[data-capturing] .br-open,
+[data-capturing] .br-sheet,
+[data-capturing] .br-scrim,
+[data-capturing] .br-busy { display: none !important; }
+
+/* the element picker */
+.br-picking, .br-picking * { cursor: crosshair !important; }
+.br-hilite {
+  position: fixed; z-index: 80; pointer-events: none;
+  border: 2px solid var(--red);
+  background: rgba(207, 58, 45, .09);
+  border-radius: 4px;
+}
+
+/* the thank-you state replaces the form entirely */
+.br-done { text-align: center; padding: 26px 8px; }
+.br-done h3 { font-family: var(--font-hand, inherit); font-size: 21px; font-weight: normal; margin: 0 0 7px; }
+.br-done p { font-size: 13px; color: var(--ink-soft); line-height: 1.6; margin: 0 0 5px; }
+.br-ref {
+  font-family: ui-monospace, monospace; font-size: 12px;
+  background: var(--sticky); border-radius: 6px; padding: 2px 7px;
+}
+
+@media (max-width: 470px) {
+  .br-sheet { width: 100vw; }
+  .br-open { right: 10px; bottom: 10px; font-size: 12px; padding: 6px 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .br-sheet, .br-scrim { transition: none; }
+}

@@ -38,3 +38,8 @@ content/instagram/.notified.json
 
 # who we have already followed and commented on - real handles, local only
 content/instagram/.outreach.json
+
+# Bug-report drafts are generated from the case file by prepare-issue.mjs.
+# They describe real reports, so they stay off the public repo until a human
+# publishes one deliberately with approve-issue.mjs.
+content/bugs/
