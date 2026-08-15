@@ -652,7 +652,9 @@ async function adminData(env, query) {
               SUM(CASE WHEN state = 'received' THEN 1 ELSE 0 END) waiting,
               SUM(CASE WHEN verdict = 'real_bug' THEN 1 ELSE 0 END) real_bugs,
               SUM(CASE WHEN verdict = 'needs_human' THEN 1 ELSE 0 END) needs_human,
-              SUM(CASE WHEN reply_email <> '' AND notified_at IS NULL THEN 1 ELSE 0 END) owed_a_reply
+              SUM(CASE WHEN reply_email <> '' AND notified_at IS NULL
+                        AND verdict IS NOT NULL AND verdict NOT IN ('abuse','needs_human')
+                       THEN 1 ELSE 0 END) owed_a_reply
        FROM bug_reports`
     ).first();
     bugs = { rows: bugRows.results || [], counts: bugCounts || {} };
@@ -790,8 +792,15 @@ function adminPage(data) {
            <th style="padding:6px 0">next</th></tr>
          ${bugRows.map((b) => {
            const [word, colour] = VERDICT_WORDS[b.verdict] || ['not looked at yet', FAINT];
+           /* "owed" has to mean a message is actually DUE, not merely "we have their address
+              and have not written". It counted needs_human cases as owed at first, which reads
+              as a debt you cannot pay: nothing has been decided yet, so there is nothing honest
+              to send. A number that overstates what you owe is as useless as one that hides it. */
+           const owed = b.verdict && b.verdict !== 'abuse' && b.verdict !== 'needs_human';
            const replyState = !b.can_reply ? 'anonymous'
-             : b.notified_at ? 'told' : 'owed';
+             : b.notified_at ? 'told'
+             : !b.verdict ? 'after triage'
+             : owed ? 'owed' : 'none due';
            return `<tr style="border-top:1px solid #e3d9bd;vertical-align:top">
              <td style="padding:9px 10px 9px 0;color:${FAINT};white-space:nowrap">${esc(new Date(b.ts * 1000).toISOString().slice(5, 16).replace('T', ' '))}</td>
              <td style="padding:9px 10px 9px 0;max-width:420px">
