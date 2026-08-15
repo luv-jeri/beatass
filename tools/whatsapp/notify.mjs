@@ -110,34 +110,33 @@ export function waPreview(body) {
   return { text: (space > PREVIEW - 60 ? cut.slice(0, space) : cut).trimEnd() + '...', clipped: true };
 }
 
-/* Three messages, not one, for the reason Sanjay gave on 2026-08-03: a single
-   blob buries the confession between a greeting and a legal footer. Sent
-   separately, the middle one is nothing but their words - the only part a
-   stranger actually cares about.
-   Emoji and *bold* added 2026-08-05, Sanjay's call: the plain version arrived
-   on a phone as a wall of grey text and "the user never sees these details".
-   This is a deliberate exception to the project's no-emoji house rule, which
-   exists for the hand-drawn website - a WhatsApp message is a different medium
-   and reads as ignorable without them.
-   The middle bubble stays UNformatted on purpose: it carries somebody's own
-   words, and an asterisk or an underscore inside a confession would collide
-   with WhatsApp's formatting and mangle their sentence. */
-export const waParts = (m, link) => {
+/* One intro line, then their words (Sanjay, 2026-08-06): deliver the confession
+   and step back - no promo, no link, no disclaimer. Bubble 1 says what it is and
+   what can actually happen next; the confession is the LAST
+   bubble, so the phone's notification preview shows the hook - their own words.
+   No link on purpose (Sanjay's call): keep it dead simple and non-spammy, and
+   anyone who wants to send their own is
+   pointed at beatass.com in plain text. The link feature returns later; it just
+   isn't in the message for now, and `link` is kept so callers do not change.
+   Emoji and *bold* stay: a WhatsApp message reads as ignorable grey text without
+   them (a deliberate exception to the no-emoji house rule, which is for the
+   hand-drawn website). The confession bubble stays UNformatted, because an
+   asterisk inside someone's words would collide with WhatsApp's formatting. */
+export const waParts = (m, link) => {   // link intentionally unused for now
+  void link;
   const p = waPreview(m.body);
   const parts = [];
-  if (p.text) {
-    parts.push('📩 *someone just left you an anonymous message on beatass.com*\n\nthis is what they wrote 👇');
-    parts.push('"' + p.text + '"');
-  } else {
-    parts.push('📩 *someone just left you an anonymous message on beatass.com*');
-  }
-  parts.push(
-    '👉 *tap here to read ' + (p.clipped ? 'the rest of it' : 'it all') +
-    ', see what they did to the doll, and reply to them:*\n' + link + '\n\n' +
-    '⚠️ *this is an automated message from beatass.com.* we only deliver messages - ' +
-    'we did not write this one, and we never share your number.\n\n' +
-    '🛑 *do not want these?* open the same link and tap *block* - one tap and we can ' +
-    'never message you again. you can *report* it from there too.');
+  // 1. what it is + what can actually happen next - no link, no promo, no disclaimer
+  /* This used to say "reply right here if you want to answer them". Nothing on our side
+     ever read those replies (2026-08-15: there is no WhatsApp inbox reader anywhere in
+     this repo, only the email lane has an inbound handler), so anyone who answered was
+     typing into a void while being told it would reach the sender. That is the honesty
+     law, not a nice-to-have. The promise is removed until something can keep it. */
+  parts.push('👋 hey - *someone left you an anonymous confession.* we cannot carry a ' +
+    'reply back to them, so there is nothing to answer here - ignore this and you will ' +
+    'not hear from us again. to send one of your own: beatass.com');
+  // 2. LAST, so it is what the notification shows: their own words, unformatted
+  if (p.text) parts.push('"' + p.text + '"');
   return parts;
 };
 
@@ -204,45 +203,35 @@ if (args.includes('--selftest')) {
   eq('runs of blank lines collapse', waPreview('a\n\n\n\n\nb').text, 'a\n\nb');
 
   const m = { body: 'i still think about it', id: 'a'.repeat(16), view_token: 'b'.repeat(32) };
-  const LINK = 'https://beatass.com/m?id=x&t=y';
-  const t = waText(m, LINK);
+  const t = waText(m);
   eq('the words are in the message', t.includes('"i still think about it"'), true);
-  eq('the link is in the message', t.includes(LINK), true);
-  eq('the reply route is the page', t.includes('reply to them'), true);
-  eq('it admits it is automated', t.includes('automated message from beatass.com'), true);
-  eq('the opt-out line survives', t.includes('never message you again'), true);
-  eq('it offers a block in so many words', t.includes('tap *block*'), true);
-  eq('it offers a report', t.includes('*report*'), true);
-  eq('a clipped one says so', waText({ body: long }, 'L').includes('read the rest'), true);
-  eq('an empty body still sends a link', waText({ body: '' }, 'L').includes('L'), true);
+  eq('it does not promise a reply route we do not have', /reply right here/.test(t), false);
+  eq('and it says plainly that a reply cannot be carried back', /cannot carry a reply/.test(t), true);
+  eq('there is no link in the message', /https?:\/\//.test(t), false);
+  eq('it points to beatass.com for their own', t.includes('beatass.com'), true);
+  eq('an empty body still produces the intro', waText({ body: '' }).length > 0, true);
 
-  /* The split is the whole point. Bubble 2 must be their words and NOTHING
-     else - if a greeting, a link, or the legal footer ever creeps back into
-     it, these go red. */
-  const p = waParts(m, LINK);
-  eq('a normal one is three messages', p.length, 3);
-  eq('bubble 2 is only their words', p[1], '"i still think about it"');
-  eq('bubble 2 has no link', p[1].includes('beatass.com'), false);
-  eq('bubble 2 has no greeting', /hey /.test(p[1]), false);
-  eq('bubble 2 has no legal footer', p[1].includes('automated'), false);
-  eq('bubble 1 introduces it', p[0].includes('anonymous message'), true);
-  eq('bubble 1 carries no link', p[0].includes(LINK), false);
-  eq('bubble 3 carries the link', p[2].includes(LINK), true);
-  eq('bubble 3 carries the opt-out', p[2].includes('never message you again'), true);
+  /* Simple now (Sanjay, 2026-08-06): one intro line + their words, no link. The
+     LAST bubble must be their words (the notification hook); the intro carries no
+     link. If a link creeps into either, these go red. */
+  const p = waParts(m);
+  eq('a normal one is two messages', p.length, 2);
+  eq('the confession is the LAST bubble', p[p.length - 1], '"i still think about it"');
+  eq('the confession bubble is only their words', p[1], '"i still think about it"');
+  eq('the intro carries no link', /https?:\/\//.test(p[0]), false);
+  eq('the intro says what actually happens next', /nothing to answer here/.test(p[0]), true);
+  eq('the intro points them to send their own', p[0].includes('beatass.com'), true);
 
-  /* The formatting Sanjay asked for on 2026-08-05, checked so a later tidy-up
-     cannot quietly flatten the messages back into grey text. */
-  eq('bubble 1 leads with an emoji', /^\u{1F4E9}/u.test(p[0]), true);
-  eq('bubble 1 bolds the headline', p[0].includes('*someone just left you an anonymous message on beatass.com*'), true);
-  eq('bubble 3 bolds the call to action', /\u{1F449} \*tap here to read/u.test(p[2]), true);
-  eq('bubble 3 flags itself with a warning sign', p[2].includes('\u26A0'), true);
-  eq('bubble 3 marks the opt-out with a stop sign', p[2].includes('\u{1F6D1}'), true);
+  /* The formatting Sanjay asked for, checked so a later tidy-up cannot quietly
+     flatten the message back into grey text. */
+  eq('the intro leads with an emoji', /^\u{1F44B}/u.test(p[0]), true);
+  eq('the intro bolds the headline', p[0].includes('*someone left you an anonymous confession.*'), true);
   /* Their words must stay clean: no bold markers, because an asterisk inside
      somebody's confession would collide with WhatsApp's formatting. */
-  eq('bubble 2 carries no formatting of ours', p[1].includes('*'), false);
-  eq('bubble 2 carries no emoji of ours', /\u{1F4E9}|\u{1F449}|\u{1F6D1}/u.test(p[1]), false);
-  eq('an empty body drops the quote bubble', waParts({ body: '' }, 'L').length, 2);
-  eq('a clipped body still splits in three', waParts({ body: long }, 'L').length, 3);
+  eq('the confession carries no formatting of ours', p[1].includes('*'), false);
+  eq('the confession carries no emoji of ours', /\u{1F44B}|\u{1F4E9}/u.test(p[1]), false);
+  eq('an empty body drops the confession bubble', waParts({ body: '' }).length, 1);
+  eq('a clipped body still makes two', waParts({ body: long }).length, 2);
   eq('no bubble is empty', p.every((x) => x.trim().length > 0), true);
 
   console.log(fails ? `\nwhatsapp selftest FAILED (${fails} of ${checks})`
@@ -486,28 +475,34 @@ if (AUTO) {
           await page.waitForTimeout(pause);
         }
       } catch (e) {
-        if (e.partsSent) {
-          /* Some bubbles landed. Record it anyway - a retry would repeat them. */
-          recordSent(sent, r.id);
-          done++;
-          say(`    PARTIAL [${r.id}]: ${e.partsSent} of 3 sent, then: ${e.message.split('\n')[0]}`);
-          evt('partial', { id: r.id, to: mask(r.to_whatsapp), bubbles: e.partsSent, error: e.message.split('\n')[0] });
-        } else if (e.undeliverable) {
-          /* Still not recorded as SENT - nothing was delivered, and the log must
-             never claim otherwise. Recorded as a failed ATTEMPT instead, so the
-             same wrong number cannot be retried every minute until the end of
-             time. After MAX_TRIES it drops out of the queue for good. */
+        if (e.undeliverable) {
+          /* Nothing was delivered - the number is not on WhatsApp. Recorded as a
+             failed ATTEMPT (never as sent), against the message AND the number, so
+             the same wrong number is not retried every minute. Drops out of the
+             queue after MAX_TRIES. */
           const at = recordFailure(sent, r.id, 'not-on-whatsapp');
-          /* and against the number, so the NEXT message to it is skipped
-             without opening a browser at all */
           recordFailure(sent, deadKey(r.to_whatsapp), 'not-on-whatsapp');
           evt(at.attempts >= MAX_TRIES ? 'gave-up' : 'undeliverable', { id: r.id, to: mask(r.to_whatsapp), attempts: at.attempts });
           say(at.attempts >= MAX_TRIES
             ? `    undeliverable [${r.id}]: ${e.message}. Giving up after ${at.attempts} tries - it will not be retried.`
             : `    undeliverable [${r.id}]: ${e.message}. Try ${at.attempts} of ${MAX_TRIES}.`);
         } else {
-          say(`    skipped [${r.id}]: ${e.message.split('\n')[0]}`);
-          evt('skip', { id: r.id, to: mask(r.to_whatsapp), error: e.message.split('\n')[0] });
+          /* A partial (some bubbles out) OR a failure before any went. NEVER mark
+             it delivered. A partial used to be recorded as SENT, which left the
+             recipient with only the intro bubble - no confession, no link - and no
+             retry ever fixed it (found live 2026-08-05: a message stuck 'delivered'
+             at 1 of 3). A 0-bubble failure used to fall through recording nothing
+             and retried forever. Both are now a failed ATTEMPT: the whole message
+             is re-sent next run (a repeated intro is a small price for the
+             confession and link actually arriving) and it gives up after
+             MAX_TRIES. A transient glitch clears on the retry; `status.mjs retry`
+             re-arms a false give-up. */
+          const outNow = e.partsSent || 0;
+          const first = e.message.split('\n')[0];
+          const at = recordFailure(sent, r.id, outNow ? `partial ${outNow}/3: ${first}` : first);
+          const gaveUp = at.attempts >= MAX_TRIES;
+          say(`    ${gaveUp ? 'GIVING UP' : 'will retry'} [${r.id}]: ${outNow} of 3 sent, ${first} (try ${at.attempts} of ${MAX_TRIES})`);
+          evt(gaveUp ? 'gave-up' : (outNow ? 'partial' : 'retry'), { id: r.id, to: mask(r.to_whatsapp), bubbles: outNow, attempts: at.attempts, error: first });
         }
         await page.screenshot({ path: path.join(HERE, 'last-failure.png') }).catch(() => {});
       }
@@ -550,10 +545,23 @@ try {
     say(`  screenshot: tools/whatsapp/sent.png`);
   }
 } catch (err) {
-  if (err.partsSent) {
-    recordSent(sent, m.id);
-    say(`! PARTIAL: ${err.partsSent} of ${parts.length} messages arrived before this failed.`);
-    say('  Logged as sent so a retry cannot repeat them. Finish it by hand if it matters.');
+  /* Record the outcome the SAME way --auto does. This path used to call
+     recordSent on a partial, which marked a half-delivered message DELIVERED
+     forever - the recipient kept only the intro bubble and no retry could ever
+     fix it (the exact bug fixed in --auto on 2026-08-05; this sibling path was
+     missed and bit us live 2026-08-06 against a restricted account). A partial
+     or a pre-send failure is a FAILED ATTEMPT, never a delivery: the whole
+     message re-sends on the next run / `status.mjs retry`, giving up after
+     MAX_TRIES. */
+  if (err.undeliverable) {
+    const at = recordFailure(sent, m.id, 'not-on-whatsapp');
+    recordFailure(sent, deadKey(m.to_whatsapp), 'not-on-whatsapp');
+    say(`! UNDELIVERABLE: ${mask(m.to_whatsapp)} is not on WhatsApp. Recorded as a failed attempt (try ${at.attempts} of ${MAX_TRIES}); nothing was sent.`);
+  } else {
+    const outNow = err.partsSent || 0;
+    const first = err.message.split('\n')[0];
+    const at = recordFailure(sent, m.id, outNow ? `partial ${outNow}/${parts.length}: ${first}` : first);
+    say(`! ${outNow} of ${parts.length} messages went before this failed - recorded as a FAILED attempt (try ${at.attempts} of ${MAX_TRIES}), NOT delivered. The whole message re-sends on a retry.`);
   }
   await page.screenshot({ path: path.join(HERE, 'last-failure.png') }).catch(() => {});
   console.error('\n✗ ' + err.message);

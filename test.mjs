@@ -357,3 +357,8 @@ await m2.screenshot({path:ROOT+'/shots/v3-mobile-preview.png'});
 
 console.log('ERRORS:', errs.length?errs:'none');
 await b.close(); srv.close();
+/* Exit non-zero on any finding so a real regression FAILS `npm test`, instead
+   of printing to stdout while the suite still reports success - which is exactly
+   what happened when a layout change pushed the preview 2px off a phone and the
+   chain sailed on to the next test. A check that cannot fail is not a check. */
+process.exit(errs.length ? 1 : 0);

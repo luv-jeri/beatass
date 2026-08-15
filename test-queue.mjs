@@ -79,6 +79,7 @@ function ensureSchema() {
   file('schema.sql', false);
   file('migrations/002-sharing.sql', true);
   file('migrations/003-whatsapp.sql', true);
+  file('migrations/004-observability.sql', true);
 }
 
 console.log('preparing the local database...');

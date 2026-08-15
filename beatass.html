@@ -390,6 +390,11 @@ a{color:var(--red)}a:hover{color:var(--ink)}
   text-shadow:0 1px 4px rgba(0,0,0,.5)}
 /* the red pen doing what it always does here: annotating what went wrong */
 .ovnote.bad{color:var(--red);text-shadow:0 1px 4px rgba(0,0,0,.65)}
+/* the honest-disclosure line: fine print, one line, small enough to sit in the
+   slack the preview card leaves on the shortest phone. Keep the text short - it
+   is a signpost to Privacy, not the full disclosure. */
+.ovnote.ovfine{font-weight:500;font-size:calc(var(--fs-small) * .82);opacity:.72;line-height:1.3;margin-top:3px}
+.ovnote.ovfine a{color:inherit}
 .ovbtns{display:flex;gap:10px;justify-content:flex-end}
 
 /* The legal row. It sits in the send bar, under the button, so it is pinned on
@@ -707,7 +712,8 @@ a{color:var(--red)}a:hover{color:var(--ink)}
       </div>
     </div>
     <div>
-      <div class="ovnote">They'll get your exact words and the doll clip. Once it's sent it can't be taken back, and they'll never know it was you. Keep it funny, not cruel - no threats or private facts.</div>
+      <div class="ovnote">They'll get your exact words and the doll clip. Once it's sent it can't be taken back, and they'll never know it was you. Keep it funny, not cruel - no threats or privte facts.</div>
+      <div class="ovnote ovfine">We log your device &amp; area to stop abuse. <a href="/privacy.html">Privacy</a></div>
       <div class="ovnote bad" id="send-err" hidden></div>
       <div class="ovbtns" style="margin-top:12px">
         <button class="btn ghost sm" id="dl" type="button">Save GIF</button>
@@ -2108,6 +2114,60 @@ document.addEventListener('keydown', e => { if(e.key === 'Escape') closeOv(); })
 window.addEventListener('resize', () => { css = CSS(); });
 resetDoll();
 requestAnimationFrame(loop);
+</script>
+
+<!-- The bug reporter.
+     Two pieces on purpose. This stub is tiny and always runs, because the
+     errors worth reading happen BEFORE anyone presses "report" - a panel that
+     only starts listening when you open it has already missed the thing you
+     opened it about. It keeps the last few errors in an array and nothing else.
+     The real reporter (the sheet, the picker, the capture rules) is a separate
+     file that is fetched the first time somebody actually asks for it, so the
+     visitors who never hit a bug never download it. -->
+<script>
+(function(){
+  var early = window.__brEarly = [];
+  function keep(level, args){
+    try{
+      var t = [].map.call(args, function(a){
+        return a instanceof Error ? a.name + ': ' + a.message
+             : typeof a === 'string' ? a
+             : (function(){ try { return JSON.stringify(a); } catch(e){ return String(a); } })();
+      }).join(' ');
+      early.push({ level: level, text: t.slice(0, 500), ts: Date.now() });
+      if (early.length > 40) early.shift();
+    }catch(e){}
+  }
+  ['error','warn'].forEach(function(l){
+    var o = console[l].bind(console);
+    console[l] = function(){ keep(l, arguments); o.apply(null, arguments); };
+  });
+  window.addEventListener('error', function(e){ keep('error', [e.message + ' @ ' + e.lineno]); });
+  window.addEventListener('unhandledrejection', function(e){ keep('error', ['unhandled promise: ' + (e.reason && e.reason.message || e.reason)]); });
+
+  var loading = false;
+  function load(then){
+    if (window.BugReport) return then();
+    if (loading) return;
+    loading = true;
+    var css = document.createElement('link');
+    css.rel = 'stylesheet'; css.href = '/bugreport.css';
+    document.head.appendChild(css);
+    var js = document.createElement('script');
+    js.src = '/bugreport.js';
+    js.onload = function(){ loading = false; then(); };
+    js.onerror = function(){ loading = false; btn.textContent = 'Could not load. Reload and try again.'; };
+    document.body.appendChild(js);
+  }
+
+  var btn = document.createElement('button');
+  btn.className = 'br-open';
+  btn.type = 'button';
+  btn.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M5.4 5.2a2.6 2.6 0 015.2 0"/><rect x="4.6" y="5.2" width="6.8" height="7.4" rx="3.4"/><path d="M4.6 7.6H2m12 0h-2.6M4.6 10.6H2.4m11.2 0h-2.2M6 13l-1.2 1.6M10 13l1.2 1.6"/></svg>Report a problem';
+  btn.style.cssText = 'position:fixed;right:14px;bottom:14px;z-index:60;font:13px var(--font-ui);color:var(--ink);background:var(--paper-2);border:1.5px solid var(--ink-faint);border-radius:11px 7px 13px 8px;padding:7px 12px 8px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;box-shadow:1px 2px 0 rgba(38,53,110,.13)';
+  btn.onclick = function(){ load(function(){ window.BugReport.open(); }); };
+  document.body.appendChild(btn);
+})();
 </script>
 </body>
 </html>

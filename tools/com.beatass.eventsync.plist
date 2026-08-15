@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Flushes the laptop's delivery events (events.jsonl) into the D1 `events`
+     table every 120 seconds, so the whole pipeline's log is queryable in one
+     place. Read-only against delivery: it only reads the local logs and inserts
+     rows; it never sends anything, so this one is safe to arm on its own.
+
+     Arm it:   cp tools/com.beatass.eventsync.plist ~/Library/LaunchAgents/
+               launchctl load ~/Library/LaunchAgents/com.beatass.eventsync.plist
+     Stop it:  launchctl unload ~/Library/LaunchAgents/com.beatass.eventsync.plist -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.beatass.eventsync</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/sanjaykumar/Claude/Projects/banyan/ventures/beatass/tools/events-sync.sh</string>
+  </array>
+  <key>StartInterval</key>
+  <integer>120</integer>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>120</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/sanjaykumar/.config/beatass-logs/eventsync-launchd.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/sanjaykumar/.config/beatass-logs/eventsync-launchd.log</string>
+</dict>
+</plist>
