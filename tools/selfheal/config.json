@@ -1,0 +1,18 @@
+{
+  "_what": "Every switch for the automatic bug loop. Change it with `node tools/selfheal/auto.mjs`, not by hand - the frequency also lives in a launchd file, and the command keeps the two in step. Editing this file alone changes the switches but NOT the timer.",
+  "_enabled": "The master switch. False means the timer can fire and nothing happens - belt and braces, so turning it off does not depend on launchd having been unloaded correctly.",
+  "enabled": true,
+  "_everyMinutes": "How often the loop runs. Triage costs one local Claude Code call per waiting report and nothing when the queue is empty, so a short timer is cheap. Below 2 is refused: the runs would overlap.",
+  "everyMinutes": 10,
+  "_steps": "Each stage of the loop, separately switchable. They run in this order and a stage that is off simply does not run; the ones after it still do.",
+  "steps": {
+    "_triage": "Decide what each new report is. Uses the Claude Code installed on this laptop. Writes a verdict and nothing else.",
+    "triage": true,
+    "_draftIssues": "Turn confirmed real bugs into sanitised draft issues on disk. This CANNOT publish - prepare-issue.mjs has no GitHub call in it at all. Publishing stays a human typing yes into approve-issue.mjs.",
+    "draftIssues": true,
+    "_notify": "Email the people who reported. OFF by default and it should stay off until Sanjay decides otherwise: the moment this is true, the machine writes to real strangers with nobody watching. It also needs RESEND_API_KEY and MAIL_FROM in the job's environment, which are deliberately not on this laptop - so turning this on alone still sends nothing.",
+    "notify": false
+  },
+  "_quietHours": "Optional. [startHour, endHour] in 24h local time, during which the loop does not run. null means always. Useful once notify is on, so nobody is emailed at 4am.",
+  "quietHours": null
+}

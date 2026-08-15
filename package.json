@@ -5,7 +5,7 @@
   "description": "beatass.com prototype \u2014 anonymous confession + voodoo doll GIF",
   "scripts": {
     "build": "python3 build.py",
-    "test": "python3 build.py && node test-relay.mjs && node bugreport/test-privacy.mjs && node bugreport/test-browser.mjs && node bugreport/test-intake.mjs && node tools/selfheal/triage.mjs --selftest && node tools/selfheal/prepare-issue.mjs --selftest && node tools/selfheal/approve-issue.mjs --selftest && node tools/selfheal/fix.mjs --selftest && node tools/selfheal/notify.mjs --selftest && node tools/instagram/notify.mjs --selftest && node tools/instagram/outreach.mjs --selftest && node tools/whatsapp/notify.mjs --selftest && node tools/classify.mjs --selftest && node test.mjs && node test-sound.mjs && node test-queue.mjs && node test-events.mjs",
+    "test": "python3 build.py && node test-relay.mjs && node bugreport/test-privacy.mjs && node bugreport/test-browser.mjs && node bugreport/test-intake.mjs && node tools/selfheal/triage.mjs --selftest && node tools/selfheal/prepare-issue.mjs --selftest && node tools/selfheal/approve-issue.mjs --selftest && node tools/selfheal/fix.mjs --selftest && node tools/selfheal/notify.mjs --selftest && node tools/selfheal/auto.mjs --selftest && node tools/instagram/notify.mjs --selftest && node tools/instagram/outreach.mjs --selftest && node tools/whatsapp/notify.mjs --selftest && node tools/classify.mjs --selftest && node test.mjs && node test-sound.mjs && node test-queue.mjs && node test-events.mjs",
     "serve": "python3 -m http.server 8080"
   },
   "devDependencies": {
